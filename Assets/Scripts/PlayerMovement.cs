@@ -24,6 +24,12 @@ public class PlayerMovement : NetworkBehaviour
     // (por ejemplo, más adelante, para animaciones de apuntado).
     [Networked] private float NetworkedPitch { get; set; }
 
+    // Guardamos la velocidad vertical acumulada (qué tan rápido estamos
+    // cayendo), en vez de aplicar un empujón fijo cada frame. Esto es más
+    // robusto que depender solo de "isGrounded" (que a veces falla un
+    // frame y deja que el jugador se hunda un poco en el piso).
+    private float _verticalVelocity;
+
     // Spawned() es una función de Fusion que se llama UNA sola vez, apenas
     // este objeto aparece en la red (equivalente al Start() de Unity, pero
     // garantizado a ejecutarse después de que la red terminó de configurar
@@ -31,6 +37,9 @@ public class PlayerMovement : NetworkBehaviour
     public override void Spawned()
     {
         _characterController = GetComponent<CharacterController>();
+
+        // Línea de prueba temporal, para diagnosticar — la borramos después.
+        Debug.Log($"[PlayerMovement] Spawned() ejecutado en '{gameObject.name}'. HasInputAuthority = {Object.HasInputAuthority}");
 
         // Object.HasInputAuthority es true SOLO en la máquina del jugador
         // dueño de este personaje (es decir, "¿este soy YO?").
@@ -74,23 +83,36 @@ public class PlayerMovement : NetworkBehaviour
                 cameraPivot.localRotation = Quaternion.Euler(NetworkedPitch, 0, 0);
             }
 
-            // --- MOVIMIENTO ---
+            // --- MOVIMIENTO HORIZONTAL ---
             // Convertimos el input (Horizontal/Vertical) en una dirección
             // relativa a hacia dónde está mirando el jugador ahora mismo.
             Vector3 moveDirection = transform.right * input.moveDirection.x
                                    + transform.forward * input.moveDirection.y;
 
-            // Runner.DeltaTime es el tiempo fijo entre ticks de red (similar
-            // a Time.deltaTime, pero el equivalente correcto para usar
-            // dentro de FixedUpdateNetwork).
-            _characterController.Move(moveDirection * moveSpeed * Runner.DeltaTime);
-
-            // Gravedad simple para que no flote (falta detección de piso
-            // más avanzada, pero para empezar alcanza con esto):
-            if (!_characterController.isGrounded)
+            // --- GRAVEDAD ---
+            if (_characterController.isGrounded)
             {
-                _characterController.Move(Physics.gravity * Runner.DeltaTime);
+                // Si estamos tocando el piso, mantenemos una caída chica
+                // constante (no cero). Esto "pega" al personaje contra el
+                // piso entre frame y frame, evitando que pierda el contacto
+                // por un instante y empiece a acelerar de nuevo desde cero
+                // (que es lo que suele causar que se hunda o atraviese pisos).
+                _verticalVelocity = -2f;
             }
+            else
+            {
+                // Si NO estamos tocando el piso (saltando o cayendo),
+                // la velocidad de caída se acelera con el tiempo, como
+                // la gravedad real.
+                _verticalVelocity += Physics.gravity.y * Runner.DeltaTime;
+            }
+
+            // Combinamos movimiento horizontal + caída vertical en un solo
+            // Move(), en vez de llamar a Move() dos veces por separado
+            // (llamarlo una sola vez es más preciso para la detección de
+            // colisiones del Character Controller).
+            Vector3 finalMove = (moveDirection * moveSpeed) + (Vector3.up * _verticalVelocity);
+            _characterController.Move(finalMove * Runner.DeltaTime);
         }
     }
 }
