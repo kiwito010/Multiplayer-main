@@ -208,7 +208,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 5
   lookSensitivity: 2
-  cameraPivot: {fileID: 9157660794613145417, guid: 442aad2f130bf304686b964f5a40c6ac, type: 3}
+  cameraPivot: {fileID: 4916090557827576219}
 --- !u!114 &4516032627377954848
 MonoBehaviour:
   m_ObjectHideFlags: 0
