@@ -27,8 +27,10 @@ public class PlayerMovementSingle : MonoBehaviour
     
     private bool isCrouching;
 
+    [SerializeField] BoxCollider proneCollider;
+
     [SerializeField] private float proneHeight = 0.5f;
-    [SerializeField] private float proneCameraOffset = 1f;
+    [SerializeField] private float proneCameraOffset = 0.95f;
 
     private Vector3 proneCenter;
     private bool isProne;
@@ -61,11 +63,11 @@ public class PlayerMovementSingle : MonoBehaviour
 
     private void Update() {
         if (gameInput.GetJumpPressed() && IsGrounded()) {
-            Debug.Log("siiii");
             jumpRequested = true;
         }
 
         HandleStance();
+
     }
 
     private void FixedUpdate() {
@@ -137,10 +139,16 @@ public class PlayerMovementSingle : MonoBehaviour
 
     public void EnterProne() { 
         isProne = true;
+
+        capsuleCollider.enabled = false;
+        proneCollider.enabled = true;
     }
 
     public void ExitProne() {
         isProne = false;
+
+        proneCollider.enabled = false;
+        capsuleCollider.enabled = true;
     }
 
     public bool IsProne() { 
