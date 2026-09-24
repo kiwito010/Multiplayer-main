@@ -6,13 +6,13 @@ public class ExplorerAbilities : MonoBehaviour
 {
     private PlayerInteraction playerInteraction;
     private GameInput gameInput;
-    private PlayerMovement playerMovement;
+    private PlayerMovementSingle playerMovementSingle;
     private bool isProne;
 
     private void Awake() {
         playerInteraction = GetComponent<PlayerInteraction>();
         gameInput = GetComponent<GameInput>();
-        playerMovement = GetComponent<PlayerMovement>();
+        playerMovementSingle = GetComponent<PlayerMovementSingle>();
 
         playerInteraction.OnInteract += PlayerInteraction_OnInteract;
     }
@@ -40,10 +40,10 @@ public class ExplorerAbilities : MonoBehaviour
 
     private void Update() {
         if (gameInput.GetPronePressed()) {
-            if (playerMovement.IsProne()) {
-                playerMovement.ExitProne();
+            if (playerMovementSingle.IsProne()) {
+                playerMovementSingle.ExitProne();
             } else { 
-                playerMovement.EnterProne();
+                playerMovementSingle.EnterProne();
             }
         }
     }

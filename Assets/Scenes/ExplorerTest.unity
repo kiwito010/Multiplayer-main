@@ -859,6 +859,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3685712430749976253, guid: 7a18a68bf940e734f953adcfd623ff3a, type: 3}
+      propertyPath: proneHeight
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3685712430749976253, guid: 7a18a68bf940e734f953adcfd623ff3a, type: 3}
+      propertyPath: groundLayer.m_Bits
+      value: 128
+      objectReference: {fileID: 0}
+    - target: {fileID: 3685712430749976253, guid: 7a18a68bf940e734f953adcfd623ff3a, type: 3}
+      propertyPath: obstacleLayer.m_Bits
+      value: 256
+      objectReference: {fileID: 0}
+    - target: {fileID: 8544729500135251166, guid: 7a18a68bf940e734f953adcfd623ff3a, type: 3}
+      propertyPath: interactLayerMask.m_Bits
+      value: 64
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -915,15 +931,34 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 411270582852609698, guid: 4e67d1e9239a4704bbbed4e6e34085de, type: 3}
+      propertyPath: climbableWall
+      value: 
+      objectReference: {fileID: 4250560711027678172}
     - target: {fileID: 5398368924346672282, guid: 4e67d1e9239a4704bbbed4e6e34085de, type: 3}
       propertyPath: m_Name
       value: ClimbableWall
       objectReference: {fileID: 0}
+    - target: {fileID: 7675825452511841172, guid: 4e67d1e9239a4704bbbed4e6e34085de, type: 3}
+      propertyPath: climbableWall
+      value: 
+      objectReference: {fileID: 4250560711027678172}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4e67d1e9239a4704bbbed4e6e34085de, type: 3}
+--- !u!114 &4250560711027678172 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 199311038958544089, guid: 4e67d1e9239a4704bbbed4e6e34085de, type: 3}
+  m_PrefabInstance: {fileID: 4250560711027678166}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c6076de6a16a2b43ab501d8b6a5b534, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

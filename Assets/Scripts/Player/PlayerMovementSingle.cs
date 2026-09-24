@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
-public class PlayerMovement : MonoBehaviour
+public class PlayerMovementSingle : MonoBehaviour
 {
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float jumpForce = 5f;
@@ -61,6 +61,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update() {
         if (gameInput.GetJumpPressed() && IsGrounded()) {
+            Debug.Log("siiii");
             jumpRequested = true;
         }
 

@@ -90,6 +90,8 @@ MonoBehaviour:
   playerCamera: {fileID: 7270251408866099241}
   crouchCameraOffset: 0.5
   crouchSpeed: 8
+  proneHeight: 0.5
+  proneCameraOffset: 1
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 256
