@@ -3,7 +3,32 @@ guid: dad9980a66c2f2242be8f9e6990c6e42
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Material.002
+    second: {fileID: 2100000, guid: ee289720aec254f47b35abaaeaf4a5bd, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Material.007
+    second: {fileID: 2100000, guid: fd10fbc8ef9955540bd062d7626ec168, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: reactor
+    second: {fileID: 2100000, guid: 00ad6ee7d0915ec4f815c75585941190, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: vidrio
+    second: {fileID: 2100000, guid: 5d11ce15da7804f4ebe357aafe6c2bf9, type: 2}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: signal lost
+    second: {fileID: 2800000, guid: 4e19664fec428504bb599db6499e88c1, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0
