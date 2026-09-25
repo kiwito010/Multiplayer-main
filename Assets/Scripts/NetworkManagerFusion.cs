@@ -46,6 +46,7 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
     // Esta función la vamos a enganchar al OnClick() del botón "Crear Partida"
     public void OnHostButtonPressed()
     {
+        Debug.Log("OnHostButtonPressed: se hizo clic y la función se ejecutó."); // Línea de prueba, después la borramos
         // GameMode.Host: esta máquina va a ser servidor Y jugador al mismo tiempo.
         // Tiene autoridad total sobre la partida (es el "dueño" de la sala).
         StartGame(GameMode.Host);
@@ -92,7 +93,7 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
             // no falle (útil mientras estás probando solo).
             SessionName = string.IsNullOrEmpty(roomNameInput.text) ? "SalaDefault" : roomNameInput.text,
 
-            Scene = SceneRef.FromIndex(1), // Índice 1 = la escena "Gameplay" en Build Settings
+            Scene = SceneRef.FromIndex(2), // Índice 2 = la escena "Gameplay" (0=TitleScreen, 1=MainMenu, 2=Gameplay)
             SceneManager = sceneManager
         };
 
