@@ -6,8 +6,16 @@ using UnityEngine.InputSystem;
 
 public class PlayerMovementSingle : MonoBehaviour
 {
-    [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float moveSpeed = 5.5f;
     [SerializeField] private float jumpForce = 5f;
+
+    [SerializeField] private float sprintSpeed = 8;
+
+    [SerializeField] private float maxStamina = 5;
+    [SerializeField] private float staminaRechargeSpeed = 1;
+
+    private float currentStamina;
+    private bool isSprinting;
 
     [SerializeField] private Transform groundCheck;
     [SerializeField] private float groundCheckRadius = 0.2f;
@@ -59,6 +67,8 @@ public class PlayerMovementSingle : MonoBehaviour
         proneCenter.y = standingCenter.y - (standingHeight - proneHeight) / 2f;
 
         standingCameraPosition = playerCamera.localPosition;
+
+        currentStamina = maxStamina;
     }
 
     private void Update() {
@@ -67,22 +77,11 @@ public class PlayerMovementSingle : MonoBehaviour
         }
 
         HandleStance();
-
+        HandleSprint();
     }
 
     private void FixedUpdate() {
-        Vector2 inputVector = gameInput.GetMovementVector();
-
-        Vector3 moveDirection =
-        transform.right * inputVector.x +
-        transform.forward * inputVector.y;
-
-        Vector3 velocity = rb.velocity;
-
-        velocity.x = moveDirection.x * moveSpeed;
-        velocity.z = moveDirection.z * moveSpeed;
-
-        rb.velocity = velocity;
+       HandleMovement();
 
         if (jumpRequested) { 
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
@@ -153,5 +152,51 @@ public class PlayerMovementSingle : MonoBehaviour
 
     public bool IsProne() { 
         return isProne;
+    }
+
+    private void HandleMovement() {
+        Vector2 inputVector = gameInput.GetMovementVector();
+
+        Vector3 moveDirection =
+        transform.right * inputVector.x +
+        transform.forward * inputVector.y;
+
+        float currentSpeed = moveSpeed;
+
+        if (isSprinting) {
+            currentSpeed = sprintSpeed;
+        }
+        Vector3 velocity = rb.velocity;
+
+        velocity.x = moveDirection.x * currentSpeed;
+        velocity.z = moveDirection.z * currentSpeed;
+
+        rb.velocity = velocity;
+    }
+
+    private void HandleSprint() {
+        Vector2 inputVector = gameInput.GetMovementVector();
+
+        bool isMovingForward = inputVector.y > 0;
+
+        if (gameInput.GetSprintPressed() && isMovingForward && currentStamina > 0) {
+            isSprinting = true;
+
+            currentStamina -= Time.deltaTime;
+
+            if (currentStamina <= 0f) { 
+                currentStamina = 0f;
+                isSprinting = false;
+            }
+
+        } else { 
+            isSprinting= false;
+
+            currentStamina += staminaRechargeSpeed * Time.deltaTime;
+
+            if (currentStamina > maxStamina) {
+                currentStamina = maxStamina;
+            }
+        }
     }
 }

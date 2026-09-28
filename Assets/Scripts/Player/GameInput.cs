@@ -50,4 +50,8 @@ public class GameInput : MonoBehaviour
     public bool GetPronePressed() {
         return inputActions.Player.Prone.WasPressedThisFrame();
     }
+
+    public bool GetSprintPressed() {
+        return inputActions.Player.Sprint.IsPressed();
+    }
 }
