@@ -4,18 +4,18 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
-public class PlayerMovementSingle : MonoBehaviour
-{
-    [SerializeField] private float moveSpeed = 5.5f;
+public class PlayerMovementSingle : MonoBehaviour {
+    [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float jumpForce = 5f;
 
-    [SerializeField] private float sprintSpeed = 8;
+    [SerializeField] private float sprintSpeed = 8.5f;
 
     [SerializeField] private float maxStamina = 5;
     [SerializeField] private float staminaRechargeSpeed = 1;
 
-    private float currentStamina;
+    [SerializeField] private float currentStamina;
     private bool isSprinting;
+    private bool emptyStamina;
 
     [SerializeField] private Transform groundCheck;
     [SerializeField] private float groundCheckRadius = 0.2f;
@@ -32,7 +32,7 @@ public class PlayerMovementSingle : MonoBehaviour
     [SerializeField] private float crouchCameraOffset = 0.5f;
 
     [SerializeField] private float crouchSpeed = 8f;
-    
+
     private bool isCrouching;
 
     [SerializeField] BoxCollider proneCollider;
@@ -61,7 +61,7 @@ public class PlayerMovementSingle : MonoBehaviour
         standingHeight = capsuleCollider.height;
 
         crouchingCenter = standingCenter;
-        crouchingCenter.y = standingCenter.y - (standingHeight - crouchingHeight)/2f;
+        crouchingCenter.y = standingCenter.y - (standingHeight - crouchingHeight) / 2f;
 
         proneCenter = standingCenter;
         proneCenter.y = standingCenter.y - (standingHeight - proneHeight) / 2f;
@@ -81,9 +81,9 @@ public class PlayerMovementSingle : MonoBehaviour
     }
 
     private void FixedUpdate() {
-       HandleMovement();
+        HandleMovement();
 
-        if (jumpRequested) { 
+        if (jumpRequested) {
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
             jumpRequested = false;
         }
@@ -99,8 +99,7 @@ public class PlayerMovementSingle : MonoBehaviour
         if (gameInput.GetCrouchPressed()) {
             if (isCrouching && CanStandUp()) {
                 isCrouching = false;
-            } 
-            else if (!isCrouching) {
+            } else if (!isCrouching) {
                 isCrouching = true;
             }
         }
@@ -109,8 +108,7 @@ public class PlayerMovementSingle : MonoBehaviour
             capsuleCollider.center = proneCenter;
 
             targetCameraPosition = standingCameraPosition + Vector3.down * proneCameraOffset;
-        } 
-        else if (isCrouching) {
+        } else if (isCrouching) {
             capsuleCollider.height = crouchingHeight;
             capsuleCollider.center = crouchingCenter;
 
@@ -123,7 +121,7 @@ public class PlayerMovementSingle : MonoBehaviour
         }
 
         playerCamera.localPosition = Vector3.Lerp(playerCamera.localPosition, targetCameraPosition, crouchSpeed * Time.deltaTime);
-    
+
     }
 
     private bool CanStandUp() {
@@ -136,7 +134,7 @@ public class PlayerMovementSingle : MonoBehaviour
         return !Physics.CheckCapsule(bottom, top, radius, obstacleLayer);
     }
 
-    public void EnterProne() { 
+    public void EnterProne() {
         isProne = true;
 
         capsuleCollider.enabled = false;
@@ -150,7 +148,7 @@ public class PlayerMovementSingle : MonoBehaviour
         capsuleCollider.enabled = true;
     }
 
-    public bool IsProne() { 
+    public bool IsProne() {
         return isProne;
     }
 
@@ -176,27 +174,45 @@ public class PlayerMovementSingle : MonoBehaviour
 
     private void HandleSprint() {
         Vector2 inputVector = gameInput.GetMovementVector();
-
         bool isMovingForward = inputVector.y > 0;
+
+        if (emptyStamina) {
+            isSprinting = false;
+            RechargeStamina();
+            return;
+        }
 
         if (gameInput.GetSprintPressed() && isMovingForward && currentStamina > 0) {
             isSprinting = true;
 
             currentStamina -= Time.deltaTime;
 
-            if (currentStamina <= 0f) { 
+            if (currentStamina <= 0f) {
                 currentStamina = 0f;
                 isSprinting = false;
+                emptyStamina = true;
             }
 
-        } else { 
-            isSprinting= false;
-
-            currentStamina += staminaRechargeSpeed * Time.deltaTime;
-
-            if (currentStamina > maxStamina) {
-                currentStamina = maxStamina;
-            }
+        } else {
+            isSprinting = false;
+            RechargeStamina();
         }
+    }
+
+    private void RechargeStamina() {
+        currentStamina += staminaRechargeSpeed * Time.deltaTime;
+
+        if (currentStamina >= maxStamina) {
+            currentStamina = maxStamina;
+            emptyStamina = false;
+        }
+    }
+
+    public float GetStaminaNormalized() {
+        return currentStamina / maxStamina;
+    }
+
+    public bool ShouldShowStaminaUI() { 
+        return isSprinting || currentStamina < maxStamina;
     }
 }
