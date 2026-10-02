@@ -203,7 +203,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 378695112004466499}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8004c63014d5d764c9c43b7ddecf6f0f, type: 3}
+  m_Script: {fileID: 11500000, guid: aacdccd3d645a54459c6af94b44c3ff3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 5
@@ -222,10 +222,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   range: 3
-  interactPoint: {fileID: 0}
+  interactPoint: {fileID: 4916090557827576219}
   interactableLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 4294967295
   useRate: 0.2
 --- !u!1001 &4264906278637596370
 PrefabInstance:

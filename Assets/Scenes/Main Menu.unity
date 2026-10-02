@@ -287,7 +287,10 @@ MonoBehaviour:
   roomNameInput: {fileID: 900395229}
   playerPrefab:
     RawGuidValue: d53e7d05874e43a439234dcf3acd4220
-  spawnPoints: []
+  spawnPoints:
+  - {fileID: 209519176531313272, guid: cf96ff571ed2a88438e46811b78f31f8, type: 3}
+  - {fileID: 4597076395830652006, guid: 3324f4d0e4060e54ebb48bcc3aa83f23, type: 3}
+  - {fileID: 5623352065607640284, guid: 825d08a6b63167c44873588e41515dc1, type: 3}
 --- !u!4 &330084264
 Transform:
   m_ObjectHideFlags: 0

@@ -15,6 +15,6 @@ public class TitleScreenManager : MonoBehaviour
         // ".unity") y esa escena tiene que estar agregada en el
         // File > Build Settings, si no, esto va a tirar un error en runtime
         // diciendo que no la encuentra.
-        SceneManager.LoadScene("MainMenu");
+        SceneManager.LoadScene("Main Menu");
     }
 }
