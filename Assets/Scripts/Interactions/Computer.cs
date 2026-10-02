@@ -7,9 +7,12 @@ public class Computer : MonoBehaviour, IInteractable {
     [SerializeField] private PlayerInteraction playerInteraction;
     [SerializeField] private GameInput gameInput;
     [SerializeField] private ComputerUI computerUI;
+    [SerializeField] private HackerMinigame hackerMiniGame;
 
     private bool isUsing;
     private bool isCompleted;
+
+    private bool isPoweredOn;
 
     private void Awake() {
         playerInteraction.OnInteract += PlayerInteraction_OnInteract;
@@ -67,6 +70,15 @@ public class Computer : MonoBehaviour, IInteractable {
         ExitComputerMode();
 
         Debug.Log("Saliendo de la computadora");
+    }
+
+    public void PowerOn() {
+        isPoweredOn = true;
+    }
+
+    public void PowerOff() { 
+        isPoweredOn = false;
+        hackerMiniGame.ResetMinigame();
     }
 
     public void Update() {
