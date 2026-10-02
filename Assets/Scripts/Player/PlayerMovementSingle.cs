@@ -7,6 +7,8 @@ using UnityEngine.InputSystem;
 public class PlayerMovementSingle : MonoBehaviour {
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float jumpForce = 5f;
+ 
+    [SerializeField] private float jumpStaminaCost = 1f;
 
     [SerializeField] private float sprintSpeed = 8.5f;
 
@@ -74,6 +76,12 @@ public class PlayerMovementSingle : MonoBehaviour {
     private void Update() {
         if (gameInput.GetJumpPressed() && IsGrounded()) {
             jumpRequested = true;
+
+                currentStamina -= jumpStaminaCost;
+
+                if (currentStamina < 0f) { 
+                    currentStamina = 0f;
+                }
         }
 
         HandleStance();
@@ -182,11 +190,12 @@ public class PlayerMovementSingle : MonoBehaviour {
             return;
         }
 
-        if (gameInput.GetSprintPressed() && isMovingForward && currentStamina > 0) {
+        if (gameInput.GetSprintPressed() && isMovingForward && currentStamina > 0 && !isCrouching && !isProne) {
             isSprinting = true;
 
-            currentStamina -= Time.deltaTime;
-
+            if (IsGrounded()) {
+                currentStamina -= Time.deltaTime;
+            }
             if (currentStamina <= 0f) {
                 currentStamina = 0f;
                 isSprinting = false;
