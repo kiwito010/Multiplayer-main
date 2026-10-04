@@ -35,6 +35,10 @@ public class Computer : MonoBehaviour, IInteractable {
     }
 
     public void Interact() {
+
+        if(!isPoweredOn)
+            return;
+
         if (isUsing)
             return;
 

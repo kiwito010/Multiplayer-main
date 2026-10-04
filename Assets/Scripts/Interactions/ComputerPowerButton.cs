@@ -17,11 +17,11 @@ public class ComputerPowerButton : MonoBehaviour, IInteractable
 
     private void PlayerInteraction_OnInteract(object sender, InteractEventArgs e) {
         if (e.interactable == this) {
-            computer.PowerOn();
+            Interact();
         }
     }
 
     public void Interact() {
-
+        computer.PowerOn();
     }
 }
