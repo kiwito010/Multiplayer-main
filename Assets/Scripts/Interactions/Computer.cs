@@ -84,6 +84,9 @@ public class Computer : MonoBehaviour, IInteractable {
     public void PowerOff() { 
         isPoweredOn = false;
         hackerMiniGame.ResetMinigame();
+        
+        ExitComputer();
+        Debug.Log("Computer apagada");
     }
 
     public void Update() {
