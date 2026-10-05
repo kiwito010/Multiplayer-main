@@ -333,6 +333,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: SpawnPoint_2
       objectReference: {fileID: 0}
+    - target: {fileID: 565604656077361265, guid: 825d08a6b63167c44873588e41515dc1, type: 3}
+      propertyPath: m_TagString
+      value: SpawnPoint
+      objectReference: {fileID: 0}
     - target: {fileID: 5623352065607640284, guid: 825d08a6b63167c44873588e41515dc1, type: 3}
       propertyPath: m_LocalPosition.x
       value: 2
@@ -388,15 +392,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 209519176531313272, guid: cf96ff571ed2a88438e46811b78f31f8, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.030367356
+      value: -2
       objectReference: {fileID: 0}
     - target: {fileID: 209519176531313272, guid: cf96ff571ed2a88438e46811b78f31f8, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.5162076
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 209519176531313272, guid: cf96ff571ed2a88438e46811b78f31f8, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.08280885
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 209519176531313272, guid: cf96ff571ed2a88438e46811b78f31f8, type: 3}
       propertyPath: m_LocalRotation.w
@@ -430,6 +434,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: SpawnPoint_0
       objectReference: {fileID: 0}
+    - target: {fileID: 8987293260644330133, guid: cf96ff571ed2a88438e46811b78f31f8, type: 3}
+      propertyPath: m_TagString
+      value: SpawnPoint
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -446,6 +454,10 @@ PrefabInstance:
     - target: {fileID: 10829473215622143, guid: 3324f4d0e4060e54ebb48bcc3aa83f23, type: 3}
       propertyPath: m_Name
       value: SpawnPoint_1
+      objectReference: {fileID: 0}
+    - target: {fileID: 10829473215622143, guid: 3324f4d0e4060e54ebb48bcc3aa83f23, type: 3}
+      propertyPath: m_TagString
+      value: SpawnPoint
       objectReference: {fileID: 0}
     - target: {fileID: 4597076395830652006, guid: 3324f4d0e4060e54ebb48bcc3aa83f23, type: 3}
       propertyPath: m_LocalPosition.x

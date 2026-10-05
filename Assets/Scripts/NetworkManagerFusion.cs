@@ -24,12 +24,6 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
     // de forma sincronizada en todas las máquinas conectadas.
     public NetworkPrefabRef playerPrefab;
 
-    [Header("Puntos de aparición")]
-    // Array de Transforms vacíos que vamos a poner en la escena Gameplay,
-    // marcando dónde puede aparecer cada jugador (para no spawnear todos
-    // amontonados en el mismo punto).
-    public Transform[] spawnPoints;
-
     // Esta variable va a guardar la instancia del NetworkRunner una vez
     // que la creamos. La necesitamos para poder usarla en varias funciones.
     private NetworkRunner _runner;
@@ -128,14 +122,26 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
         // spawnee, tendríamos jugadores duplicados.
         if (runner.IsServer)
         {
-            // Elegimos un punto de spawn. Si hay varios, usamos el índice del
-            // jugador para repartirlos (con margen por si hay más jugadores
-            // que puntos, usamos el operador % para repetir el ciclo).
+            // Buscamos los puntos de spawn por Tag en vez de depender de un
+            // array arrastrado a mano en el Inspector. Esto evita el
+            // problema de que NetworkManager (en MainMenu) no puede
+            // "ver" objetos que viven en la escena Gameplay hasta que esa
+            // escena ya esté cargada — y en este punto del código,
+            // gracias al NetworkSceneManagerDefault, ya lo está.
+            GameObject[] spawnPointObjects = GameObject.FindGameObjectsWithTag("SpawnPoint");
+
             Vector3 spawnPosition = Vector3.zero;
-            if (spawnPoints != null && spawnPoints.Length > 0)
+            if (spawnPointObjects.Length > 0)
             {
-                int index = player.RawEncoded % spawnPoints.Length;
-                spawnPosition = spawnPoints[index].position;
+                int index = player.RawEncoded % spawnPointObjects.Length;
+                spawnPosition = spawnPointObjects[index].transform.position;
+            }
+            else
+            {
+                // Aviso útil por si te olvidaste de ponerle la Tag a algún
+                // SpawnPoint — así no te quedás preguntando por qué
+                // aparecen todos en el origen sin ningún mensaje de alerta.
+                Debug.LogWarning("No se encontró ningún objeto con la Tag 'SpawnPoint' en la escena. Los jugadores van a aparecer en (0,0,0).");
             }
 
             // Runner.Spawn crea el objeto en TODAS las máquinas conectadas
