@@ -5,6 +5,8 @@ using UnityEngine.InputSystem;
 
 public class HackerQTE : MonoBehaviour
 {
+    [SerializeField] private Computer computer;
+
     [SerializeField] private float qteInterval = 10f;
     
     [SerializeField] private int startingSequenceLength = 2;
@@ -30,9 +32,9 @@ public class HackerQTE : MonoBehaviour
     
     private bool qteActive;
 
-    [SerializeField] private float keyTime = 1.5f;
-    [SerializeField] private float minKeyTime = 0.5f;
-    [SerializeField] private float timeReduction = 0.1f;
+    [SerializeField] private float keyTime = 5f;
+    [SerializeField] private float minKeyTime = 2f;
+    [SerializeField] private float timeReduction = 0.5f;
 
     private float keyTimer;
 
@@ -66,8 +68,10 @@ public class HackerQTE : MonoBehaviour
                     CompleteQTE();
                 } else {
                     keyTimer = keyTime;
+
+                    Debug.Log("Tecla actual: " + currentSequence[currentKeyIndex]);
                 }
-            } else if (WasAnyQTEKeyPressed()){
+            } else if (Keyboard.current.anyKey.wasPressedThisFrame){
                 FailQTE();
             }
         }
@@ -79,8 +83,7 @@ public class HackerQTE : MonoBehaviour
         for (int i = 0; i < currentSequence.Length; i++) { 
             int randomIndex = Random.Range(0, qteKeys.Length);
             currentSequence[i] = qteKeys[randomIndex];
-            Debug.Log(currentSequence[i]);
-        }
+            }
 
         currentKeyIndex = 0;
         qteActive = true;
@@ -88,16 +91,8 @@ public class HackerQTE : MonoBehaviour
         keyTimer = keyTime;
 
         Debug.Log("QTE iniciado");
+        Debug.Log("Tecla actual: " + currentSequence[currentKeyIndex]);
 
-    }
-
-    private bool WasAnyQTEKeyPressed() {
-        for (int i = 0; i < qteKeys.Length; i++) {
-            if (Keyboard.current[qteKeys[i]].wasPressedThisFrame) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private void CompleteQTE() { 
@@ -114,5 +109,7 @@ public class HackerQTE : MonoBehaviour
         qteActive = false;
 
         Debug.Log("QTE fallado");
+
+        computer.PowerOff();
     }
 }

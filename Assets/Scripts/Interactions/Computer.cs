@@ -78,6 +78,7 @@ public class Computer : MonoBehaviour, IInteractable {
 
     public void PowerOn() {
         isPoweredOn = true;
+        Debug.Log("Computer encendida");
     }
 
     public void PowerOff() { 

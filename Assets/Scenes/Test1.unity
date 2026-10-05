@@ -277,6 +277,7 @@ MonoBehaviour:
   playerInteraction: {fileID: 1509152330}
   gameInput: {fileID: 1509152329}
   computerUI: {fileID: 1355776102}
+  hackerMiniGame: {fileID: 1037251558}
 --- !u!64 &74931713
 MeshCollider:
   m_ObjectHideFlags: 0
