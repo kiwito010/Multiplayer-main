@@ -765,7 +765,6 @@ RectTransform:
   m_Children:
   - {fileID: 666814146}
   - {fileID: 280659477}
-  - {fileID: 1646089909}
   m_Father: {fileID: 511989039}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -785,6 +784,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c1ca5605ff51a0a45b70f840036fd53d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  computer: {fileID: 877448827}
   CodeText: {fileID: 666814147}
   fullText: '> CONNECTING TO SECURITY NODE...
 
@@ -810,6 +810,11 @@ MonoBehaviour:
     >
     ACCESS GRANTED'
   typingSpeed: 0.04
+  charactersBetweenQTE: 20
+  timeCircle: {fileID: 248886333}
+  keyTime: 1.5
+  qteContainer: {fileID: 1646089909}
+  maxFails: 3
 --- !u!114 &82440801
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2721,7 +2726,8 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1646089909}
   m_Father: {fileID: 82440799}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -4058,17 +4064,17 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1646089908}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 248886333}
-  m_Father: {fileID: 82440799}
+  m_Father: {fileID: 666814146}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 259.63208, y: -238.7315}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1648032609

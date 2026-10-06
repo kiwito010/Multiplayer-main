@@ -5,6 +5,15 @@ using UnityEngine.InputSystem;
 
 public class HackerTypingText : MonoBehaviour
 {
+    //VARIABLES:
+        
+        //Referencia a otros scripts
+
+    [SerializeField] private Computer computer;
+
+        //CodeText
+            //(el texto, la speed, la tecla q hay q presionar, el intervalo de caracteres)
+
     [SerializeField] private TextMeshProUGUI CodeText;
 
     [TextArea]
@@ -15,6 +24,28 @@ public class HackerTypingText : MonoBehaviour
     private bool waitingForKey;
     private Key expectedKey;
 
+    [SerializeField] private int charactersBetweenQTE = 20;
+
+    private int charactersSinceLastQTE;
+
+            //circulo de tiempo
+
+    [SerializeField] private RectTransform timeCircle;
+
+    [SerializeField] private float keyTime = 1.5f;
+
+    [SerializeField] private RectTransform qteContainer;
+
+    private float keyTimer;
+
+            //fails
+    [SerializeField] private int maxFails = 3;
+
+    private int currentFails;
+
+    private string textBeforeQTE;
+    private char currentQTECharacter;
+
     private void Start() {
         StartCoroutine(TypeText());
     }
@@ -23,38 +54,77 @@ public class HackerTypingText : MonoBehaviour
         if (!waitingForKey)
             return;
 
-        if (Keyboard.current[expectedKey].wasPressedThisFrame) { 
+        keyTimer -= Time.deltaTime;
+
+        float timerNormalized = keyTimer / keyTime;
+
+        timeCircle.localScale = Vector3.one * timerNormalized;
+
+        if (keyTimer <= 0f) {
+            FailQTE();
+            return;
+        }
+
+        if (Keyboard.current[expectedKey].wasPressedThisFrame) {
+            CodeText.text = textBeforeQTE + "<color=green>" + currentQTECharacter + "</color>";
+            
             waitingForKey = false;
 
             Debug.Log("Tecla correcta");
+        } else if (Keyboard.current.anyKey.wasPressedThisFrame) {
+            FailQTE();
         }
     }
 
     private IEnumerator TypeText() {
         CodeText.text = "";
+        charactersSinceLastQTE = 0;
 
         for (int i = 0; i < fullText.Length; i++) { 
             char currentCharacter = fullText[i];
 
-            if (TryGetKeyFromChat(currentCharacter, out Key key)) {
+            bool canBeQTEKey = TryGetKeyFromChar(currentCharacter, out Key key);
+
+            if (charactersSinceLastQTE >= charactersBetweenQTE && canBeQTEKey) {
 
                 expectedKey = key;
                 waitingForKey = true;
 
+                keyTimer = keyTime;
+                timeCircle.gameObject.SetActive(true);
+                timeCircle.localScale = Vector3.one;
+
+                textBeforeQTE = CodeText.text;
+                currentQTECharacter = currentCharacter;
+
                 CodeText.text += "<color=yellow>" + currentCharacter + "</color>";
+
+                CodeText.ForceMeshUpdate();
+
+                int characterIndex = CodeText.textInfo.characterCount - 1;
+
+                TMP_CharacterInfo characterInfo = CodeText.textInfo.characterInfo[characterIndex];
+
+                Vector3 characterCenter = (characterInfo.bottomLeft + characterInfo.topRight) / 2f;
+
+                qteContainer.localPosition = characterCenter;
 
                 Debug.Log("Esperando tecla " + expectedKey);
 
+                charactersSinceLastQTE = 0;
+
                 yield return new WaitUntil(() => !waitingForKey);
+
             } else {
                 CodeText.text += currentCharacter;
+                charactersSinceLastQTE++;
             }
 
             yield return new WaitForSeconds(typingSpeed);
         }
     }
 
-    private bool TryGetKeyFromChat(char character, out Key key) {
+    private bool TryGetKeyFromChar(char character, out Key key) {
         switch (char.ToUpper(character)) {
             case 'W':
                 key = Key.W;
@@ -83,6 +153,25 @@ public class HackerTypingText : MonoBehaviour
             default:
                 key = Key.None;
                 return false;
+        }
+    }
+
+    private void FailQTE() {
+
+        CodeText.text = textBeforeQTE + "<color=red>" + currentQTECharacter + "</color>";
+        
+        waitingForKey = false;
+
+        timeCircle.gameObject.SetActive(false);
+
+        currentFails++;
+
+        Debug.Log("Fallo " + currentFails + "/" + maxFails);
+
+        if (currentFails >= maxFails) {
+            Debug.Log("Demasiados fallos");
+
+            computer.PowerOff();
         }
     }
 }
