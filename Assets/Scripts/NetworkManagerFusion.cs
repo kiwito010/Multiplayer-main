@@ -16,6 +16,8 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
 {
     [Header("Referencias de UI (arrastrar desde la Hierarchy)")]
     public TMP_InputField roomNameInput; // El campo de texto donde se escribe el nombre de sala
+    [Header("Spawn points")]
+    public GameObject[] spawnPointObjects;
 
     [Header("Prefab del jugador")]
     // NetworkPrefabRef es como un "GameObject" normal, pero apuntando
@@ -40,7 +42,11 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
     // Esta función la vamos a enganchar al OnClick() del botón "Crear Partida"
     public void OnHostButtonPressed()
     {
-        Debug.Log("OnHostButtonPressed: se hizo clic y la función se ejecutó."); // Línea de prueba, después la borramos
+        // Si ya hay un runner conectándose o conectado, ignoramos clics
+        // repetidos (por ejemplo, si el jugador hace doble clic sin querer,
+        // o aprieta el botón varias veces mientras espera la conexión).
+        if (_runner != null) return;
+
         // GameMode.Host: esta máquina va a ser servidor Y jugador al mismo tiempo.
         // Tiene autoridad total sobre la partida (es el "dueño" de la sala).
         StartGame(GameMode.Host);
@@ -49,6 +55,8 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
     // Esta función la vamos a enganchar al OnClick() del botón "Unirse"
     public void OnJoinButtonPressed()
     {
+        if (_runner != null) return;
+
         // GameMode.Client: esta máquina se conecta a una sala que ya existe,
         // creada por otro jugador en modo Host.
         StartGame(GameMode.Client);
@@ -128,7 +136,9 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
             // "ver" objetos que viven en la escena Gameplay hasta que esa
             // escena ya esté cargada — y en este punto del código,
             // gracias al NetworkSceneManagerDefault, ya lo está.
-            GameObject[] spawnPointObjects = GameObject.FindGameObjectsWithTag("SpawnPoint");
+            spawnPointObjects = GameObject.FindGameObjectsWithTag("SpawnPoint");
+            Debug.Log("Spawn points encontrados: " + spawnPointObjects.Length);
+            
 
             Vector3 spawnPosition = Vector3.zero;
             if (spawnPointObjects.Length > 0)
@@ -144,6 +154,8 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
                 Debug.LogWarning("No se encontró ningún objeto con la Tag 'SpawnPoint' en la escena. Los jugadores van a aparecer en (0,0,0).");
             }
 
+
+        Debug.LogError("Spawn en: " + spawnPosition);
             // Runner.Spawn crea el objeto en TODAS las máquinas conectadas
             // de forma sincronizada (no es un Instantiate normal de Unity).
             // El parámetro "player" le dice a Fusion "este jugador es el
