@@ -2139,7 +2139,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   content: {fileID: 410929520}
-  hackerMinigame: {fileID: 60991846}
+  hackerMinigame: {fileID: 82440798}
   successPanel: {fileID: 668944247}
   failedPanel: {fileID: 243345503}
   hackerMinigameScript: {fileID: 60991852}
@@ -3172,7 +3172,7 @@ MonoBehaviour:
   playerInteraction: {fileID: 94851369}
   gameInput: {fileID: 94851368}
   computerUI: {fileID: 511989040}
-  hackerMiniGame: {fileID: 0}
+  hackerTypingText: {fileID: 82440800}
 --- !u!65 &877448828
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4056,7 +4056,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1646089909
 RectTransform:
   m_ObjectHideFlags: 0

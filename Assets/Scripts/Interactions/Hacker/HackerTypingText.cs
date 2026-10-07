@@ -3,11 +3,10 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class HackerTypingText : MonoBehaviour
-{
+public class HackerTypingText : MonoBehaviour {
     //VARIABLES:
-        
-        //Referencia a otros scripts
+
+    //Referencia a otros scripts
 
     [SerializeField] private Computer computer;
 
@@ -46,6 +45,8 @@ public class HackerTypingText : MonoBehaviour
     private string textBeforeQTE;
     private char currentQTECharacter;
 
+    public event System.Action OnSuccess;
+    public event System.Action OnFailed;
     private void Start() {
         StartCoroutine(TypeText());
     }
@@ -70,6 +71,8 @@ public class HackerTypingText : MonoBehaviour
             
             waitingForKey = false;
 
+            qteContainer.gameObject.SetActive(false);
+
             Debug.Log("Tecla correcta");
         } else if (Keyboard.current.anyKey.wasPressedThisFrame) {
             FailQTE();
@@ -79,6 +82,7 @@ public class HackerTypingText : MonoBehaviour
     private IEnumerator TypeText() {
         CodeText.text = "";
         charactersSinceLastQTE = 0;
+        currentFails = 0;
 
         for (int i = 0; i < fullText.Length; i++) { 
             char currentCharacter = fullText[i];
@@ -89,6 +93,8 @@ public class HackerTypingText : MonoBehaviour
 
                 expectedKey = key;
                 waitingForKey = true;
+
+                timeCircle.gameObject.SetActive(false);
 
                 keyTimer = keyTime;
                 timeCircle.gameObject.SetActive(true);
@@ -108,6 +114,8 @@ public class HackerTypingText : MonoBehaviour
                 Vector3 characterCenter = (characterInfo.bottomLeft + characterInfo.topRight) / 2f;
 
                 qteContainer.localPosition = characterCenter;
+
+                qteContainer.gameObject.SetActive(true);
 
                 Debug.Log("Esperando tecla " + expectedKey);
 
@@ -173,5 +181,20 @@ public class HackerTypingText : MonoBehaviour
 
             computer.PowerOff();
         }
+    }
+
+    public void ResetMinigame() { 
+        StopAllCoroutines();
+
+        waitingForKey = false;
+
+        currentFails = 0;
+        charactersSinceLastQTE = 0;
+
+        keyTimer = 0f;
+
+        CodeText.text = "";
+
+        qteContainer.gameObject.SetActive(false);
     }
 }

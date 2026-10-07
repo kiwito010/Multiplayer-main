@@ -7,7 +7,7 @@ public class Computer : MonoBehaviour, IInteractable {
     [SerializeField] private PlayerInteraction playerInteraction;
     [SerializeField] private GameInput gameInput;
     [SerializeField] private ComputerUI computerUI;
-    [SerializeField] private HackerMinigame hackerMiniGame;
+    [SerializeField] private HackerTypingText hackerTypingText;
 
     private bool isUsing;
     private bool isCompleted;
@@ -83,8 +83,9 @@ public class Computer : MonoBehaviour, IInteractable {
 
     public void PowerOff() { 
         isPoweredOn = false;
-        //hackerMiniGame.ResetMinigame();
-        
+
+        hackerTypingText.ResetMinigame();
+
         ExitComputer();
         Debug.Log("Computer apagada");
     }
