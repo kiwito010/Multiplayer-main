@@ -786,31 +786,36 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   computer: {fileID: 877448827}
   CodeText: {fileID: 666814147}
-  fullText: '> CONNECTING TO SECURITY NODE...
+  phase1Text: '> CONNECTING TO SECURITY NODE...
 
     > ESTABLISHING ENCRYPTED CHANNEL...
 
     >
-    SCANNING FIREWALL PROTOCOLS...
+    SCANNING NETWORK PORTS...
 
-    > BYPASSING SECURITY LAYER...
+    > CONNECTION ESTABLISHED'
+  phase2Text: '> ANALYZING FIREWALL...
 
-    > DECRYPTING
-    ACCESS KEYS...
+    > SEARCHING FOR VULNERABILITIES...
+
+    >
+    BYPASSING SECURITY LAYER...
+
+    > FIREWALL COMPROMISED'
+  phase3Text: '> DECRYPTING ACCESS KEYS...
 
     > OVERRIDING TERMINAL LOCK...
 
-    > ACCESSING RESTRICTED
-    DATABASE...
+    >
+    ACCESSING RESTRICTED DATABASE...
 
     > DOWNLOADING SYSTEM DATA...
 
-    > VERIFYING INTEGRITY...
-
-    >
-    ACCESS GRANTED'
+    > ACCESS
+    GRANTED'
   typingSpeed: 0.04
   charactersBetweenQTE: 20
+  progressText: {fileID: 280659478}
   timeCircle: {fileID: 248886333}
   keyTime: 1.5
   qteContainer: {fileID: 1646089909}
@@ -2022,7 +2027,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &511989039
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2063,7 +2068,6 @@ MonoBehaviour:
   content: {fileID: 410929520}
   hackerMinigame: {fileID: 82440798}
   successPanel: {fileID: 668944247}
-  failedPanel: {fileID: 0}
   hackerTypingText: {fileID: 82440800}
   computer: {fileID: 877448827}
 --- !u!114 &511989041
@@ -2959,6 +2963,7 @@ MonoBehaviour:
   gameInput: {fileID: 94851368}
   computerUI: {fileID: 511989040}
   hackerTypingText: {fileID: 82440800}
+  staminaUI: {fileID: 883950564}
 --- !u!65 &877448828
 BoxCollider:
   m_ObjectHideFlags: 0

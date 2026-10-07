@@ -74,7 +74,7 @@ public class PlayerMovementSingle : MonoBehaviour {
     }
 
     private void Update() {
-        if (gameInput.GetJumpPressed() && IsGrounded()) {
+        if (gameInput.GetJumpPressed() && IsGrounded() && !emptyStamina) {
             jumpRequested = true;
 
                 currentStamina -= jumpStaminaCost;

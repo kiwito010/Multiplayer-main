@@ -33,6 +33,7 @@ public class ComputerUI : MonoBehaviour
     }
 
     public void ShowContent() {
+
         content.SetActive(true);
         hackerMinigame.SetActive(false);
         successPanel.SetActive(false);
@@ -42,6 +43,8 @@ public class ComputerUI : MonoBehaviour
         content.SetActive(false);
         hackerMinigame.SetActive(true);
         successPanel.SetActive(false);
+
+        hackerTypingText.StartMinigame();
     }
 
     public void ShowSuccessPanel() {

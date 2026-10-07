@@ -8,6 +8,7 @@ public class Computer : MonoBehaviour, IInteractable {
     [SerializeField] private GameInput gameInput;
     [SerializeField] private ComputerUI computerUI;
     [SerializeField] private HackerTypingText hackerTypingText;
+    [SerializeField] private StaminaUI staminaUI;
 
     private bool isUsing;
     private bool isCompleted;
@@ -46,6 +47,8 @@ public class Computer : MonoBehaviour, IInteractable {
 
         gameInput.DisableMovement();
 
+        staminaUI.Hide();
+
         computerUI.Show();
 
         EnterComputerMode();
@@ -71,18 +74,25 @@ public class Computer : MonoBehaviour, IInteractable {
 
         computerUI.Hide();
 
+        staminaUI.EnableNormalVisibility();
+
         ExitComputerMode();
 
         Debug.Log("Saliendo de la computadora");
     }
 
     public void PowerOn() {
+        if (isPoweredOn)
+            return;
+
         isPoweredOn = true;
         Debug.Log("Computer encendida");
     }
 
     public void PowerOff() { 
         isPoweredOn = false;
+
+        hackerTypingText.ResetMinigame();
 
         ExitComputer();
         Debug.Log("Computer apagada");

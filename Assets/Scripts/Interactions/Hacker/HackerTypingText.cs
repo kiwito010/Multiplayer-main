@@ -10,13 +10,22 @@ public class HackerTypingText : MonoBehaviour {
 
     [SerializeField] private Computer computer;
 
-        //CodeText
-            //(el texto, la speed, la tecla q hay q presionar, el intervalo de caracteres)
+    //Variable Phase
+    private int currentPhase;
 
+    //CodeTexts
     [SerializeField] private TextMeshProUGUI CodeText;
 
     [TextArea]
-    [SerializeField] private string fullText;
+    [SerializeField] private string phase1Text;
+
+    [TextArea]
+    [SerializeField] private string phase2Text;
+
+    [TextArea]
+    [SerializeField] private string phase3Text;
+
+    //(la speed, la tecla q hay q presionar, el intervalo de caracteres, progressText)
 
     [SerializeField] private float typingSpeed = 0.04f;
 
@@ -26,6 +35,8 @@ public class HackerTypingText : MonoBehaviour {
     [SerializeField] private int charactersBetweenQTE = 20;
 
     private int charactersSinceLastQTE;
+
+    [SerializeField] private TextMeshProUGUI progressText;
 
             //circulo de tiempo
 
@@ -46,10 +57,6 @@ public class HackerTypingText : MonoBehaviour {
     private char currentQTECharacter;
 
     public event System.Action OnSuccess;
-    public event System.Action OnFailed;
-    private void Start() {
-        StartCoroutine(TypeText());
-    }
 
     private void Update() {
         if (!waitingForKey)
@@ -79,13 +86,13 @@ public class HackerTypingText : MonoBehaviour {
         }
     }
 
-    private IEnumerator TypeText() {
+    private IEnumerator TypeText(string textToType) {
         CodeText.text = "";
         charactersSinceLastQTE = 0;
         currentFails = 0;
 
-        for (int i = 0; i < fullText.Length; i++) { 
-            char currentCharacter = fullText[i];
+        for (int i = 0; i < textToType.Length; i++) { 
+            char currentCharacter = textToType[i];
 
             bool canBeQTEKey = TryGetKeyFromChar(currentCharacter, out Key key);
 
@@ -94,11 +101,10 @@ public class HackerTypingText : MonoBehaviour {
                 expectedKey = key;
                 waitingForKey = true;
 
-                timeCircle.gameObject.SetActive(false);
+                //timeCircle.gameObject.SetActive(false);
 
                 keyTimer = keyTime;
-                timeCircle.gameObject.SetActive(true);
-                timeCircle.localScale = Vector3.one;
+                //timeCircle.gameObject.SetActive(true);
 
                 textBeforeQTE = CodeText.text;
                 currentQTECharacter = currentCharacter;
@@ -116,6 +122,8 @@ public class HackerTypingText : MonoBehaviour {
                 qteContainer.localPosition = characterCenter;
 
                 qteContainer.gameObject.SetActive(true);
+
+                timeCircle.localScale = Vector3.one;
 
                 Debug.Log("Esperando tecla " + expectedKey);
 
@@ -196,5 +204,26 @@ public class HackerTypingText : MonoBehaviour {
         CodeText.text = "";
 
         qteContainer.gameObject.SetActive(false);
+    }
+
+    public void StartMinigame() {
+        ResetMinigame();
+        StartCoroutine(RunMinigame());
+    }
+
+    private IEnumerator RunMinigame() { 
+        currentPhase = 1;
+        progressText.text = "PHASE 1/3";
+        yield return StartCoroutine(TypeText(phase1Text));
+
+        currentPhase = 2;
+        progressText.text = "PHASE 2/3";
+        yield return StartCoroutine(TypeText(phase2Text));
+
+        currentPhase = 3;
+        progressText.text = "PHASE 3/3";
+        yield return StartCoroutine(TypeText(phase3Text));
+
+        OnSuccess?.Invoke();
     }
 }
