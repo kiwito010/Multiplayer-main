@@ -8,18 +8,15 @@ public class ComputerUI : MonoBehaviour
     [SerializeField] private GameObject content;
     [SerializeField] private GameObject hackerMinigame;
     [SerializeField] private GameObject successPanel;
-    [SerializeField] private GameObject failedPanel;
     [SerializeField] private HackerTypingText hackerTypingText;
     [SerializeField] private Computer computer;
 
     private void OnEnable() {
         hackerTypingText.OnSuccess += HackerSuccess;
-        hackerTypingText.OnFailed += HackerFailed;
     }
 
     private void OnDisable() {
         hackerTypingText.OnSuccess -= HackerSuccess;
-        hackerTypingText.OnFailed -= HackerFailed;
     }
 
     public void Show() { 
@@ -39,28 +36,18 @@ public class ComputerUI : MonoBehaviour
         content.SetActive(true);
         hackerMinigame.SetActive(false);
         successPanel.SetActive(false);
-        failedPanel.SetActive(false);
     }
 
     public void AccessComputer() {
         content.SetActive(false);
         hackerMinigame.SetActive(true);
         successPanel.SetActive(false);
-        failedPanel.SetActive(false);
     }
 
     public void ShowSuccessPanel() {
         content.SetActive(false);
         hackerMinigame.SetActive(false);
         successPanel.SetActive(true);
-        failedPanel.SetActive(false);
-    }
-
-    public void ShowFailedPanel() {
-        content.SetActive(false);
-        hackerMinigame.SetActive(false);
-        failedPanel.SetActive(true);
-        successPanel.SetActive(false);
     }
 
     public void HackerSuccess() { 
@@ -68,12 +55,7 @@ public class ComputerUI : MonoBehaviour
         ShowSuccessPanel();
     }
 
-    private void HackerFailed() { 
-        ShowFailedPanel();
-    }
-
      public void ReturnToContent() {
-        failedPanel.SetActive(false);
         content.SetActive(true);
 
         hackerTypingText.ResetMinigame();
