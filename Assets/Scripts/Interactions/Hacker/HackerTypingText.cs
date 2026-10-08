@@ -25,7 +25,7 @@ public class HackerTypingText : MonoBehaviour {
     [TextArea]
     [SerializeField] private string phase3Text;
 
-    //(la speed, la tecla q hay q presionar, el intervalo de caracteres, progressText)
+        //(la speed, la tecla q hay q presionar, el intervalo de caracteres)
 
     [SerializeField] private float typingSpeed = 0.04f;
 
@@ -36,9 +36,7 @@ public class HackerTypingText : MonoBehaviour {
 
     private int charactersSinceLastQTE;
 
-    [SerializeField] private TextMeshProUGUI progressText;
-
-            //circulo de tiempo
+        //circulo de tiempo
 
     [SerializeField] private RectTransform timeCircle;
 
@@ -48,7 +46,7 @@ public class HackerTypingText : MonoBehaviour {
 
     private float keyTimer;
 
-            //fails
+        //fails
     [SerializeField] private int maxFails = 3;
 
     private int currentFails;
@@ -56,7 +54,16 @@ public class HackerTypingText : MonoBehaviour {
     private string textBeforeQTE;
     private char currentQTECharacter;
 
+    //EVENTOS:
     public event System.Action OnSuccess;
+    public event System.Action OnFailure;
+
+    //progress and errors
+    [SerializeField] private TextMeshProUGUI progressText;
+    [SerializeField] private TextMeshProUGUI errorsText;
+
+    private int typedCharacters;
+    private int totalCharacters;
 
     private void Update() {
         if (!waitingForKey)
@@ -88,8 +95,8 @@ public class HackerTypingText : MonoBehaviour {
 
     private IEnumerator TypeText(string textToType) {
         CodeText.text = "";
+
         charactersSinceLastQTE = 0;
-        currentFails = 0;
 
         for (int i = 0; i < textToType.Length; i++) { 
             char currentCharacter = textToType[i];
@@ -101,10 +108,7 @@ public class HackerTypingText : MonoBehaviour {
                 expectedKey = key;
                 waitingForKey = true;
 
-                timeCircle.gameObject.SetActive(false);
-
                 keyTimer = keyTime;
-                timeCircle.gameObject.SetActive(true);
 
                 textBeforeQTE = CodeText.text;
                 currentQTECharacter = currentCharacter;
@@ -121,9 +125,9 @@ public class HackerTypingText : MonoBehaviour {
 
                 qteContainer.localPosition = characterCenter;
 
-                qteContainer.gameObject.SetActive(true);
-
                 timeCircle.localScale = Vector3.one;
+
+                qteContainer.gameObject.SetActive(true);
 
                 Debug.Log("Esperando tecla " + expectedKey);
 
@@ -135,6 +139,9 @@ public class HackerTypingText : MonoBehaviour {
                 CodeText.text += currentCharacter;
                 charactersSinceLastQTE++;
             }
+
+            typedCharacters++;
+            UpdateProgress();
 
             yield return new WaitForSeconds(typingSpeed);
         }
@@ -166,6 +173,30 @@ public class HackerTypingText : MonoBehaviour {
                 key = Key.E;
                 return true;
 
+            case 'Z':
+                key = Key.Z;
+                return true;
+
+            case 'X':
+                key = Key.X;
+                return true;
+
+            case 'C':
+                key = Key.C;
+                return true;
+
+            case 'V':
+                key = Key.V;
+                return true;
+
+            case 'F':
+                key = Key.F;
+                return true;
+
+            case 'R':
+                key = Key.R;
+                return true;
+
             default:
                 key = Key.None;
                 return false;
@@ -178,16 +209,17 @@ public class HackerTypingText : MonoBehaviour {
         
         waitingForKey = false;
 
-        timeCircle.gameObject.SetActive(false);
+        qteContainer.gameObject.SetActive(false);
 
         currentFails++;
+        UpdateErrorsText();
 
         Debug.Log("Fallo " + currentFails + "/" + maxFails);
 
         if (currentFails >= maxFails) {
             Debug.Log("Demasiados fallos");
 
-            computer.PowerOff();
+            OnFailure?.Invoke();
         }
     }
 
@@ -197,7 +229,12 @@ public class HackerTypingText : MonoBehaviour {
         waitingForKey = false;
 
         currentFails = 0;
+        UpdateErrorsText();
+
         charactersSinceLastQTE = 0;
+
+        typedCharacters = 0;
+        UpdateProgress();
 
         keyTimer = 0f;
 
@@ -207,24 +244,27 @@ public class HackerTypingText : MonoBehaviour {
     }
 
     public void StartMinigame() {
+        totalCharacters =
+            phase1Text.Length +
+            phase2Text.Length +
+            phase3Text.Length;
+
         ResetMinigame();
+
         StartCoroutine(RunMinigame());
     }
 
     private IEnumerator RunMinigame() { 
         currentPhase = 1;
-        progressText.text = "PROGRESS 0%";
         SetDifficulty(currentPhase);
         yield return StartCoroutine(TypeText(phase1Text));
 
         currentPhase = 2;
-        progressText.text = "PROGRESS 30%";
         SetDifficulty(currentPhase);
 
         yield return StartCoroutine(TypeText(phase2Text));
 
         currentPhase = 3;
-        progressText.text = "PROGRESS 70%";
         SetDifficulty(currentPhase);
         yield return StartCoroutine(TypeText(phase3Text));
 
@@ -245,5 +285,17 @@ public class HackerTypingText : MonoBehaviour {
             charactersBetweenQTE = 10;
             keyTime = 1f;
         }
+    }
+
+    private void UpdateProgress() { 
+        float progress = (float) typedCharacters / totalCharacters;
+
+        int percentage = Mathf.RoundToInt(progress * 100f);
+
+        progressText.text = "PROGRESS " + percentage + "%";
+    }
+
+    private void UpdateErrorsText() {
+        errorsText.text = "ERRORS " + currentFails + "/" + maxFails;
     }
 }
