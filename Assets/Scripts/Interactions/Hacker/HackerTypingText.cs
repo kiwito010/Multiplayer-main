@@ -101,10 +101,10 @@ public class HackerTypingText : MonoBehaviour {
                 expectedKey = key;
                 waitingForKey = true;
 
-                //timeCircle.gameObject.SetActive(false);
+                timeCircle.gameObject.SetActive(false);
 
                 keyTimer = keyTime;
-                //timeCircle.gameObject.SetActive(true);
+                timeCircle.gameObject.SetActive(true);
 
                 textBeforeQTE = CodeText.text;
                 currentQTECharacter = currentCharacter;
@@ -213,17 +213,37 @@ public class HackerTypingText : MonoBehaviour {
 
     private IEnumerator RunMinigame() { 
         currentPhase = 1;
-        progressText.text = "PHASE 1/3";
+        progressText.text = "PROGRESS 0%";
+        SetDifficulty(currentPhase);
         yield return StartCoroutine(TypeText(phase1Text));
 
         currentPhase = 2;
-        progressText.text = "PHASE 2/3";
+        progressText.text = "PROGRESS 30%";
+        SetDifficulty(currentPhase);
+
         yield return StartCoroutine(TypeText(phase2Text));
 
         currentPhase = 3;
-        progressText.text = "PHASE 3/3";
+        progressText.text = "PROGRESS 70%";
+        SetDifficulty(currentPhase);
         yield return StartCoroutine(TypeText(phase3Text));
 
         OnSuccess?.Invoke();
+    }
+
+    private void SetDifficulty(int phase) {
+        if (phase == 1) {
+            typingSpeed = 0.05f;
+            charactersBetweenQTE = 20;
+            keyTime = 1.8f;
+        } else if (phase == 2) {
+            typingSpeed = 0.04f;
+            charactersBetweenQTE = 15;
+            keyTime = 1.4f;
+        } else if (phase == 3) {
+            typingSpeed = 0.03f;
+            charactersBetweenQTE = 10;
+            keyTime = 1f;
+        }
     }
 }

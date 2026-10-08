@@ -431,7 +431,6 @@ RectTransform:
   m_Children:
   - {fileID: 75851114}
   - {fileID: 1782574591}
-  - {fileID: 1627059552}
   m_Father: {fileID: 511989039}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -765,6 +764,7 @@ RectTransform:
   m_Children:
   - {fileID: 666814146}
   - {fileID: 280659477}
+  - {fileID: 1627059552}
   m_Father: {fileID: 511989039}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -816,9 +816,9 @@ MonoBehaviour:
   typingSpeed: 0.04
   charactersBetweenQTE: 20
   progressText: {fileID: 280659478}
-  timeCircle: {fileID: 248886333}
+  timeCircle: {fileID: 1015506148}
   keyTime: 1.5
-  qteContainer: {fileID: 1646089909}
+  qteContainer: {fileID: 1627059552}
   maxFails: 3
 --- !u!114 &82440801
 MonoBehaviour:
@@ -3552,13 +3552,13 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1627059551}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1015506148}
-  m_Father: {fileID: 60991847}
+  m_Father: {fileID: 82440799}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
