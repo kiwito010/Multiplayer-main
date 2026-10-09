@@ -155,7 +155,7 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
             }
 
 
-        Debug.LogError("Spawn en: " + spawnPosition);
+        Debug.Log("Spawn en: " + spawnPosition);
             // Runner.Spawn crea el objeto en TODAS las máquinas conectadas
             // de forma sincronizada (no es un Instantiate normal de Unity).
             // El parámetro "player" le dice a Fusion "este jugador es el
