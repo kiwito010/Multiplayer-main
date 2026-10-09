@@ -38,8 +38,20 @@ public class PlayerMovement : NetworkBehaviour
     {
         _characterController = GetComponent<CharacterController>();
 
-        // Línea de prueba temporal, para diagnosticar — la borramos después.
-        Debug.Log($"[PlayerMovement] Spawned() ejecutado en '{gameObject.name}'. HasInputAuthority = {Object.HasInputAuthority}");
+        // El CharacterController guarda internamente su propia posición, y
+        // si el objeto fue colocado en otro lugar (como hace Runner.Spawn con
+        // el SpawnPoint), puede "volver" a la posición vieja del prefab apenas
+        // se llama a Move(). Apagarlo y prenderlo lo obliga a releer la
+        // posición REAL actual del transform. Physics.SyncTransforms() hace
+        // que la física también se entere del cambio de inmediato.
+        _characterController.enabled = false;
+        _characterController.enabled = true;
+        Physics.SyncTransforms();
+
+        // Leemos la sensibilidad que el jugador configuró en el panel de
+        // Opciones (Paso "OptionsMenu.cs"). Si nunca la tocó, usamos el
+        // valor por defecto de este mismo script como respaldo.
+        lookSensitivity = PlayerPrefs.GetFloat("OptionSensitivity", lookSensitivity);
 
         // Object.HasInputAuthority es true SOLO en la máquina del jugador
         // dueño de este personaje (es decir, "¿este soy YO?").
@@ -78,6 +90,7 @@ public class PlayerMovement : NetworkBehaviour
             // --- ROTACIÓN VERTICAL (mirar arriba/abajo, solo la cámara) ---
             NetworkedPitch -= input.lookPitch * lookSensitivity;
             NetworkedPitch = Mathf.Clamp(NetworkedPitch, -80f, 80f); // Evita que gires la cámara 360°
+
             if (cameraPivot != null)
             {
                 cameraPivot.localRotation = Quaternion.Euler(NetworkedPitch, 0, 0);
