@@ -9,6 +9,7 @@ public class Computer : MonoBehaviour, IInteractable {
     [SerializeField] private ComputerUI computerUI;
     [SerializeField] private HackerTypingText hackerTypingText;
     [SerializeField] private StaminaUI staminaUI;
+    [SerializeField] private PlayerManager playerManager;
 
     private bool isUsing;
     private bool isCompleted;
@@ -25,16 +26,6 @@ public class Computer : MonoBehaviour, IInteractable {
         }
     }
 
-    private void EnterComputerMode() { 
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
-    }
-
-    private void ExitComputerMode() {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-    }
-
     public void Interact() {
 
         if(!isPoweredOn)
@@ -45,13 +36,9 @@ public class Computer : MonoBehaviour, IInteractable {
 
         isUsing = true;
 
-        gameInput.DisableMovement();
-
+        playerManager.EnterUIMode();
         staminaUI.Hide();
-
         computerUI.Show();
-
-        EnterComputerMode();
 
         Debug.Log("Entrando a la computadora");
     }
@@ -70,13 +57,10 @@ public class Computer : MonoBehaviour, IInteractable {
 
         isUsing = false;
 
-        gameInput.EnableMovement();
-
+        playerManager.ExitUIMode();
         computerUI.Hide();
 
         staminaUI.EnableNormalVisibility();
-
-        ExitComputerMode();
 
         Debug.Log("Saliendo de la computadora");
     }

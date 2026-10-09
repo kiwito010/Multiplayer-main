@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 5017314319448689506}
   - component: {fileID: 7503120705318207184}
   - component: {fileID: 8544729500135251166}
+  - component: {fileID: 3491046863361534879}
   m_Layer: 0
   m_Name: BasePlayer
   m_TagString: Untagged
@@ -80,6 +81,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 5
   jumpForce: 5
+  jumpStaminaCost: 1
+  sprintSpeed: 8.5
+  maxStamina: 5
+  staminaRechargeSpeed: 1
+  currentStamina: 0
   groundCheck: {fileID: 5874130901093102480}
   groundCheckRadius: 0.2
   groundLayer:
@@ -90,6 +96,7 @@ MonoBehaviour:
   playerCamera: {fileID: 7270251408866099241}
   crouchCameraOffset: 0.5
   crouchSpeed: 8
+  proneCollider: {fileID: 0}
   proneHeight: 0.5
   proneCameraOffset: 1
   obstacleLayer:
@@ -137,6 +144,18 @@ MonoBehaviour:
   interactLayerMask:
     serializedVersion: 2
     m_Bits: 64
+--- !u!114 &3491046863361534879
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 35844681316072045}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d66f92ba91ea2d419d4f26c15160213, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2140153221781719855
 GameObject:
   m_ObjectHideFlags: 0
