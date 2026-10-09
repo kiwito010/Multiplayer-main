@@ -54,4 +54,8 @@ public class GameInput : MonoBehaviour
     public bool GetSprintPressed() {
         return inputActions.Player.Sprint.IsPressed();
     }
+
+    public bool GetDiagnosticPressed() {
+        return inputActions.Player.Diagnostic.IsPressed();   
+    }
 }

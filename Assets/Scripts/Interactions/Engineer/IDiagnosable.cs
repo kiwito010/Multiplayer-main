@@ -4,4 +4,5 @@ using UnityEngine;
 
 public interface IDiagnosable {
     void OnScanComplete();
+    bool IsDiagnosed();
 }
