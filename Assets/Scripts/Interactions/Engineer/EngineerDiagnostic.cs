@@ -17,6 +17,7 @@ public class EngineerDiagnostic : MonoBehaviour
     [SerializeField] private LayerMask diagnosticLayerMask;
     [SerializeField] private float diagnosticDistance = 2f;
     [SerializeField] private float scanTime = 5;
+    [SerializeField] private float scanLoseSpeed = 1f;
 
     private float currentScanTime;
     private IDiagnosable currentDiagnosable;
@@ -28,27 +29,22 @@ public class EngineerDiagnostic : MonoBehaviour
     private void Update() {
         if (!gameInput.GetDiagnosticPressed()) { 
             playerCamera.fieldOfView = normalFov;
-            ResetScan();
+            LoseScanProgress();
             return;
         }
 
         playerCamera.fieldOfView = diagnosticFov;
 
-        if (Physics.Raycast(
-            cameraTransform.position,
-            cameraTransform.forward,
-            out RaycastHit raycastHit,
-            diagnosticDistance,
-            diagnosticLayerMask)) {
+        if (Physics.Raycast(cameraTransform.position, cameraTransform.forward, out RaycastHit raycastHit, diagnosticDistance, diagnosticLayerMask)) {
             if (raycastHit.transform.TryGetComponent<IDiagnosable>(out IDiagnosable diagnosable)) { 
                 Scan(diagnosable);
             }
         }
+        LoseScanProgress();
     }
 
     private void Scan(IDiagnosable diagnosable) {
         if (diagnosable.IsDiagnosed()) {
-            ResetScan();
             return;
         }
 
@@ -60,13 +56,24 @@ public class EngineerDiagnostic : MonoBehaviour
         currentScanTime += Time.deltaTime;
 
         if (currentScanTime >= scanTime) { 
+            currentScanTime = scanTime;
             diagnosable.OnScanComplete();
-            ResetScan();
         }
     }
 
     private void ResetScan() {
         currentScanTime = 0f;
         currentDiagnosable = null;
+    }
+
+    private void LoseScanProgress() {
+        if (currentScanTime > 0f) { 
+            currentScanTime -= scanLoseSpeed * Time.deltaTime;
+
+            if (currentScanTime < 0f) {
+                currentScanTime = 0f; 
+                currentDiagnosable = null;
+            }
+        }
     }
 }

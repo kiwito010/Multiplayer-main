@@ -2,19 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CoolingDiagnostic : MonoBehaviour, IDiagnosable {
-    private bool isDiagnosed;
+public class CoolingDiagnostic : DiagnosableBase {
 
-    public void OnScanComplete() {
-        if (isDiagnosed)
-            return;
-
-        isDiagnosed = true;
-
+    protected override void OnScanComplete() {
         Debug.Log("Cooling diagnosticado");
-    }
-
-    public bool IsDiagnosed() { 
-        return isDiagnosed;
     }
 }
