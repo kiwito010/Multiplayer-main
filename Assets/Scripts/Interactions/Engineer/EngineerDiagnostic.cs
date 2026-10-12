@@ -8,18 +8,23 @@ public class EngineerDiagnostic : MonoBehaviour
     //Referencias
     private GameInput gameInput;
     [SerializeField] private Camera playerCamera;
+    [SerializeField] private Transform cameraTransform;
 
+    [SerializeField] private ScanUI scanUI;
+    
+    //FOV
     [SerializeField] private float normalFov = 60f;
     [SerializeField] private float diagnosticFov = 35f;
 
     //otras
-    [SerializeField] private Transform cameraTransform;
     [SerializeField] private LayerMask diagnosticLayerMask;
     [SerializeField] private float diagnosticDistance = 2f;
-    [SerializeField] private float scanTime = 5;
+    
     [SerializeField] private float scanLoseSpeed = 1f;
 
-    private float currentScanTime;
+    //Lupa
+    private bool hasMagnifiynGlass;
+
     private IDiagnosable currentDiagnosable;
 
     private void Awake() {
@@ -27,53 +32,53 @@ public class EngineerDiagnostic : MonoBehaviour
     }
 
     private void Update() {
-        if (!gameInput.GetDiagnosticPressed()) { 
+        if (!hasMagnifiynGlass || !gameInput.GetDiagnosticPressed()) { 
             playerCamera.fieldOfView = normalFov;
-            LoseScanProgress();
+            StopCurrentScan();
+            scanUI.HideAll();
             return;
         }
 
         playerCamera.fieldOfView = diagnosticFov;
+        scanUI.ShowCrosshair();
 
         if (Physics.Raycast(cameraTransform.position, cameraTransform.forward, out RaycastHit raycastHit, diagnosticDistance, diagnosticLayerMask)) {
             if (raycastHit.transform.TryGetComponent<IDiagnosable>(out IDiagnosable diagnosable)) { 
                 Scan(diagnosable);
+                return;
             }
         }
-        LoseScanProgress();
+        StopCurrentScan();
     }
 
     private void Scan(IDiagnosable diagnosable) {
-        if (diagnosable.IsDiagnosed()) {
-            return;
-        }
+        if (currentDiagnosable != diagnosable) {
+            StopCurrentScan();
 
-        if (currentDiagnosable != diagnosable) { 
             currentDiagnosable = diagnosable;
-            currentScanTime = 0;
-        }
+            currentDiagnosable.SetBeingScanned(true);
 
-        currentScanTime += Time.deltaTime;
-
-        if (currentScanTime >= scanTime) { 
-            currentScanTime = scanTime;
-            diagnosable.OnScanComplete();
+            if (!currentDiagnosable.IsDiagnosed()) {
+                scanUI.ResetScanFeedback();
+            }
         }
+        currentDiagnosable.AddScanProgress(Time.deltaTime);
+
+        scanUI.ShowScanFeedback(currentDiagnosable.GetScanProgress(), currentDiagnosable.IsDiagnosed());
     }
 
-    private void ResetScan() {
-        currentScanTime = 0f;
+    private void StopCurrentScan() {
+        if (currentDiagnosable == null)
+            return;
+
+        currentDiagnosable.SetBeingScanned(false);
         currentDiagnosable = null;
     }
 
-    private void LoseScanProgress() {
-        if (currentScanTime > 0f) { 
-            currentScanTime -= scanLoseSpeed * Time.deltaTime;
+    public void GiveMagnifyingGlass() { 
+        hasMagnifiynGlass = true;
 
-            if (currentScanTime < 0f) {
-                currentScanTime = 0f; 
-                currentDiagnosable = null;
-            }
-        }
+        Debug.Log("ENGINEER AHORA TIENE LUPA");
+
     }
 }

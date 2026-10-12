@@ -4,10 +4,8 @@ using UnityEngine;
 
 public interface IDiagnosable {
     void AddScanProgress(float amount);
-    void LoseScanProgress(float amount);
+    void SetBeingScanned(bool isBeingScanned);
 
     float GetScanProgress();
     bool IsDiagnosed();
-
-    void OnScanComplete();
 }

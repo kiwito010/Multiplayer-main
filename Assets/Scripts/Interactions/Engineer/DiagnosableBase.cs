@@ -5,15 +5,22 @@ using UnityEngine;
 public abstract class DiagnosableBase : MonoBehaviour, IDiagnosable
 {
     [SerializeField] private float scanTime = 2f;
+    [SerializeField] private float scanLoseSpeed = 0.5f;
 
     private float currentScanTime;
     private bool isDiagnosed;
+    private bool isBeingScanned;
+
+    private void Update() {
+        LoseScanProgress();
+    }
 
     public void AddScanProgress(float amount) { 
         if (isDiagnosed)
             return;
 
         currentScanTime += amount;
+        Debug.Log(gameObject.name + " progreso: " + GetScanProgress());
 
         if (currentScanTime >= scanTime) { 
             currentScanTime = scanTime;
@@ -23,15 +30,18 @@ public abstract class DiagnosableBase : MonoBehaviour, IDiagnosable
         }
     }
 
-    public void LoseScabProgress(float amount) {
-        if (isDiagnosed)
+    private void LoseScanProgress() {
+        if (isDiagnosed || isBeingScanned)
             return;
 
-        currentScanTime -= amount;
+        if (currentScanTime <= 0f)
+            return;
 
-        if (currentScanTime < scanTime) { 
-            currentScanTime = 0f;
-        }
+        currentScanTime -= scanLoseSpeed * Time.deltaTime;
+    }
+
+    public void SetBeingScanned(bool isBeingScanned) { 
+        this.isBeingScanned = isBeingScanned;
     }
 
     public float GetScanProgress() {
