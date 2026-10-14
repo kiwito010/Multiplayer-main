@@ -41,6 +41,7 @@ public class ScanUI : MonoBehaviour
         scanText.text = "SCANNING " + percentage + "%";
 
         if (progress >= 1f && !isCompleting) {
+            isCompleting = true;
             StartCoroutine(ShowCompleteRoutine());
         }
     }
@@ -59,7 +60,9 @@ public class ScanUI : MonoBehaviour
     }
 
     public void ResetScanFeedback() { 
+        StopAllCoroutines();
         isScanComplete = false;
+        isCompleting = false;
     }
 
     public void HideAll() {
