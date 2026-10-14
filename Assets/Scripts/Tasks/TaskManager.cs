@@ -6,6 +6,6 @@ public class TaskManager : MonoBehaviour
 {
     public void AddTask(TaskData task) {
         Debug.Log("NUEVA TAREA: " + task.taskName);
-        Debug.Log(task.description);
+        Debug.Log("DESCRIPCION: " + task.description);
     }
 }
