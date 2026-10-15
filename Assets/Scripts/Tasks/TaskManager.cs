@@ -6,6 +6,7 @@ public class TaskManager : MonoBehaviour
 {
     private List<TaskData> activeTasks = new List<TaskData>();
     public event System.Action OnTasksChanged;
+    public event System.Action<TaskData> OnTaskAdded;
 
     public void AddTask(TaskData task) {
         activeTasks.Add(task);
@@ -14,6 +15,7 @@ public class TaskManager : MonoBehaviour
         Debug.Log("TAREAS ACTIVAS: " + activeTasks.Count);
 
         OnTasksChanged?.Invoke();
+        OnTaskAdded?.Invoke(task);
     }
 
     public List<TaskData> GetActiveTasks() {

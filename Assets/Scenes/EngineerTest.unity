@@ -750,7 +750,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -498.91794, y: 61.43004}
+  m_AnchoredPosition: {x: -510, y: 61.43004}
   m_SizeDelta: {x: 878.6224, y: 661.15}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &753925654
@@ -762,11 +762,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 753925652}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2a1c35013b63a6f448a55f3d634c77ad, type: 3}
+  m_Script: {fileID: 11500000, guid: b58821ef624b143429f3303a02c280e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   taskManager: {fileID: 1653758739}
-  taskText: {fileID: 0}
+  notificationContainer: {fileID: 1819109114}
+  notificationPrefab: {fileID: 8138314722053330147, guid: 1f7db34093af8504e81aa65f98d38fb1, type: 3}
 --- !u!1 &858729154
 GameObject:
   m_ObjectHideFlags: 0
@@ -889,8 +890,8 @@ MonoBehaviour:
   scanLoseSpeed: 0.5
   taskManager: {fileID: 1653758739}
   collingTask:
-    taskName: Find Cooling Hose
-    description: Find a replacement hose for the cooling system.
+    taskName: "Encontrar Manguera de Refrigeraci\xF3n"
+    description: "Encuentra una manguera de refrigeraci\xF3n para reparar el motor"
 --- !u!1 &1040746722
 GameObject:
   m_ObjectHideFlags: 0
@@ -1681,7 +1682,7 @@ GameObject:
   - component: {fileID: 1414319363}
   - component: {fileID: 1414319362}
   - component: {fileID: 1414319361}
-  - component: {fileID: 1414319364}
+  - component: {fileID: 1414319365}
   m_Layer: 9
   m_Name: CableDiagnosticPoint
   m_TagString: Untagged
@@ -1775,7 +1776,7 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1414319359}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!114 &1414319364
+--- !u!114 &1414319365
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1789,6 +1790,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scanTime: 2
   scanLoseSpeed: 0.5
+  taskManager: {fileID: 1653758739}
+  cableTask:
+    taskName: Cable
+    description: Encuentra el cable para reparar el motor
 --- !u!1 &1491894132
 GameObject:
   m_ObjectHideFlags: 0
@@ -2127,7 +2132,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1819109113}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -2136,8 +2141,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_AnchoredPosition: {x: 1.1556, y: -0.28748}
+  m_SizeDelta: {x: 876.31, y: 660.57}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1819109115
 MonoBehaviour:
@@ -2158,9 +2163,9 @@ MonoBehaviour:
     m_Bottom: 0
   m_ChildAlignment: 0
   m_Spacing: 10
-  m_ChildForceExpandWidth: 1
-  m_ChildForceExpandHeight: 1
-  m_ChildControlWidth: 1
+  m_ChildForceExpandWidth: 0
+  m_ChildForceExpandHeight: 0
+  m_ChildControlWidth: 0
   m_ChildControlHeight: 1
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
