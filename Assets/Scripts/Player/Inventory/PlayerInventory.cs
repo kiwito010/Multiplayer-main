@@ -22,6 +22,8 @@ public class PlayerInventory : MonoBehaviour
     [SerializeField] private float dropDistance = 1f;
     [SerializeField] private float throwForce = 3f;
 
+    public event System.Action OnInventoryChanged;
+
     private void Awake() {
         slots = new PickableItem[maxSlots];
     }
@@ -48,6 +50,8 @@ public class PlayerInventory : MonoBehaviour
         for (int i = 0; i < slots.Length; i++) {
             if (slots[i] == null) {
                 slots[i] = item;
+
+                OnInventoryChanged?.Invoke();
 
                 Debug.Log(
                     item.GetItemName() +
@@ -109,6 +113,8 @@ public class PlayerInventory : MonoBehaviour
 
         slots[selectedSlot] = null;
         equippedItem = null;
+
+        OnInventoryChanged?.Invoke();
     }
 
     public void RemoveSelectedItem() {
@@ -118,9 +124,22 @@ public class PlayerInventory : MonoBehaviour
         }
 
         slots[selectedSlot] = null;
+        
+        OnInventoryChanged?.Invoke();
     }
 
     public PickableItem GetSelectedItem() {
         return slots[selectedSlot];
+    }
+
+    public PickableItem GetItemInSlot(int index) {
+        if (index < 0 || index >= slots.Length)
+            return null;
+
+        return slots[index];
+    }
+
+    public int GetSelectedSlot() {
+        return selectedSlot;
     }
 }
