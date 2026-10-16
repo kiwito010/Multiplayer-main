@@ -79,6 +79,11 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
     // y no queremos que el juego se "congele" mientras tanto).
     private async void StartGame(GameMode mode, string roomCode)
     {
+        
+        // Este objeto (el que tiene el NetworkRunner) tiene que sobrevivir
+        // cuando cambiemos de la escena MainMenu a la escena Gameplay,
+        // porque ahí vive toda la conexión de red.
+        DontDestroyOnLoad(gameObject);
         // Si el campo está vacío usamos "SalaDefault" (útil mientras probás solo).
         // Trim() saca espacios sin querer al principio o al final del código.
         string sessionName = string.IsNullOrWhiteSpace(roomCode) ? "SalaDefault" : roomCode.Trim();
@@ -125,11 +130,6 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
             _runner = null;
             return;
         }
-
-        // Este objeto (el que tiene el NetworkRunner) tiene que sobrevivir
-        // cuando cambiemos de la escena MainMenu a la escena Gameplay,
-        // porque ahí vive toda la conexión de red.
-        DontDestroyOnLoad(gameObject);
     }
 
     // ---------------------------------------------------------
