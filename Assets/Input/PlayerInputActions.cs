@@ -181,6 +181,33 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""InventorySlot1"",
+                    ""type"": ""Button"",
+                    ""id"": ""9d62ea58-d829-4b2d-bb81-89cab7df07fb"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""InventorySlot2"",
+                    ""type"": ""Button"",
+                    ""id"": ""5eb5f136-529a-4d44-ba53-ea0bae836173"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""InventorySlot3"",
+                    ""type"": ""Button"",
+                    ""id"": ""eb112650-724e-449f-a1d7-d9de5bb65079"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -337,6 +364,39 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""action"": ""Diagnostic"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""2ecd0a3c-4472-408a-8168-12b264da2162"",
+                    ""path"": ""<Keyboard>/1"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""InventorySlot1"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f6c19928-d228-4e15-9f1a-91f5588d8bc1"",
+                    ""path"": ""<Keyboard>/2"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""InventorySlot2"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""18e5b950-e2e5-4983-b157-869f55de191f"",
+                    ""path"": ""<Keyboard>/3"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""InventorySlot3"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -355,6 +415,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         m_Player_Prone = m_Player.FindAction("Prone", throwIfNotFound: true);
         m_Player_Sprint = m_Player.FindAction("Sprint", throwIfNotFound: true);
         m_Player_Diagnostic = m_Player.FindAction("Diagnostic", throwIfNotFound: true);
+        m_Player_InventorySlot1 = m_Player.FindAction("InventorySlot1", throwIfNotFound: true);
+        m_Player_InventorySlot2 = m_Player.FindAction("InventorySlot2", throwIfNotFound: true);
+        m_Player_InventorySlot3 = m_Player.FindAction("InventorySlot3", throwIfNotFound: true);
     }
 
     ~@PlayerInputActions()
@@ -445,6 +508,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Prone;
     private readonly InputAction m_Player_Sprint;
     private readonly InputAction m_Player_Diagnostic;
+    private readonly InputAction m_Player_InventorySlot1;
+    private readonly InputAction m_Player_InventorySlot2;
+    private readonly InputAction m_Player_InventorySlot3;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -496,6 +562,18 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/Diagnostic".
         /// </summary>
         public InputAction @Diagnostic => m_Wrapper.m_Player_Diagnostic;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/InventorySlot1".
+        /// </summary>
+        public InputAction @InventorySlot1 => m_Wrapper.m_Player_InventorySlot1;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/InventorySlot2".
+        /// </summary>
+        public InputAction @InventorySlot2 => m_Wrapper.m_Player_InventorySlot2;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/InventorySlot3".
+        /// </summary>
+        public InputAction @InventorySlot3 => m_Wrapper.m_Player_InventorySlot3;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -552,6 +630,15 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @Diagnostic.started += instance.OnDiagnostic;
             @Diagnostic.performed += instance.OnDiagnostic;
             @Diagnostic.canceled += instance.OnDiagnostic;
+            @InventorySlot1.started += instance.OnInventorySlot1;
+            @InventorySlot1.performed += instance.OnInventorySlot1;
+            @InventorySlot1.canceled += instance.OnInventorySlot1;
+            @InventorySlot2.started += instance.OnInventorySlot2;
+            @InventorySlot2.performed += instance.OnInventorySlot2;
+            @InventorySlot2.canceled += instance.OnInventorySlot2;
+            @InventorySlot3.started += instance.OnInventorySlot3;
+            @InventorySlot3.performed += instance.OnInventorySlot3;
+            @InventorySlot3.canceled += instance.OnInventorySlot3;
         }
 
         /// <summary>
@@ -593,6 +680,15 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @Diagnostic.started -= instance.OnDiagnostic;
             @Diagnostic.performed -= instance.OnDiagnostic;
             @Diagnostic.canceled -= instance.OnDiagnostic;
+            @InventorySlot1.started -= instance.OnInventorySlot1;
+            @InventorySlot1.performed -= instance.OnInventorySlot1;
+            @InventorySlot1.canceled -= instance.OnInventorySlot1;
+            @InventorySlot2.started -= instance.OnInventorySlot2;
+            @InventorySlot2.performed -= instance.OnInventorySlot2;
+            @InventorySlot2.canceled -= instance.OnInventorySlot2;
+            @InventorySlot3.started -= instance.OnInventorySlot3;
+            @InventorySlot3.performed -= instance.OnInventorySlot3;
+            @InventorySlot3.canceled -= instance.OnInventorySlot3;
         }
 
         /// <summary>
@@ -703,5 +799,26 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnDiagnostic(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "InventorySlot1" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnInventorySlot1(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "InventorySlot2" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnInventorySlot2(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "InventorySlot3" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnInventorySlot3(InputAction.CallbackContext context);
     }
 }

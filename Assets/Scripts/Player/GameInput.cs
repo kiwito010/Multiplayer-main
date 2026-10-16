@@ -58,4 +58,16 @@ public class GameInput : MonoBehaviour
     public bool GetDiagnosticPressed() {
         return inputActions.Player.Diagnostic.IsPressed();   
     }
+
+    public bool GetInventorySlot1Pressed() {
+        return inputActions.Player.InventorySlot1.WasPressedThisFrame();
+    }
+
+    public bool GetInventorySlot2Pressed() {
+        return inputActions.Player.InventorySlot2.WasPressedThisFrame();
+    }
+
+    public bool GetInventorySlot3Pressed() {
+        return inputActions.Player.InventorySlot3.WasPressedThisFrame();
+    }
 }

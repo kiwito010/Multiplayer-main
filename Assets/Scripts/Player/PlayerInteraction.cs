@@ -7,6 +7,7 @@ public class PlayerInteraction : MonoBehaviour
 {
     [SerializeField] private Transform cameraTransform;
     [SerializeField] private LayerMask interactLayerMask;
+    [SerializeField] private PlayerInventory playerInventory;
 
     private GameInput gameInput;
 
@@ -22,7 +23,7 @@ public class PlayerInteraction : MonoBehaviour
         if (gameInput.GetInteractPressed()) {
             if (Physics.Raycast(cameraTransform.position, cameraTransform.forward, out RaycastHit raycastHit, interactionDistance, interactLayerMask)) {
                 if (raycastHit.transform.TryGetComponent<IInteractable>(out IInteractable interactable)) { 
-                    OnInteract?.Invoke(this, new InteractEventArgs(interactable));
+                    OnInteract?.Invoke(this, new InteractEventArgs(interactable, playerInventory));
                 }
             }
         }
