@@ -208,6 +208,15 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Drop"",
+                    ""type"": ""Button"",
+                    ""id"": ""0141d383-5f07-422f-b17c-211c434c9e8a"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -397,6 +406,17 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""action"": ""InventorySlot3"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""9e7510f2-8213-4d69-90cc-026645ab626a"",
+                    ""path"": ""<Keyboard>/g"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Drop"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -418,6 +438,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         m_Player_InventorySlot1 = m_Player.FindAction("InventorySlot1", throwIfNotFound: true);
         m_Player_InventorySlot2 = m_Player.FindAction("InventorySlot2", throwIfNotFound: true);
         m_Player_InventorySlot3 = m_Player.FindAction("InventorySlot3", throwIfNotFound: true);
+        m_Player_Drop = m_Player.FindAction("Drop", throwIfNotFound: true);
     }
 
     ~@PlayerInputActions()
@@ -511,6 +532,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_InventorySlot1;
     private readonly InputAction m_Player_InventorySlot2;
     private readonly InputAction m_Player_InventorySlot3;
+    private readonly InputAction m_Player_Drop;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -574,6 +596,10 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/InventorySlot3".
         /// </summary>
         public InputAction @InventorySlot3 => m_Wrapper.m_Player_InventorySlot3;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/Drop".
+        /// </summary>
+        public InputAction @Drop => m_Wrapper.m_Player_Drop;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -639,6 +665,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @InventorySlot3.started += instance.OnInventorySlot3;
             @InventorySlot3.performed += instance.OnInventorySlot3;
             @InventorySlot3.canceled += instance.OnInventorySlot3;
+            @Drop.started += instance.OnDrop;
+            @Drop.performed += instance.OnDrop;
+            @Drop.canceled += instance.OnDrop;
         }
 
         /// <summary>
@@ -689,6 +718,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @InventorySlot3.started -= instance.OnInventorySlot3;
             @InventorySlot3.performed -= instance.OnInventorySlot3;
             @InventorySlot3.canceled -= instance.OnInventorySlot3;
+            @Drop.started -= instance.OnDrop;
+            @Drop.performed -= instance.OnDrop;
+            @Drop.canceled -= instance.OnDrop;
         }
 
         /// <summary>
@@ -820,5 +852,12 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnInventorySlot3(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Drop" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnDrop(InputAction.CallbackContext context);
     }
 }

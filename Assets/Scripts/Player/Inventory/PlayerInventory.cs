@@ -17,6 +17,11 @@ public class PlayerInventory : MonoBehaviour
     private PickableItem[] slots;
     private int selectedSlot = 0;
 
+    [SerializeField] private Transform cameraTransform;
+
+    [SerializeField] private float dropDistance = 1f;
+    [SerializeField] private float throwForce = 3f;
+
     private void Awake() {
         slots = new PickableItem[maxSlots];
     }
@@ -32,6 +37,10 @@ public class PlayerInventory : MonoBehaviour
 
         if (gameInput.GetInventorySlot3Pressed()) {
             SelectSlot(2);
+        }
+
+        if (gameInput.GetDropPressed()) {
+            DropSelectedItem();
         }
     }
 
@@ -58,6 +67,12 @@ public class PlayerInventory : MonoBehaviour
         if (slotIndex < 0 || slotIndex >= slots.Length)
             return;
 
+        if (selectedSlot == slotIndex && equippedItem != null) {
+            equippedItem.Unequip();
+            equippedItem = null;
+            return;
+        }
+
         selectedSlot = slotIndex;
 
         EquipSelectedItem();
@@ -67,7 +82,7 @@ public class PlayerInventory : MonoBehaviour
 
     private void EquipSelectedItem() {
         if (equippedItem != null) {
-            equippedItem.gameObject.SetActive(false);
+            equippedItem.Unequip();
         }
 
         equippedItem = GetSelectedItem();
@@ -75,12 +90,25 @@ public class PlayerInventory : MonoBehaviour
         if (equippedItem == null)
             return;
 
-        equippedItem.transform.SetParent(handPoint);
+        equippedItem.Equip(handPoint);
+    }
 
-        equippedItem.transform.localPosition = Vector3.zero;
-        equippedItem.transform.localRotation = Quaternion.identity;
+    public void DropSelectedItem() {
+        if (equippedItem == null)
+            return;
 
-        equippedItem.gameObject.SetActive(true);
+        Vector3 dropPosition =
+            cameraTransform.position +
+            cameraTransform.forward * dropDistance;
+
+        equippedItem.Drop(
+            dropPosition,
+            cameraTransform.forward,
+            throwForce
+        );
+
+        slots[selectedSlot] = null;
+        equippedItem = null;
     }
 
     public PickableItem GetSelectedItem() {

@@ -70,4 +70,8 @@ public class GameInput : MonoBehaviour
     public bool GetInventorySlot3Pressed() {
         return inputActions.Player.InventorySlot3.WasPressedThisFrame();
     }
+
+    public bool GetDropPressed() {
+        return inputActions.Player.Drop.WasPressedThisFrame();
+    }
 }
