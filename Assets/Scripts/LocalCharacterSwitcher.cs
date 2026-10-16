@@ -7,6 +7,9 @@ public class LocalCharacterSwitcher : MonoBehaviour
     [SerializeField] private GameObject engineer;
     [SerializeField] private GameObject explorer;
 
+    [SerializeField] private GameObject engineerInventoryUI;
+    [SerializeField] private GameObject explorerInventoryUI;
+
     private bool controllingEngineer = true;
 
     private void Start() {
@@ -26,6 +29,9 @@ public class LocalCharacterSwitcher : MonoBehaviour
     private void SetEngineerActive() {
         engineer.SetActive(true);
         explorer.SetActive(false);
+        
+        engineerInventoryUI.SetActive(true);
+        explorerInventoryUI.SetActive(false);
 
         controllingEngineer = true;
     }
@@ -33,6 +39,9 @@ public class LocalCharacterSwitcher : MonoBehaviour
     private void SetExplorerActive() {
         engineer.SetActive(false);
         explorer.SetActive(true);
+
+        engineerInventoryUI.SetActive(false);
+        explorerInventoryUI.SetActive(true);
 
         controllingEngineer = false;
     }

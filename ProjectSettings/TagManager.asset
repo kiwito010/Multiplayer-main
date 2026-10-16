@@ -16,8 +16,8 @@ TagManager:
   - Ground
   - Obstacle
   - MotorComponent
-  - 
-  - 
+  - Pickable
+  - Player
   - 
   - 
   - 
