@@ -21,4 +21,12 @@ public class TaskManager : MonoBehaviour
     public List<TaskData> GetActiveTasks() {
         return activeTasks;
     }
+
+    public void CompleteTask(TaskData task) {
+        activeTasks.Remove(task);
+
+        Debug.Log("TAREA COMPLETADA: " + task.taskName);
+
+        OnTasksChanged?.Invoke();
+    }
 }

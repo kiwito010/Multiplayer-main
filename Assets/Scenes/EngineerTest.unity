@@ -166,7 +166,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5a270b2bcdb195c4ca9b144797908983, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemName: Cooling Hose
+  itemName: Manguera de refrigeracion
 --- !u!65 &37341984
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -386,16 +386,6 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 7516051987379185478, guid: 5577647c0c099be47a831728f9d4fe1d, type: 3}
   m_PrefabInstance: {fileID: 126858288}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &192810030 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 7270251408866099241, guid: 7a18a68bf940e734f953adcfd623ff3a, type: 3}
-  m_PrefabInstance: {fileID: 1670151848}
-  m_PrefabAsset: {fileID: 0}
---- !u!20 &192810032 stripped
-Camera:
-  m_CorrespondingSourceObject: {fileID: 399146495466108129, guid: 7a18a68bf940e734f953adcfd623ff3a, type: 3}
-  m_PrefabInstance: {fileID: 1670151848}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &193262927 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4415596229035033927, guid: b6e2bf408d5d50e49aa880344bce81c3, type: 3}
@@ -475,7 +465,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7430534757746923119, guid: b6e2bf408d5d50e49aa880344bce81c3, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -5.205
+      value: -6.059
       objectReference: {fileID: 0}
     - target: {fileID: 7430534757746923119, guid: b6e2bf408d5d50e49aa880344bce81c3, type: 3}
       propertyPath: m_LocalRotation.w
@@ -524,10 +514,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1251040513523714244, guid: b6e2bf408d5d50e49aa880344bce81c3, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 254038558}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b6e2bf408d5d50e49aa880344bce81c3, type: 3}
 --- !u!1 &254038550 stripped
 GameObject:
@@ -545,17 +532,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 82e3bb7339100864ca92da2116cbc610, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &254038552 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8112844272414573244, guid: b6e2bf408d5d50e49aa880344bce81c3, type: 3}
-  m_PrefabInstance: {fileID: 254038549}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 254038550}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d920f7142b817b343a59f13ebfc57fd7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &254038554 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 12362313400825059, guid: b6e2bf408d5d50e49aa880344bce81c3, type: 3}
@@ -567,19 +543,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a11f7466330461f42b1a1eb0e5410b1e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &254038558
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 254038550}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 029c0a329c5d4974c99219de7e612d64, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerInteraction: {fileID: 254038552}
 --- !u!1 &297081754
 GameObject:
   m_ObjectHideFlags: 0
@@ -1178,15 +1141,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 858729154}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3389d8501567790448ec1d7534215ac1, type: 3}
+  m_Script: {fileID: 11500000, guid: d692f0dc7b1032747aa10f098b103466, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   scanTime: 2
   scanLoseSpeed: 0.5
+  componentName: Sistema de refrigeracion
   taskManager: {fileID: 1653758739}
-  collingTask:
-    taskName: "Encontrar Manguera de Refrigeraci\xF3n"
-    description: "Encuentra una manguera de refrigeraci\xF3n para reparar el motor"
+  repairTask:
+    taskName: Manguera Refrigeracion
+    description: Encontrar una manguera de refrigeracion para reparar el motor
+  requiredItemName: Manguera de refrigeracion
 --- !u!4 &930485972 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4153809558440598567, guid: b6e2bf408d5d50e49aa880344bce81c3, type: 3}
@@ -1982,7 +1947,7 @@ GameObject:
   - component: {fileID: 1414319363}
   - component: {fileID: 1414319362}
   - component: {fileID: 1414319361}
-  - component: {fileID: 1414319365}
+  - component: {fileID: 1414319364}
   m_Layer: 9
   m_Name: CableDiagnosticPoint
   m_TagString: Untagged
@@ -2076,7 +2041,7 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1414319359}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!114 &1414319365
+--- !u!114 &1414319364
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2085,15 +2050,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 1414319359}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9057e3817a7cf714f93dfdec1762bbe6, type: 3}
+  m_Script: {fileID: 11500000, guid: d692f0dc7b1032747aa10f098b103466, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   scanTime: 2
   scanLoseSpeed: 0.5
-  taskManager: {fileID: 1653758739}
-  cableTask:
-    taskName: Cable
-    description: Encuentra el cable para reparar el motor
+  componentName: 
+  taskManager: {fileID: 0}
+  repairTask:
+    taskName: 
+    description: 
+  requiredItemName: 
 --- !u!1 &1491894132
 GameObject:
   m_ObjectHideFlags: 0
@@ -2323,6 +2290,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: EngineerPlayer
       objectReference: {fileID: 0}
+    - target: {fileID: 1997767502302325049, guid: 7a18a68bf940e734f953adcfd623ff3a, type: 3}
+      propertyPath: scanUI
+      value: 
+      objectReference: {fileID: 2091640593}
+    - target: {fileID: 1997767502302325049, guid: 7a18a68bf940e734f953adcfd623ff3a, type: 3}
+      propertyPath: diagnosticLayerMask.m_Bits
+      value: 512
+      objectReference: {fileID: 0}
     - target: {fileID: 3449768301848277485, guid: 7a18a68bf940e734f953adcfd623ff3a, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -2363,14 +2338,32 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5241087124825078039, guid: 7a18a68bf940e734f953adcfd623ff3a, type: 3}
+      propertyPath: handPoint
+      value: 
+      objectReference: {fileID: 1670151849}
+    - target: {fileID: 8544729500135251166, guid: 7a18a68bf940e734f953adcfd623ff3a, type: 3}
+      propertyPath: playerInventory
+      value: 
+      objectReference: {fileID: 2133474345}
+    - target: {fileID: 8544729500135251166, guid: 7a18a68bf940e734f953adcfd623ff3a, type: 3}
+      propertyPath: interactLayerMask.m_Bits
+      value: 576
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 4235241561061337794, guid: 7a18a68bf940e734f953adcfd623ff3a, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 35844681316072045, guid: 7a18a68bf940e734f953adcfd623ff3a, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 2133474334}
+      addedObject: {fileID: 2133474343}
   m_SourcePrefab: {fileID: 100100000, guid: 7a18a68bf940e734f953adcfd623ff3a, type: 3}
+--- !u!4 &1670151849 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3858548999567323715, guid: 7a18a68bf940e734f953adcfd623ff3a, type: 3}
+  m_PrefabInstance: {fileID: 1670151848}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1775394346
 GameObject:
   m_ObjectHideFlags: 0
@@ -3039,11 +3032,10 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 35844681316072045, guid: 7a18a68bf940e734f953adcfd623ff3a, type: 3}
   m_PrefabInstance: {fileID: 1670151848}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &2133474334
+--- !u!114 &2133474334 stripped
 MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 1997767502302325049, guid: 7a18a68bf940e734f953adcfd623ff3a, type: 3}
+  m_PrefabInstance: {fileID: 1670151848}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2133474327}
   m_Enabled: 1
@@ -3051,16 +3043,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c446fbef30670f44eaec11e6bf7c828b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerCamera: {fileID: 192810032}
-  cameraTransform: {fileID: 192810030}
-  scanUI: {fileID: 2091640593}
-  normalFov: 60
-  diagnosticFov: 35
-  diagnosticLayerMask:
-    serializedVersion: 2
-    m_Bits: 512
-  diagnosticDistance: 2
-  scanLoseSpeed: 1
 --- !u!114 &2133474337 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8544729500135251166, guid: 7a18a68bf940e734f953adcfd623ff3a, type: 3}
@@ -3070,6 +3052,31 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d920f7142b817b343a59f13ebfc57fd7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &2133474343
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2133474327}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 478aa6b45e5462e42b0735960b6bd134, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerInteraction: {fileID: 2133474337}
+  playerInventory: {fileID: 2133474345}
+--- !u!114 &2133474345 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5241087124825078039, guid: 7a18a68bf940e734f953adcfd623ff3a, type: 3}
+  m_PrefabInstance: {fileID: 1670151848}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2133474327}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82e3bb7339100864ca92da2116cbc610, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1660057539 &9223372036854775807

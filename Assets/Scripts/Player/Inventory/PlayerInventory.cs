@@ -111,6 +111,15 @@ public class PlayerInventory : MonoBehaviour
         equippedItem = null;
     }
 
+    public void RemoveSelectedItem() {
+        if (equippedItem != null) {
+            equippedItem.gameObject.SetActive(false);
+            equippedItem = null;
+        }
+
+        slots[selectedSlot] = null;
+    }
+
     public PickableItem GetSelectedItem() {
         return slots[selectedSlot];
     }

@@ -145,6 +145,7 @@ GameObject:
   - component: {fileID: 8112844272414573244}
   - component: {fileID: 2338027060007043389}
   - component: {fileID: 7747050382476140196}
+  - component: {fileID: 5481493524163071146}
   m_Layer: 0
   m_Name: ExplorerPlayer
   m_TagString: Untagged
@@ -300,7 +301,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameInput: {fileID: 0}
+  handPoint: {fileID: 0}
   maxSlots: 3
+  cameraTransform: {fileID: 0}
+  dropDistance: 1
+  throwForce: 3
+--- !u!114 &5481493524163071146
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1251040513523714244}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 029c0a329c5d4974c99219de7e612d64, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerInteraction: {fileID: 8112844272414573244}
 --- !u!1 &1485748148169229700
 GameObject:
   m_ObjectHideFlags: 0
