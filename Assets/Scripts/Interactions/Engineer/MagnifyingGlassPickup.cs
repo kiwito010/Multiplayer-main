@@ -16,7 +16,9 @@ public class MagnifyingGlassPickup : MonoBehaviour, IInteractable
     }
 
     private void PlayerInteraction_OnInteract(object sender, InteractEventArgs e) {
-        Interact();
+        if (e.interactable == this) {
+            Interact();
+        }
     }
 
     public void Interact() {

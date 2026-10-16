@@ -6,9 +6,11 @@ using UnityEngine;
 public class InteractEventArgs : EventArgs
 {
 
-   public IInteractable interactable;
+    public IInteractable interactable;
+    public PlayerInventory playerInventory;
 
-    public InteractEventArgs (IInteractable interactable) {
+    public InteractEventArgs (IInteractable interactable, PlayerInventory playerInventory) {
         this.interactable = interactable;
+        this.playerInventory = playerInventory;
     }
 }
