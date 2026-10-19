@@ -16,14 +16,15 @@ using UnityEngine.Serialization;
 public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
 {
     [Header("Referencias de UI (arrastrar desde la Hierarchy)")]
-    // FormerlySerializedAs conserva la referencia que ya tenías arrastrada en
-    // el Inspector bajo el nombre viejo "roomNameInput" (el campo de crear).
+    // Campo donde el jugador que CREA la sala escribe el código que quiere usar.
+    // [FormerlySerializedAs] le dice a Unity "este campo antes se llamaba
+    // roomNameInput", así conserva lo que ya tenías arrastrado en el Inspector
+    // en vez de dejarlo vacío al cambiar el nombre de la variable.
     [FormerlySerializedAs("roomNameInput")]
-    public TMP_InputField createRoomInput; // Campo "Crear codigo..."
-    public TMP_InputField joinRoomInput;   // Campo "Insertar codigo..."
+    public TMP_InputField createRoomInput;
 
-    [Header("Spawn points")]
-    public GameObject[] spawnPointObjects;
+    // Campo donde el jugador que SE UNE escribe el código de la sala a la que quiere entrar.
+    public TMP_InputField joinRoomInput;
 
     [Header("Prefab del jugador")]
     // NetworkPrefabRef es como un "GameObject" normal, pero apuntando
@@ -45,7 +46,7 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
     //  FUNCIONES QUE SE CONECTAN A LOS BOTONES DEL MENÚ
     // ---------------------------------------------------------
 
-    // Esta función la vamos a enganchar al OnClick() del botón "Crear"
+    // Esta función la vamos a enganchar al OnClick() del botón "Crear Partida"
     public void OnHostButtonPressed()
     {
         // Si ya hay un runner conectándose o conectado, ignoramos clics
@@ -53,10 +54,21 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
         // o aprieta el botón varias veces mientras espera la conexión).
         if (_runner != null) return;
 
+        // Leemos el código del campo de "Crear sala". Trim() le saca los
+        // espacios del principio y del final, para que "abc " y "abc" sean
+        // el mismo código (si no, un espacio de más haría que no coincidan).
+        string code = createRoomInput.text.Trim();
+
+        // Exigimos que haya un código; si no, avisamos y no hacemos nada.
+        if (string.IsNullOrEmpty(code))
+        {
+            Debug.LogWarning("Escribí un código en el campo de 'Crear sala' antes de apretar Crear.");
+            return;
+        }
+
         // GameMode.Host: esta máquina va a ser servidor Y jugador al mismo tiempo.
         // Tiene autoridad total sobre la partida (es el "dueño" de la sala).
-        // El nombre de la sala sale del campo "Crear codigo...".
-        StartGame(GameMode.Host, createRoomInput.text);
+        StartGame(GameMode.Host, code);
     }
 
     // Esta función la vamos a enganchar al OnClick() del botón "Unirse"
@@ -64,10 +76,18 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
     {
         if (_runner != null) return;
 
+        // Acá leemos el campo de "Unirse a sala", que es otro distinto.
+        string code = joinRoomInput.text.Trim();
+
+        if (string.IsNullOrEmpty(code))
+        {
+            Debug.LogWarning("Escribí el código de la sala en el campo de 'Unirse a sala' antes de apretar Unirse.");
+            return;
+        }
+
         // GameMode.Client: esta máquina se conecta a una sala que ya existe,
         // creada por otro jugador en modo Host.
-        // El nombre de la sala sale del campo "Insertar codigo...".
-        StartGame(GameMode.Client, joinRoomInput.text);
+        StartGame(GameMode.Client, code);
     }
 
     // ---------------------------------------------------------
@@ -79,20 +99,14 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
     // y no queremos que el juego se "congele" mientras tanto).
     private async void StartGame(GameMode mode, string roomCode)
     {
-        
-        // Este objeto (el que tiene el NetworkRunner) tiene que sobrevivir
-        // cuando cambiemos de la escena MainMenu a la escena Gameplay,
-        // porque ahí vive toda la conexión de red.
-        DontDestroyOnLoad(gameObject);
-        // Si el campo está vacío usamos "SalaDefault" (útil mientras probás solo).
-        // Trim() saca espacios sin querer al principio o al final del código.
-        string sessionName = string.IsNullOrWhiteSpace(roomCode) ? "SalaDefault" : roomCode.Trim();
-
-        // Creamos el componente NetworkRunner: es el objeto que realmente
-        // maneja toda la conexión.
+        // Creamos un GameObject vacío en tiempo de ejecución (no lo vas a ver
+        // en la Hierarchy hasta que le des Play) y le agregamos el componente
+        // NetworkRunner: es el objeto que realmente maneja toda la conexión.
         _runner = gameObject.AddComponent<NetworkRunner>();
 
-        _runner.ProvideInput = true; // Este runner va a mandar el input del jugador local
+        // Le decimos al runner "avisame a MÍ (este mismo script) cuando pase
+        // algo en la red" — por eso este script implementa INetworkRunnerCallbacks.
+        _runner.ProvideInput = true; // Además, este runner va a mandar el input del jugador local
 
         // NetworkSceneManagerDefault es el componente que le permite a Fusion
         // cargar/cambiar de escena de forma sincronizada entre todos los jugadores.
@@ -105,7 +119,9 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
 
             // SessionName es el "nombre de la sala". Todos los jugadores que
             // usen el mismo nombre se van a conectar a la MISMA partida.
-            SessionName = sessionName,
+            // Acá usamos el código que escribió el jugador (del campo de
+            // "Crear" o del de "Unirse", según el botón que apretó).
+            SessionName = roomCode,
 
             Scene = SceneRef.FromIndex(2), // Índice 2 = la escena "Gameplay" (0=TitleScreen, 1=MainMenu, 2=Gameplay)
             SceneManager = sceneManager
@@ -122,14 +138,20 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
         {
             Debug.LogError($"Fusion: no se pudo iniciar la partida. Motivo: {result.ShutdownReason}");
 
-            // Limpiamos el runner fallido y liberamos _runner. Sin esto, el
-            // chequeo "if (_runner != null) return;" de los botones bloquearía
-            // todos los intentos siguientes hasta reiniciar el juego.
+            // Limpiamos los componentes que creamos y dejamos _runner en null.
+            // Si no hiciéramos esto, el chequeo "if (_runner != null) return;"
+            // de los botones bloquearía para siempre cualquier reintento
+            // (por ejemplo, si te equivocaste de código al unirte).
             Destroy(sceneManager);
             Destroy(_runner);
             _runner = null;
             return;
         }
+
+        // Este objeto (el que tiene el NetworkRunner) tiene que sobrevivir
+        // cuando cambiemos de la escena MainMenu a la escena Gameplay,
+        // porque ahí vive toda la conexión de red.
+        DontDestroyOnLoad(gameObject);
     }
 
     // ---------------------------------------------------------
@@ -151,8 +173,7 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
             // "ver" objetos que viven en la escena Gameplay hasta que esa
             // escena ya esté cargada — y en este punto del código,
             // gracias al NetworkSceneManagerDefault, ya lo está.
-            spawnPointObjects = GameObject.FindGameObjectsWithTag("SpawnPoint");
-            Debug.Log("Spawn points encontrados: " + spawnPointObjects.Length);
+            GameObject[] spawnPointObjects = GameObject.FindGameObjectsWithTag("SpawnPoint");
 
             Vector3 spawnPosition = Vector3.zero;
             if (spawnPointObjects.Length > 0)
@@ -167,8 +188,6 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
                 // aparecen todos en el origen sin ningún mensaje de alerta.
                 Debug.LogWarning("No se encontró ningún objeto con la Tag 'SpawnPoint' en la escena. Los jugadores van a aparecer en (0,0,0).");
             }
-
-            Debug.Log("Spawn en: " + spawnPosition);
 
             // Runner.Spawn crea el objeto en TODAS las máquinas conectadas
             // de forma sincronizada (no es un Instantiate normal de Unity).

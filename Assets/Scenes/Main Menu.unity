@@ -284,8 +284,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7942d1a2397a60c409269046b93f9b23, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  roomNameInput: {fileID: 900395229}
-  spawnPointObjects: []
+  createRoomInput: {fileID: 900395229}
+  joinRoomInput: {fileID: 2055499525}
   playerPrefab:
     RawGuidValue: d53e7d05874e43a439234dcf3acd4220
 --- !u!4 &330084264
@@ -880,7 +880,7 @@ MonoBehaviour:
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 0, g: 0, b: 0, a: 1}
-    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_HighlightedColor: {r: 0.16037738, g: 0.06581525, b: 0.06581525, a: 1}
     m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
     m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
@@ -1350,8 +1350,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.0004, y: -0.00096538}
-  m_SizeDelta: {x: 799.9993, y: 449.75}
+  m_AnchoredPosition: {x: 0.027, y: -0.03}
+  m_SizeDelta: {x: 800.137, y: 449.135}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1251596640
 MonoBehaviour:
@@ -2135,8 +2135,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.0011756, y: -0.0017701}
-  m_SizeDelta: {x: 800, y: 449.75}
+  m_AnchoredPosition: {x: 0.026509, y: -0.038035}
+  m_SizeDelta: {x: 800.14, y: 449.12}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1952112920
 MonoBehaviour:
@@ -2371,7 +2371,7 @@ MonoBehaviour:
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 0, g: 0, b: 0, a: 1}
-    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_HighlightedColor: {r: 0.16078432, g: 0.06666667, b: 0.06666667, a: 1}
     m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
     m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
