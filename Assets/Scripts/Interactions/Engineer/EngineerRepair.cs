@@ -14,20 +14,7 @@ public class EngineerRepair : MonoBehaviour {
 
     private void PlayerInteraction_OnInteract(object sender, InteractEventArgs e) {
         if (e.interactable is RepairableComponent repairableComponent) {
-            TryRepair(repairableComponent);
+            repairableComponent.OpenRepairMinigame(playerInventory);
         }
-    }
-
-    private void TryRepair(RepairableComponent repairableComponent) {
-        PickableItem item = playerInventory.GetSelectedItem();
-
-        if (!repairableComponent.CanRepairWith(item)) {
-            Debug.Log("No se puede reparar con este objeto");
-            return;
-        }
-
-        repairableComponent.Repair();
-
-        playerInventory.RemoveSelectedItem();
     }
 }
