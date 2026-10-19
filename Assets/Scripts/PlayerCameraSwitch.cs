@@ -34,8 +34,16 @@ public class PlayerCameraSwitch : NetworkBehaviour
 
         if (isLocalPlayer)
         {
-            if (playerCamera != null) playerCamera.enabled = true;
-            if (audioListener != null) audioListener.enabled = true;
+            if (playerCamera != null)
+            {
+                playerCamera.gameObject.SetActive(true);
+                playerCamera.enabled = true;
+            }
+            if (audioListener != null)
+            {
+                audioListener.gameObject.SetActive(true);
+                audioListener.enabled = true;
+            }
         }
     }
 }
