@@ -8,6 +8,9 @@ public class InventoryUI : MonoBehaviour {
     [SerializeField] private TextMeshProUGUI[] slotTexts;
     [SerializeField] private Image[] slotImages;
 
+    [SerializeField] private Color normalColor;
+    [SerializeField] private Color selectedColor;
+
     private void OnEnable() {
         playerInventory.OnInventoryChanged += UpdateUI;
     }
@@ -21,6 +24,8 @@ public class InventoryUI : MonoBehaviour {
     }
 
     private void UpdateUI() {
+        int selectedSlot = playerInventory.GetSelectedSlot();
+
         for (int i = 0; i < slotTexts.Length; i++) {
             PickableItem item = playerInventory.GetItemInSlot(i);
 
@@ -28,6 +33,12 @@ public class InventoryUI : MonoBehaviour {
                 slotTexts[i].text = "";
             } else {
                 slotTexts[i].text = item.GetItemName();
+            }
+
+            if (i == selectedSlot) {
+                slotImages[i].color = selectedColor;
+            } else {
+                slotImages[i].color = normalColor;
             }
         }
     }

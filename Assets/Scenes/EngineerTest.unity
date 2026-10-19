@@ -177,6 +177,8 @@ MonoBehaviour:
   - {fileID: 1464350810}
   - {fileID: 1050465181}
   slotImages: []
+  normalColor: {r: 0, g: 0, b: 0, a: 0}
+  selectedColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!1 &14662486
 GameObject:
   m_ObjectHideFlags: 0
@@ -356,6 +358,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   itemName: Manguera de refrigeracion
+  freezeDelay: 0.5
+  maxVelocityToFreeze: 0.1
+  maxAngularVelocityToFreeze: 0.1
 --- !u!65 &37341984
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1706,7 +1711,12 @@ MonoBehaviour:
   - {fileID: 1011903712}
   - {fileID: 1976862816}
   - {fileID: 780705995}
-  slotImages: []
+  slotImages:
+  - {fileID: 113487836}
+  - {fileID: 1471479819}
+  - {fileID: 763557221}
+  normalColor: {r: 1, g: 1, b: 1, a: 0.39215687}
+  selectedColor: {r: 0.25490198, g: 0.25490198, b: 0.25490198, a: 0.5882353}
 --- !u!1 &681301402
 GameObject:
   m_ObjectHideFlags: 0
@@ -4288,6 +4298,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   itemName: Cooling Hose
+  freezeDelay: 0.5
+  maxVelocityToFreeze: 0.1
+  maxAngularVelocityToFreeze: 0.1
 --- !u!54 &1775394348
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -4554,7 +4567,12 @@ MonoBehaviour:
   - {fileID: 194526036}
   - {fileID: 2040083548}
   - {fileID: 398924240}
-  slotImages: []
+  slotImages:
+  - {fileID: 154650341}
+  - {fileID: 608063348}
+  - {fileID: 216123797}
+  normalColor: {r: 1, g: 1, b: 1, a: 0.39215687}
+  selectedColor: {r: 0.254717, g: 0.254717, b: 0.254717, a: 0.5882353}
 --- !u!1 &1937150645
 GameObject:
   m_ObjectHideFlags: 0

@@ -7,6 +7,13 @@ public class PickableItem : MonoBehaviour, IInteractable
     private Collider itemCollider;
     private Rigidbody itemRigidbody;
 
+    [SerializeField] private float freezeDelay = 0.5f;
+    [SerializeField] private float maxVelocityToFreeze = 0.1f;
+    [SerializeField] private float maxAngularVelocityToFreeze = 0.1f;
+
+    private bool touchingGround;
+    private bool freezeScheduled;
+
     private void Awake() {
         itemCollider = GetComponent<Collider>();
         itemRigidbody = GetComponent<Rigidbody>();
@@ -66,9 +73,42 @@ public class PickableItem : MonoBehaviour, IInteractable
         itemRigidbody.isKinematic = false;
         itemRigidbody.useGravity = true;
 
-        itemRigidbody.AddForce(
-            throwDirection * throwForce,
-            ForceMode.Impulse
-        );
+        CancelInvoke(nameof(TryFreezeItem));
+        freezeScheduled = false;
+
+        itemRigidbody.constraints = RigidbodyConstraints.None;
+
+        itemRigidbody.AddForce(throwDirection * throwForce, ForceMode.Impulse);
+    }
+
+    private void OnCollisionEnter(Collision collision) {
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Ground")){
+            touchingGround = true;
+
+            if (!freezeScheduled) { 
+                freezeScheduled = true;
+                Invoke(nameof(TryFreezeItem), freezeDelay);
+            }
+        }
+    }
+
+    private void OnCollisionExit(Collision collision) {
+        touchingGround = false;
+    }
+
+    private void TryFreezeItem() {
+        freezeScheduled = false;
+
+        if (!touchingGround)
+            return;
+
+        if (itemRigidbody.velocity.magnitude > maxVelocityToFreeze ||
+            itemRigidbody.angularVelocity.magnitude > maxAngularVelocityToFreeze) {
+            freezeScheduled = true;
+            Invoke(nameof(TryFreezeItem), freezeDelay);
+            return;
+        }
+
+        itemRigidbody.constraints = RigidbodyConstraints.FreezeAll;
     }
 }

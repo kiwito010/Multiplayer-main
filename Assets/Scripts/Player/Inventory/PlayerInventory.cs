@@ -15,7 +15,7 @@ public class PlayerInventory : MonoBehaviour
     private PickableItem equippedItem;
 
     private PickableItem[] slots;
-    private int selectedSlot = 0;
+    private int selectedSlot = -1;
 
     [SerializeField] private Transform cameraTransform;
 
@@ -71,15 +71,24 @@ public class PlayerInventory : MonoBehaviour
         if (slotIndex < 0 || slotIndex >= slots.Length)
             return;
 
-        if (selectedSlot == slotIndex && equippedItem != null) {
+        if (selectedSlot == slotIndex) {
+            
+            if (equippedItem != null) { 
             equippedItem.Unequip();
             equippedItem = null;
+            }
+
+            selectedSlot = -1;
+
+            OnInventoryChanged?.Invoke();
             return;
         }
 
         selectedSlot = slotIndex;
 
         EquipSelectedItem();
+
+        OnInventoryChanged?.Invoke();
 
         Debug.Log("Slot seleccionado: " + selectedSlot);
     }
@@ -101,18 +110,14 @@ public class PlayerInventory : MonoBehaviour
         if (equippedItem == null)
             return;
 
-        Vector3 dropPosition =
-            cameraTransform.position +
-            cameraTransform.forward * dropDistance;
+        Vector3 dropPosition = cameraTransform.position + cameraTransform.forward * dropDistance;
 
-        equippedItem.Drop(
-            dropPosition,
-            cameraTransform.forward,
-            throwForce
-        );
+        equippedItem.Drop(dropPosition, cameraTransform.forward, throwForce);
 
         slots[selectedSlot] = null;
+
         equippedItem = null;
+        selectedSlot = -1;
 
         OnInventoryChanged?.Invoke();
     }
@@ -129,6 +134,9 @@ public class PlayerInventory : MonoBehaviour
     }
 
     public PickableItem GetSelectedItem() {
+        if (selectedSlot < 0 || selectedSlot >= slots.Length)
+            return null;
+
         return slots[selectedSlot];
     }
 
