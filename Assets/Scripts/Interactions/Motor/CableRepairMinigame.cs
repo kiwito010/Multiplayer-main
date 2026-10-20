@@ -5,13 +5,10 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     private enum RepairPhase {
         CutBrokenCable,
         RemoveBrokenCable,
-        InsertNewCable,
+        PlaceNewCable,
         Wrap,
         Complete
     }
-
-    [SerializeField] private PlayerManager playerManager;
-    [SerializeField] private GameInput gameInput;
 
     [SerializeField] private GameObject content;
 
@@ -19,34 +16,36 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     [SerializeField] private GameObject newCable;
     [SerializeField] private GameObject socket;
     [SerializeField] private GameObject tape;
-    
+
     [SerializeField] private GameObject leftCutPoint;
     [SerializeField] private GameObject rightCutPoint;
 
-    private bool leftCut;
-    private bool rightCut;
-
     [SerializeField] private TextMeshProUGUI instructionText;
+
+    [SerializeField] private PlayerManager playerManager;
+    [SerializeField] private GameInput gameInput;
 
     private RepairPhase currentPhase;
 
     private RepairableComponent currentComponent;
     private PlayerInventory currentInventory;
 
+    private bool leftCut;
+    private bool rightCut;
+
+    private bool brokenCableRemoved;
+
     private bool repairStarted;
 
-    private void Start() {
-        currentPhase = RepairPhase.CutBrokenCable;
-        UpdatePhaseUI();
-    }
-
     private void Update() {
-        if (gameInput.GetExitComputerPressed()) {
+        if (content.activeSelf && gameInput.GetExitPressed()) {
             Close();
         }
     }
 
-    public void Open(RepairableComponent component, PlayerInventory inventory) {
+    public void Open(
+        RepairableComponent component,
+        PlayerInventory inventory) {
         currentComponent = component;
         currentInventory = inventory;
 
@@ -55,6 +54,8 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
             leftCut = false;
             rightCut = false;
+
+            brokenCableRemoved = false;
 
             repairStarted = true;
         }
@@ -73,34 +74,19 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     }
 
     private void UpdatePhaseUI() {
-        brokenCable.SetActive(
-            currentPhase == RepairPhase.CutBrokenCable ||
-            currentPhase == RepairPhase.RemoveBrokenCable
-        );
-
-        newCable.SetActive(
-            currentPhase == RepairPhase.InsertNewCable ||
-            currentPhase == RepairPhase.Wrap ||
-            currentPhase == RepairPhase.Complete
-        );
-
-        socket.SetActive(
-            currentPhase == RepairPhase.RemoveBrokenCable ||
-            currentPhase == RepairPhase.InsertNewCable ||
-            currentPhase == RepairPhase.Wrap ||
-            currentPhase == RepairPhase.Complete
-        );
-
-        tape.SetActive(
-            currentPhase == RepairPhase.Wrap
-        );
+        brokenCable.SetActive(true);
+        newCable.SetActive(true);
+        socket.SetActive(true);
+        tape.SetActive(true);
 
         leftCutPoint.SetActive(
-            currentPhase == RepairPhase.CutBrokenCable && !leftCut
+            currentPhase == RepairPhase.CutBrokenCable &&
+            !leftCut
         );
 
         rightCutPoint.SetActive(
-            currentPhase == RepairPhase.CutBrokenCable && !rightCut
+            currentPhase == RepairPhase.CutBrokenCable &&
+            !rightCut
         );
 
         UpdateInstruction();
@@ -109,49 +95,30 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     private void UpdateInstruction() {
         switch (currentPhase) {
             case RepairPhase.CutBrokenCable:
-                instructionText.text = "Corta las puntas del cable roto";
+                instructionText.text =
+                    "Corta las puntas del cable roto";
                 break;
 
             case RepairPhase.RemoveBrokenCable:
-                instructionText.text = "Retira el cable roto";
+                instructionText.text =
+                    "Retira el cable roto";
                 break;
 
-            case RepairPhase.InsertNewCable:
-                instructionText.text = "Coloca el cable nuevo";
+            case RepairPhase.PlaceNewCable:
+                instructionText.text =
+                    "Coloca el cable nuevo";
                 break;
 
             case RepairPhase.Wrap:
-                instructionText.text = "Encinta la reparacion";
+                instructionText.text =
+                    "Encinta la reparacion";
                 break;
 
             case RepairPhase.Complete:
-                instructionText.text = "REPARACION COMPLETA";
+                instructionText.text =
+                    "REPARACION COMPLETA";
                 break;
         }
-    }
-
-    public void CompleteCurrentPhase() {
-        switch (currentPhase) {
-            case RepairPhase.CutBrokenCable:
-                currentPhase = RepairPhase.RemoveBrokenCable;
-                break;
-
-            case RepairPhase.RemoveBrokenCable:
-                currentPhase = RepairPhase.InsertNewCable;
-                break;
-
-            case RepairPhase.InsertNewCable:
-                currentPhase = RepairPhase.Wrap;
-                break;
-
-            case RepairPhase.Wrap:
-                currentPhase = RepairPhase.Complete;
-                UpdatePhaseUI();
-                CompleteRepair();
-                break;
-        }
-
-        UpdatePhaseUI();
     }
 
     public void CutLeftSide() {
@@ -163,9 +130,7 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
         leftCut = true;
 
-        leftCutPoint.SetActive(false);
-        Debug.Log("Corte izquierdo");
-
+        UpdatePhaseUI();
         CheckCutsComplete();
     }
 
@@ -178,9 +143,7 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
         rightCut = true;
 
-        rightCutPoint.SetActive(false);
-        Debug.Log("Corte derecho");
-
+        UpdatePhaseUI();
         CheckCutsComplete();
     }
 
@@ -188,12 +151,6 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         if (leftCut && rightCut) {
             CompleteCurrentPhase();
         }
-    }
-
-    private void CompleteRepair() {
-        currentComponent.Repair();
-
-        Close();
     }
 
     public bool CanRemoveBrokenCable() {
@@ -204,6 +161,41 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         if (currentPhase != RepairPhase.RemoveBrokenCable)
             return;
 
+        brokenCableRemoved = true;
+
         CompleteCurrentPhase();
+    }
+
+    public bool CanPlaceNewCable() {
+        return brokenCableRemoved;
+    }
+
+    public void CompleteCurrentPhase() {
+        switch (currentPhase) {
+            case RepairPhase.CutBrokenCable:
+                currentPhase = RepairPhase.RemoveBrokenCable;
+                break;
+
+            case RepairPhase.RemoveBrokenCable:
+                currentPhase = RepairPhase.PlaceNewCable;
+                break;
+
+            case RepairPhase.PlaceNewCable:
+                currentPhase = RepairPhase.Wrap;
+                break;
+
+            case RepairPhase.Wrap:
+                currentPhase = RepairPhase.Complete;
+                CompleteRepair();
+                return;
+        }
+
+        UpdatePhaseUI();
+    }
+
+    private void CompleteRepair() {
+        currentComponent.Repair();
+
+        Close();
     }
 }

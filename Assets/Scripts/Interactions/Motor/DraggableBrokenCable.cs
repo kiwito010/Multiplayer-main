@@ -4,7 +4,7 @@ using UnityEngine.EventSystems;
 public class DraggableBrokenCable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler {
     [SerializeField] private CableRepairMinigame cableRepairMinigame;
     [SerializeField] private RectTransform cableRect;
-    [SerializeField] private RectTransform removeZone;
+    [SerializeField] private RectTransform connectionZone;
 
     private Vector2 startPosition;
 
@@ -13,11 +13,15 @@ public class DraggableBrokenCable : MonoBehaviour, IBeginDragHandler, IDragHandl
     }
 
     public void OnBeginDrag(PointerEventData eventData) {
+        Debug.Log("BEGIN DRAG");
+
         if (!cableRepairMinigame.CanRemoveBrokenCable())
             return;
     }
 
     public void OnDrag(PointerEventData eventData) {
+        Debug.Log("DRAG");
+
         if (!cableRepairMinigame.CanRemoveBrokenCable())
             return;
 
@@ -28,10 +32,20 @@ public class DraggableBrokenCable : MonoBehaviour, IBeginDragHandler, IDragHandl
         if (!cableRepairMinigame.CanRemoveBrokenCable())
             return;
 
-        if (RectTransformUtility.RectangleContainsScreenPoint(
-            removeZone,
-            eventData.position,
-            eventData.pressEventCamera)) {
+        Vector2 cableScreenPosition =
+            RectTransformUtility.WorldToScreenPoint(
+                null,
+                cableRect.position
+            );
+
+        bool stillInConnectionZone =
+            RectTransformUtility.RectangleContainsScreenPoint(
+                connectionZone,
+                cableScreenPosition,
+                null
+            );
+
+        if (!stillInConnectionZone) {
             cableRepairMinigame.BrokenCableRemoved();
         } else {
             cableRect.anchoredPosition = startPosition;

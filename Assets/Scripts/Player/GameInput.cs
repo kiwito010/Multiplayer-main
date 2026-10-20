@@ -31,7 +31,7 @@ public class GameInput : MonoBehaviour
         return inputActions.Player.Interact.WasPressedThisFrame();
     }
 
-    public bool GetExitComputerPressed() { 
+    public bool GetExitPressed() { 
         return inputActions.Player.ExitComputer.WasPressedThisFrame();
     }
 

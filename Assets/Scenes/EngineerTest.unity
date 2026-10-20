@@ -1603,7 +1603,7 @@ GameObject:
   - component: {fileID: 413618885}
   - component: {fileID: 413618884}
   m_Layer: 5
-  m_Name: RemoveZone
+  m_Name: CableConnectionZone
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5253,7 +5253,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cableRepairMinigame: {fileID: 1015649411}
   cableRect: {fileID: 1831464973}
-  removeZone: {fileID: 413618883}
+  connectionZone: {fileID: 413618883}
 --- !u!1 &1865385457
 GameObject:
   m_ObjectHideFlags: 0
