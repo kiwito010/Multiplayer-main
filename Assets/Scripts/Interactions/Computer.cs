@@ -83,7 +83,7 @@ public class Computer : MonoBehaviour, IInteractable {
     }
 
     public void Update() {
-        if (gameInput.GetExitComputerPressed()) { 
+        if (gameInput.GetExitPressed()) { 
             ExitComputer();
         }
     }

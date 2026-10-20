@@ -6,27 +6,19 @@ public class RepairableComponent : DiagnosableBase, IInteractable {
     [SerializeField] private TaskManager taskManager;
     [SerializeField] private TaskData repairTask;
 
-    [SerializeField] private string requiredItemName;
+    [SerializeField] private MonoBehaviour repairMinigameBehaviour;
 
+    private IRepairMinigame repairMinigame;
     private bool isRepaired;
+
+    private void Awake() {
+        repairMinigame = repairMinigameBehaviour as IRepairMinigame;
+    }
 
     protected override void OnScanComplete() {
         Debug.Log(componentName + " diagnosticado");
 
         taskManager.AddTask(repairTask);
-    }
-
-    public bool CanRepairWith(PickableItem item) {
-        if (!IsDiagnosed())
-            return false;
-
-        if (isRepaired)
-            return false;
-
-        if (item == null)
-            return false;
-
-        return item.GetItemName() == requiredItemName;
     }
 
     public void Repair() {
@@ -42,6 +34,23 @@ public class RepairableComponent : DiagnosableBase, IInteractable {
 
     public bool IsRepaired() {
         return isRepaired;
+    }
+
+    public void OpenRepairMinigame(PlayerInventory inventory) {
+        if (!IsDiagnosed()) {
+            Debug.Log("Este componente todavia no fue diagnosticado");
+            return;
+        }
+
+        if (isRepaired)
+            return;
+
+        if (repairMinigame == null) {
+            Debug.LogError("No hay un minijuego de reparacion asignado");
+            return;
+        }
+
+        repairMinigame.Open(this, inventory);
     }
 
     public void Interact() { 
