@@ -3235,6 +3235,7 @@ MonoBehaviour:
   leftTwistPoint: {fileID: 728695179}
   rightTwistPoint: {fileID: 1136807277}
   leftWrapCenter: {fileID: 338248896}
+  rightWrapCenter: {fileID: 217335038}
   requiredWrapRotation: 720
 --- !u!1 &1040746722
 GameObject:
@@ -3695,6 +3696,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 24e9025535977bc48a31ea2a0b0764d8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  cableRepairMinigame: {fileID: 1015649411}
+  tapeRect: {fileID: 1162635032}
 --- !u!1 &1168018095
 GameObject:
   m_ObjectHideFlags: 0
