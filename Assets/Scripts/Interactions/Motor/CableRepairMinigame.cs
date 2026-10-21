@@ -1,11 +1,13 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     private enum RepairPhase {
         CutBrokenCable,
         RemoveBrokenCable,
         PlaceNewCable,
+        TwistEnds,
         Wrap,
         Complete
     }
@@ -17,9 +19,6 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     [SerializeField] private GameObject socket;
     [SerializeField] private GameObject tape;
 
-    [SerializeField] private GameObject leftCutPoint;
-    [SerializeField] private GameObject rightCutPoint;
-
     [SerializeField] private TextMeshProUGUI instructionText;
 
     [SerializeField] private PlayerManager playerManager;
@@ -30,12 +29,28 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     private RepairableComponent currentComponent;
     private PlayerInventory currentInventory;
 
+    [SerializeField] private GameObject leftCutPoint;
+    [SerializeField] private GameObject rightCutPoint;
+
     private bool leftCut;
     private bool rightCut;
 
     private bool brokenCableRemoved;
 
     private bool repairStarted;
+
+    [SerializeField] private GameObject leftTwistPoint;
+    [SerializeField] private GameObject rightTwistPoint;
+
+    private bool leftTwisted;
+    private bool rightTwisted;
+
+    [SerializeField] private RectTransform leftWrapCenter;
+    [SerializeField] private float requiredWrapRotation = 720f;
+
+    private float accumulatedWrapRotation;
+    private float previousTapeAngle;
+    private bool isWrapping;
 
     private void Update() {
         if (content.activeSelf && gameInput.GetExitPressed()) {
@@ -89,6 +104,16 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
             !rightCut
         );
 
+        leftTwistPoint.SetActive(
+            currentPhase == RepairPhase.TwistEnds &&
+            !leftTwisted
+        );
+
+        rightTwistPoint.SetActive(
+            currentPhase == RepairPhase.TwistEnds &&
+            !rightTwisted
+        );
+
         UpdateInstruction();
     }
 
@@ -107,6 +132,10 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
             case RepairPhase.PlaceNewCable:
                 instructionText.text =
                     "Coloca el cable nuevo";
+                break;
+
+            case RepairPhase.TwistEnds:
+                instructionText.text = "Conecta las puntas del cable";
                 break;
 
             case RepairPhase.Wrap:
@@ -181,6 +210,10 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
                 break;
 
             case RepairPhase.PlaceNewCable:
+                currentPhase = RepairPhase.TwistEnds;
+                break;
+
+            case RepairPhase.TwistEnds:
                 currentPhase = RepairPhase.Wrap;
                 break;
 
@@ -191,6 +224,103 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         }
 
         UpdatePhaseUI();
+    }
+
+    public void NewCablePlaced() {
+        if (!brokenCableRemoved)
+            return;
+
+        if (currentPhase != RepairPhase.PlaceNewCable)
+            return;
+
+        CompleteCurrentPhase();
+    }
+
+    public void TwistLeftSide() {
+        if (currentPhase != RepairPhase.TwistEnds)
+            return;
+
+        if (leftTwisted)
+            return;
+
+        leftTwisted = true;
+
+        UpdatePhaseUI();
+        CheckTwistsComplete();
+    }
+
+    public void TwistRightSide() {
+        if (currentPhase != RepairPhase.TwistEnds)
+            return;
+
+        if (rightTwisted)
+            return;
+
+        rightTwisted = true;
+
+        UpdatePhaseUI();
+        CheckTwistsComplete();
+    }
+
+    private void CheckTwistsComplete() {
+        if (leftTwisted && rightTwisted) {
+            CompleteCurrentPhase();
+        }
+    }
+
+    public void StartWrapping(Vector2 tapePosition) {
+        if (currentPhase != RepairPhase.Wrap)
+            return;
+
+        isWrapping = true;
+
+        previousTapeAngle = GetTapeAngle(
+            tapePosition,
+            leftWrapCenter
+        );
+    }
+
+    public void UpdateWrapping(Vector2 tapePosition) {
+        if (!isWrapping)
+            return;
+
+        float currentTapeAngle = GetTapeAngle(
+            tapePosition,
+            leftWrapCenter
+        );
+
+        float angleDifference = Mathf.DeltaAngle(
+            previousTapeAngle,
+            currentTapeAngle
+        );
+
+        previousTapeAngle = currentTapeAngle;
+
+        if (angleDifference > 0f) {
+            accumulatedWrapRotation += angleDifference;
+        }
+
+        if (accumulatedWrapRotation >= requiredWrapRotation) {
+            accumulatedWrapRotation = 0f;
+            isWrapping = false;
+
+            Debug.Log("Punta izquierda encintada");
+        }
+    }
+    public void StopWrapping() {
+        isWrapping = false;
+    }
+
+    private float GetTapeAngle(
+    Vector2 tapePosition,
+    RectTransform center) {
+        Vector2 direction =
+            tapePosition - (Vector2)center.position;
+
+        return Mathf.Atan2(
+            direction.y,
+            direction.x
+        ) * Mathf.Rad2Deg;
     }
 
     private void CompleteRepair() {
