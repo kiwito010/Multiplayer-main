@@ -62,6 +62,9 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     private RectTransform currentWrapCenter;
     private bool wrappingLeft;
 
+    private string requiredCableName = "New Cable";
+    [SerializeField] private GameObject cableRequiredMessage;
+
     private void Update() {
         if (content.activeSelf && gameInput.GetExitPressed()) {
             Close();
@@ -87,6 +90,8 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
         content.SetActive(true);
 
+        cableRequiredMessage.SetActive(false);
+
         playerManager.EnterUIMode();
 
         UpdatePhaseUI();
@@ -100,8 +105,7 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
     private void UpdatePhaseUI() {
         brokenCable.SetActive(true);
-        newCable.SetActive(true);
-        socket.SetActive(true);
+        newCable.SetActive(HasRequiredCable());
         tape.SetActive(true);
 
         leftCutPoint.SetActive(
@@ -243,6 +247,15 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         if (currentPhase != RepairPhase.PlaceNewCable)
             return;
 
+        if (!HasRequiredCable())
+            return;
+
+        bool removed =
+            currentInventory.RemoveItem(requiredCableName);
+
+        if (!removed)
+            return;
+
         CompleteCurrentPhase();
     }
 
@@ -282,24 +295,9 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         if (currentPhase != RepairPhase.Wrap)
             return;
 
-        float distanceToLeft =
-            Vector2.Distance(tapePosition, leftWrapCenter.position);
-
-        float distanceToRight =
-            Vector2.Distance(tapePosition, rightWrapCenter.position);
-
-        if (!leftWrapped &&
-            (distanceToLeft < distanceToRight || rightWrapped)) {
-            currentWrapCenter = leftWrapCenter;
-            wrappingLeft = true;
-        } else if (!rightWrapped) {
-            currentWrapCenter = rightWrapCenter;
-            wrappingLeft = false;
-        } else {
-            return;
-        }
-
         isWrapping = true;
+
+        UpdateCurrentWrapTarget(tapePosition);
 
         previousTapeAngle = GetTapeAngle(
             tapePosition,
@@ -307,9 +305,28 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         );
     }
 
+    private void UpdateCurrentWrapTarget(Vector2 tapePosition) {
+        float distanceToLeft =
+            Vector2.Distance(tapePosition, leftWrapCenter.position);
+
+        float distanceToRight =
+            Vector2.Distance(tapePosition, rightWrapCenter.position);
+
+        if (!leftWrapped &&
+            distanceToLeft < distanceToRight) {
+            currentWrapCenter = leftWrapCenter;
+            wrappingLeft = true;
+        } else if (!rightWrapped) {
+            currentWrapCenter = rightWrapCenter;
+            wrappingLeft = false;
+        }
+    }
+
     public void UpdateWrapping(Vector2 tapePosition) {
         if (!isWrapping)
             return;
+
+        UpdateCurrentWrapTarget(tapePosition);
 
         float currentTapeAngle = GetTapeAngle(
             tapePosition,
@@ -331,8 +348,6 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
                 if (leftWrapRotation >= requiredWrapRotation) {
                     leftWrapped = true;
-                    isWrapping = false;
-
                     Debug.Log("Punta izquierda encintada");
                 }
             } else {
@@ -340,14 +355,13 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
                 if (rightWrapRotation >= requiredWrapRotation) {
                     rightWrapped = true;
-                    isWrapping = false;
-
                     Debug.Log("Punta derecha encintada");
                 }
             }
         }
 
         if (leftWrapped && rightWrapped) {
+            isWrapping = false;
             CompleteCurrentPhase();
         }
     }
@@ -380,5 +394,38 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         currentComponent.Repair();
 
         Close();
+    }
+
+    private bool HasRequiredCable()
+{
+    if (currentInventory == null)
+    {
+        Debug.Log("currentInventory es null");
+        return false;
+    }
+
+    bool hasCable = currentInventory.HasItem(requiredCableName);
+
+    Debug.Log("Buscando cable: " + requiredCableName);
+    Debug.Log("Tiene cable: " + hasCable);
+
+    return hasCable;
+}
+
+    public void CheckCableRequired() {
+        if (currentPhase != RepairPhase.PlaceNewCable)
+            return;
+
+        if (HasRequiredCable())
+            return;
+
+        cableRequiredMessage.SetActive(true);
+
+        CancelInvoke(nameof(HideCableRequiredMessage));
+        Invoke(nameof(HideCableRequiredMessage), 2f);
+    }
+
+    private void HideCableRequiredMessage() {
+        cableRequiredMessage.SetActive(false);
     }
 }

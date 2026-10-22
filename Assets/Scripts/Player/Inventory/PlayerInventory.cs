@@ -150,4 +150,46 @@ public class PlayerInventory : MonoBehaviour
     public int GetSelectedSlot() {
         return selectedSlot;
     }
+
+    public bool HasItem(string itemName) {
+        for (int i = 0; i < slots.Length; i++) {
+            if (slots[i] != null) {
+                Debug.Log(
+                    "Slot " + i +
+                    " contiene: " +
+                    slots[i].GetItemName()
+                );
+
+                if (slots[i].GetItemName() == itemName) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public bool RemoveItem(string itemName) {
+        for (int i = 0; i < slots.Length; i++) {
+            if (slots[i] != null &&
+                slots[i].GetItemName() == itemName) {
+                if (equippedItem == slots[i]) {
+                    equippedItem.gameObject.SetActive(false);
+                    equippedItem = null;
+                }
+
+                slots[i] = null;
+
+                if (selectedSlot == i) {
+                    selectedSlot = -1;
+                }
+
+                OnInventoryChanged?.Invoke();
+
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
