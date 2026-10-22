@@ -59,11 +59,19 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     private float previousTapeAngle;
     private bool isWrapping;
 
+    //required objects
+    [SerializeField] private GameObject requiredItemMessage;
+    [SerializeField] private TextMeshProUGUI requiredItemMessageText;
+
     private RectTransform currentWrapCenter;
     private bool wrappingLeft;
 
     private string requiredCableName = "New Cable";
-    [SerializeField] private GameObject cableRequiredMessage;
+
+
+    private string requiredPliersName = "Alicate";
+    private string requiredTapeName = "Tape";
+
 
     private void Update() {
         if (content.activeSelf && gameInput.GetExitPressed()) {
@@ -90,8 +98,6 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
         content.SetActive(true);
 
-        cableRequiredMessage.SetActive(false);
-
         playerManager.EnterUIMode();
 
         UpdatePhaseUI();
@@ -106,7 +112,7 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     private void UpdatePhaseUI() {
         brokenCable.SetActive(true);
         newCable.SetActive(HasRequiredCable());
-        tape.SetActive(true);
+        tape.SetActive(HasRequiredTape());
 
         leftCutPoint.SetActive(
             currentPhase == RepairPhase.CutBrokenCable &&
@@ -171,6 +177,11 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         if (leftCut)
             return;
 
+        if (!HasRequiredPliers()) {
+            ShowRequiredItemMessage("ALICATE NECESARIO");
+            return;
+        }
+
         leftCut = true;
 
         UpdatePhaseUI();
@@ -183,6 +194,11 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
         if (rightCut)
             return;
+
+        if (!HasRequiredPliers()) {
+            ShowRequiredItemMessage("ALICATE NECESARIO");
+            return;
+        }
 
         rightCut = true;
 
@@ -295,6 +311,9 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         if (currentPhase != RepairPhase.Wrap)
             return;
 
+        if (!HasRequiredTape())
+            return;
+
         isWrapping = true;
 
         UpdateCurrentWrapTarget(tapePosition);
@@ -305,22 +324,6 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         );
     }
 
-    private void UpdateCurrentWrapTarget(Vector2 tapePosition) {
-        float distanceToLeft =
-            Vector2.Distance(tapePosition, leftWrapCenter.position);
-
-        float distanceToRight =
-            Vector2.Distance(tapePosition, rightWrapCenter.position);
-
-        if (!leftWrapped &&
-            distanceToLeft < distanceToRight) {
-            currentWrapCenter = leftWrapCenter;
-            wrappingLeft = true;
-        } else if (!rightWrapped) {
-            currentWrapCenter = rightWrapCenter;
-            wrappingLeft = false;
-        }
-    }
 
     public void UpdateWrapping(Vector2 tapePosition) {
         if (!isWrapping)
@@ -362,26 +365,31 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
         if (leftWrapped && rightWrapped) {
             isWrapping = false;
+
+            currentInventory.RemoveItem(requiredTapeName);
+
             CompleteCurrentPhase();
+        }
+    }
+    private void UpdateCurrentWrapTarget(Vector2 tapePosition) {
+        float distanceToLeft =
+            Vector2.Distance(tapePosition, leftWrapCenter.position);
+
+        float distanceToRight =
+            Vector2.Distance(tapePosition, rightWrapCenter.position);
+
+        if (!leftWrapped &&
+            distanceToLeft < distanceToRight) {
+            currentWrapCenter = leftWrapCenter;
+            wrappingLeft = true;
+        } else if (!rightWrapped) {
+            currentWrapCenter = rightWrapCenter;
+            wrappingLeft = false;
         }
     }
 
     public void StopWrapping() {
         isWrapping = false;
-    }
-
-    private void CompleteWrapSide() {
-        if (wrappingLeft) {
-            leftWrapped = true;
-            Debug.Log("Punta izquierda encintada");
-        } else {
-            rightWrapped = true;
-            Debug.Log("Punta derecha encintada");
-        }
-
-        if (leftWrapped && rightWrapped) {
-            CompleteCurrentPhase();
-        }
     }
 
     private float GetTapeAngle(Vector2 tapePosition, RectTransform center) {
@@ -394,6 +402,18 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         currentComponent.Repair();
 
         Close();
+    }
+
+    private void ShowRequiredItemMessage(string message) {
+        requiredItemMessageText.text = message;
+        requiredItemMessage.SetActive(true);
+
+        CancelInvoke(nameof(HideRequiredItemMessage));
+        Invoke(nameof(HideRequiredItemMessage), 2f);
+    }
+
+    private void HideRequiredItemMessage() {
+        requiredItemMessage.SetActive(false);
     }
 
     private bool HasRequiredCable()
@@ -419,13 +439,37 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         if (HasRequiredCable())
             return;
 
-        cableRequiredMessage.SetActive(true);
+        ShowRequiredItemMessage("CABLE NECESARIO");
 
         CancelInvoke(nameof(HideCableRequiredMessage));
         Invoke(nameof(HideCableRequiredMessage), 2f);
     }
 
+    private bool HasRequiredPliers() {
+        if (currentInventory == null)
+            return false;
+
+        return currentInventory.HasItem(requiredPliersName);
+    }
+
     private void HideCableRequiredMessage() {
-        cableRequiredMessage.SetActive(false);
+        ShowRequiredItemMessage("CABLE NECESARIO");
+    }
+
+    private bool HasRequiredTape() {
+        if (currentInventory == null)
+            return false;
+
+        return currentInventory.HasItem(requiredTapeName);
+    }
+
+    public void CheckTapeRequired() {
+        if (currentPhase != RepairPhase.Wrap)
+            return;
+
+        if (HasRequiredTape())
+            return;
+
+        ShowRequiredItemMessage("TAPE NECESARIA");
     }
 }
