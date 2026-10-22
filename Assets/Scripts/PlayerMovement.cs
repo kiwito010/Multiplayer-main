@@ -38,6 +38,14 @@ public class PlayerMovement : NetworkBehaviour
     {
         _characterController = GetComponent<CharacterController>();
 
+        // Si cameraPivot esta vacio o apunta a algo que no es hijo de ESTE
+        // jugador (ej: el prefab del Project, compartido), usamos la camara propia.
+        if (cameraPivot == null || !cameraPivot.IsChildOf(transform))
+        {
+            var ownCamera = GetComponentInChildren<Camera>(true);
+            if (ownCamera != null) cameraPivot = ownCamera.transform;
+        }
+
         // El CharacterController guarda internamente su propia posición, y
         // si el objeto fue colocado en otro lugar (como hace Runner.Spawn con
         // el SpawnPoint), puede "volver" a la posición vieja del prefab apenas

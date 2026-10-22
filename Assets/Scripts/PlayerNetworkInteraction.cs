@@ -26,6 +26,17 @@ public class PlayerNetworkInteraction : NetworkBehaviour
     // NetworkObject lo usó.
     public static event System.Action<PlayerRef, NetworkObject> OnUsedOnTarget;
 
+    public override void Spawned()
+    {
+        // Si interactPoint esta vacio o apunta a algo que no es hijo de ESTE
+        // jugador (ej: el prefab del Project, compartido), usamos la camara propia.
+        if (interactPoint == null || !interactPoint.IsChildOf(transform))
+        {
+            var ownCamera = GetComponentInChildren<Camera>(true);
+            if (ownCamera != null) interactPoint = ownCamera.transform;
+        }
+    }
+
     public override void FixedUpdateNetwork()
     {
         if (GetInput(out NetworkInputData input))

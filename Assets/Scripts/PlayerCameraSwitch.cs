@@ -1,49 +1,39 @@
 using Fusion;
 using UnityEngine;
 
-// Cada jugador spawneado trae su propia cámara dentro del prefab.
-// Este script deja prendida SOLO la cámara (y el AudioListener) del jugador
-// local, y apaga la de todos los demás.
+// Deja prendida SOLO la camara (y el audio) del jugador local.
 public class PlayerCameraSwitch : NetworkBehaviour
 {
-    [Header("Referencias (arrastrar desde el prefab)")]
+    [Header("Referencias (si faltan o estan mal, se corrigen solas)")]
     public Camera playerCamera;
     public AudioListener audioListener;
 
     public override void Spawned()
     {
-        // Si olvidaste arrastrar las referencias en el prefab, las buscamos
-        // solas entre los hijos (incluso si están desactivadas).
-        if (playerCamera == null)
+        // Si la referencia esta vacia, o apunta a algo que NO es hijo de ESTE
+        // jugador (por ejemplo, la camara del prefab en la carpeta Project,
+        // que es UNA sola compartida por todos los jugadores), buscamos la
+        // camara propia de este jugador entre sus hijos.
+        if (playerCamera == null || !playerCamera.transform.IsChildOf(transform))
+        {
+            Debug.LogWarning("[PlayerCameraSwitch] 'Player Camera' no apuntaba a la camara de este jugador " +
+                             "(seguramente se arrastro desde Project). Se corrigio sola, pero conviene arreglarla en el prefab.");
             playerCamera = GetComponentInChildren<Camera>(true);
-        if (audioListener == null)
-            audioListener = GetComponentInChildren<AudioListener>(true);
+        }
 
+        if (audioListener == null || !audioListener.transform.IsChildOf(transform))
+        {
+            audioListener = GetComponentInChildren<AudioListener>(true);
+        }
+
+        // HasInputAuthority es true solo en la maquina del dueno de este personaje.
         bool isLocalPlayer = Object.HasInputAuthority;
 
-        Debug.Log($"[PlayerCameraSwitch] '{name}' isLocal={isLocalPlayer} " +
-                  $"camera={(playerCamera != null ? playerCamera.name : "NULL")} " +
-                  $"listener={(audioListener != null ? audioListener.name : "NULL")}");
+        playerCamera.enabled = isLocalPlayer;
 
-        // Apagamos TODAS las cámaras y listeners de este jugador, y recién
-        // después prendemos los míos. Así no queda ninguno "suelto" encendido.
-        foreach (var cam in GetComponentsInChildren<Camera>(true))
-            cam.enabled = false;
-        foreach (var listener in GetComponentsInChildren<AudioListener>(true))
-            listener.enabled = false;
-
-        if (isLocalPlayer)
+        if (audioListener != null)
         {
-            if (playerCamera != null)
-            {
-                playerCamera.gameObject.SetActive(true);
-                playerCamera.enabled = true;
-            }
-            if (audioListener != null)
-            {
-                audioListener.gameObject.SetActive(true);
-                audioListener.enabled = true;
-            }
+            audioListener.enabled = isLocalPlayer;
         }
     }
 }
