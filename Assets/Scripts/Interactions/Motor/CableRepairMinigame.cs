@@ -46,11 +46,21 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     private bool rightTwisted;
 
     [SerializeField] private RectTransform leftWrapCenter;
+    [SerializeField] private RectTransform rightWrapCenter;
+    
+    private bool leftWrapped;
+    private bool rightWrapped;
+
     [SerializeField] private float requiredWrapRotation = 720f;
 
-    private float accumulatedWrapRotation;
+    private float leftWrapRotation;
+    private float rightWrapRotation;
+
     private float previousTapeAngle;
     private bool isWrapping;
+
+    private RectTransform currentWrapCenter;
+    private bool wrappingLeft;
 
     private void Update() {
         if (content.activeSelf && gameInput.GetExitPressed()) {
@@ -272,11 +282,28 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         if (currentPhase != RepairPhase.Wrap)
             return;
 
+        float distanceToLeft =
+            Vector2.Distance(tapePosition, leftWrapCenter.position);
+
+        float distanceToRight =
+            Vector2.Distance(tapePosition, rightWrapCenter.position);
+
+        if (!leftWrapped &&
+            (distanceToLeft < distanceToRight || rightWrapped)) {
+            currentWrapCenter = leftWrapCenter;
+            wrappingLeft = true;
+        } else if (!rightWrapped) {
+            currentWrapCenter = rightWrapCenter;
+            wrappingLeft = false;
+        } else {
+            return;
+        }
+
         isWrapping = true;
 
         previousTapeAngle = GetTapeAngle(
             tapePosition,
-            leftWrapCenter
+            currentWrapCenter
         );
     }
 
@@ -286,7 +313,7 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
         float currentTapeAngle = GetTapeAngle(
             tapePosition,
-            leftWrapCenter
+            currentWrapCenter
         );
 
         float angleDifference = Mathf.DeltaAngle(
@@ -296,31 +323,57 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
         previousTapeAngle = currentTapeAngle;
 
-        if (angleDifference > 0f) {
-            accumulatedWrapRotation += angleDifference;
+        if (angleDifference < 0f) {
+            float rotationAmount = Mathf.Abs(angleDifference);
+
+            if (wrappingLeft) {
+                leftWrapRotation += rotationAmount;
+
+                if (leftWrapRotation >= requiredWrapRotation) {
+                    leftWrapped = true;
+                    isWrapping = false;
+
+                    Debug.Log("Punta izquierda encintada");
+                }
+            } else {
+                rightWrapRotation += rotationAmount;
+
+                if (rightWrapRotation >= requiredWrapRotation) {
+                    rightWrapped = true;
+                    isWrapping = false;
+
+                    Debug.Log("Punta derecha encintada");
+                }
+            }
         }
 
-        if (accumulatedWrapRotation >= requiredWrapRotation) {
-            accumulatedWrapRotation = 0f;
-            isWrapping = false;
-
-            Debug.Log("Punta izquierda encintada");
+        if (leftWrapped && rightWrapped) {
+            CompleteCurrentPhase();
         }
     }
+
     public void StopWrapping() {
         isWrapping = false;
     }
 
-    private float GetTapeAngle(
-    Vector2 tapePosition,
-    RectTransform center) {
-        Vector2 direction =
-            tapePosition - (Vector2)center.position;
+    private void CompleteWrapSide() {
+        if (wrappingLeft) {
+            leftWrapped = true;
+            Debug.Log("Punta izquierda encintada");
+        } else {
+            rightWrapped = true;
+            Debug.Log("Punta derecha encintada");
+        }
 
-        return Mathf.Atan2(
-            direction.y,
-            direction.x
-        ) * Mathf.Rad2Deg;
+        if (leftWrapped && rightWrapped) {
+            CompleteCurrentPhase();
+        }
+    }
+
+    private float GetTapeAngle(Vector2 tapePosition, RectTransform center) {
+        Vector2 direction = tapePosition - (Vector2)center.position;
+
+        return Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
     }
 
     private void CompleteRepair() {
