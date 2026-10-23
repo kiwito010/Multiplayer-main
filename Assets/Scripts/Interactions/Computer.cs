@@ -37,7 +37,7 @@ public class Computer : MonoBehaviour, IInteractable {
         isUsing = true;
 
         playerManager.EnterUIMode();
-        staminaUI.Hide();
+        staminaUI.ForceHide();
         computerUI.Show();
 
         Debug.Log("Entrando a la computadora");
