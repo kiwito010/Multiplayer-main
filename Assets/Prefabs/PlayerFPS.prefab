@@ -192,8 +192,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b37f7557e2a4f574ea472d888a662f8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerCamera: {fileID: 1354894142447243798, guid: 442aad2f130bf304686b964f5a40c6ac, type: 3}
-  audioListener: {fileID: 756089073605307874, guid: 442aad2f130bf304686b964f5a40c6ac, type: 3}
+  playerCamera: {fileID: 3018098544571956420}
+  audioListener: {fileID: 3553857599361942320}
 --- !u!114 &-5549801434036328598
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -284,6 +284,16 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 442aad2f130bf304686b964f5a40c6ac, type: 3}
+--- !u!20 &3018098544571956420 stripped
+Camera:
+  m_CorrespondingSourceObject: {fileID: 1354894142447243798, guid: 442aad2f130bf304686b964f5a40c6ac, type: 3}
+  m_PrefabInstance: {fileID: 4264906278637596370}
+  m_PrefabAsset: {fileID: 0}
+--- !u!81 &3553857599361942320 stripped
+AudioListener:
+  m_CorrespondingSourceObject: {fileID: 756089073605307874, guid: 442aad2f130bf304686b964f5a40c6ac, type: 3}
+  m_PrefabInstance: {fileID: 4264906278637596370}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &4916090557827576219 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 9157660794613145417, guid: 442aad2f130bf304686b964f5a40c6ac, type: 3}

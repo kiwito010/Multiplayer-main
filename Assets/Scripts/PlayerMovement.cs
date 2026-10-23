@@ -24,11 +24,17 @@ public class PlayerMovement : NetworkBehaviour
     // (por ejemplo, más adelante, para animaciones de apuntado).
     [Networked] private float NetworkedPitch { get; set; }
 
-    // Guardamos la velocidad vertical acumulada (qué tan rápido estamos
-    // cayendo), en vez de aplicar un empujón fijo cada frame. Esto es más
-    // robusto que depender solo de "isGrounded" (que a veces falla un
-    // frame y deja que el jugador se hunda un poco en el piso).
-    private float _verticalVelocity;
+    // Velocidad vertical acumulada (qué tan rápido estamos cayendo).
+    // Es [Networked] a propósito: cuando el cliente corrige su predicción,
+    // Fusion "rebobina" y vuelve a simular varios ticks. Las variables
+    // [Networked] se rebobinan con él; una variable común no, y quedaría
+    // con un valor de un tick que ya no corresponde.
+    [Networked] private float VerticalVelocity { get; set; }
+
+    // Si estábamos tocando el piso al terminar el tick anterior. Lo guardamos
+    // nosotros porque, como más abajo reiniciamos el CharacterController en
+    // cada tick, su propio isGrounded se resetea y no sirve para esto.
+    [Networked] private NetworkBool IsGrounded { get; set; }
 
     // Spawned() es una función de Fusion que se llama UNA sola vez, apenas
     // este objeto aparece en la red (equivalente al Start() de Unity, pero
@@ -37,6 +43,14 @@ public class PlayerMovement : NetworkBehaviour
     public override void Spawned()
     {
         _characterController = GetComponent<CharacterController>();
+
+        // Si cameraPivot esta vacio o apunta a algo que no es hijo de ESTE
+        // jugador (ej: el prefab del Project, compartido), usamos la camara propia.
+        if (cameraPivot == null || !cameraPivot.IsChildOf(transform))
+        {
+            var ownCamera = GetComponentInChildren<Camera>(true);
+            if (ownCamera != null) cameraPivot = ownCamera.transform;
+        }
 
         // El CharacterController guarda internamente su propia posición, y
         // si el objeto fue colocado en otro lugar (como hace Runner.Spawn con
@@ -103,29 +117,40 @@ public class PlayerMovement : NetworkBehaviour
                                    + transform.forward * input.moveDirection.y;
 
             // --- GRAVEDAD ---
-            if (_characterController.isGrounded)
+            if (IsGrounded)
             {
-                // Si estamos tocando el piso, mantenemos una caída chica
-                // constante (no cero). Esto "pega" al personaje contra el
-                // piso entre frame y frame, evitando que pierda el contacto
-                // por un instante y empiece a acelerar de nuevo desde cero
-                // (que es lo que suele causar que se hunda o atraviese pisos).
-                _verticalVelocity = -2f;
+                // Si estábamos tocando el piso, mantenemos una caída chica
+                // constante (no cero), para que el personaje quede "pegado"
+                // al piso entre tick y tick.
+                VerticalVelocity = -2f;
             }
             else
             {
-                // Si NO estamos tocando el piso (saltando o cayendo),
-                // la velocidad de caída se acelera con el tiempo, como
-                // la gravedad real.
-                _verticalVelocity += Physics.gravity.y * Runner.DeltaTime;
+                // Si NO estábamos tocando el piso (cayendo), la velocidad de
+                // caída se acelera con el tiempo, como la gravedad real.
+                VerticalVelocity += Physics.gravity.y * Runner.DeltaTime;
             }
 
-            // Combinamos movimiento horizontal + caída vertical en un solo
-            // Move(), en vez de llamar a Move() dos veces por separado
-            // (llamarlo una sola vez es más preciso para la detección de
-            // colisiones del Character Controller).
-            Vector3 finalMove = (moveDirection * moveSpeed) + (Vector3.up * _verticalVelocity);
+            // --- LA CLAVE PARA QUE NO SE DESFASE EN EL CLIENTE ---
+            // Cuando el cliente corrige su predicción, Fusion mueve el
+            // transform a la posición real del servidor y re-simula. Pero el
+            // CharacterController guarda su propia posición interna y NO se
+            // entera de ese cambio: seguiría desde su posición vieja y
+            // adelantada, sumando el movimiento dos veces (el jugador "corre
+            // de más" en su pantalla y el Host lo ve en otro lugar).
+            // Apagarlo y prenderlo lo obliga a releer la posición del
+            // transform, y SyncTransforms avisa a la física del cambio.
+            _characterController.enabled = false;
+            _characterController.enabled = true;
+            Physics.SyncTransforms();
+
+            // Combinamos movimiento horizontal + caída vertical en un solo Move().
+            Vector3 finalMove = (moveDirection * moveSpeed) + (Vector3.up * VerticalVelocity);
             _characterController.Move(finalMove * Runner.DeltaTime);
+
+            // Guardamos si quedamos en el piso para el próximo tick. Hay que
+            // leerlo ACÁ, justo después del Move(), que es cuando es válido.
+            IsGrounded = _characterController.isGrounded;
         }
     }
 }

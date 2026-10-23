@@ -42,6 +42,16 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
     // Nos sirve para poder destruir su personaje si se desconecta.
     private Dictionary<PlayerRef, NetworkObject> _spawnedCharacters = new Dictionary<PlayerRef, NetworkObject>();
 
+    private void Awake()
+    {
+        // Por defecto, Unity frena (o ralentiza muchisimo) el juego cuando su
+        // ventana pierde el foco. Si probas Host + Client en la misma PC, una
+        // de las dos ventanas SIEMPRE esta sin foco, entonces esa instancia
+        // simula el juego en camara lenta y las posiciones no coinciden.
+        // Con esto ambas siguen corriendo normal aunque no las estes mirando.
+        Application.runInBackground = true;
+    }
+
     // ---------------------------------------------------------
     //  FUNCIONES QUE SE CONECTAN A LOS BOTONES DEL MENÚ
     // ---------------------------------------------------------
@@ -246,6 +256,14 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
         input.Set(data); // Le entregamos el paquete armado a Fusion
     }
 
+    public void OnBackButtonPressed()
+    {
+        // El nombre tiene que coincidir EXACTO con el de la escena
+        // (sensible a mayúsculas) y la escena tiene que estar en
+        // File > Build Settings, como ya hicimos con las otras.
+        SceneManager.LoadScene("TitleScreen");
+    }
+    
     // ---------------------------------------------------------
     //  El resto de estas funciones las exige la interfaz
     //  INetworkRunnerCallbacks, pero no las necesitamos para
