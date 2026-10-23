@@ -1,11 +1,14 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     private enum RepairPhase {
         CutBrokenCable,
         RemoveBrokenCable,
         PlaceNewCable,
+        TwistEnds,
         Wrap,
         Complete
     }
@@ -17,9 +20,6 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     [SerializeField] private GameObject socket;
     [SerializeField] private GameObject tape;
 
-    [SerializeField] private GameObject leftCutPoint;
-    [SerializeField] private GameObject rightCutPoint;
-
     [SerializeField] private TextMeshProUGUI instructionText;
 
     [SerializeField] private PlayerManager playerManager;
@@ -30,12 +30,51 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     private RepairableComponent currentComponent;
     private PlayerInventory currentInventory;
 
+    [SerializeField] private GameObject leftCutPoint;
+    [SerializeField] private GameObject rightCutPoint;
+
     private bool leftCut;
     private bool rightCut;
 
     private bool brokenCableRemoved;
 
     private bool repairStarted;
+
+    [SerializeField] private GameObject leftTwistPoint;
+    [SerializeField] private GameObject rightTwistPoint;
+
+    private bool leftTwisted;
+    private bool rightTwisted;
+
+    [SerializeField] private RectTransform leftWrapCenter;
+    [SerializeField] private RectTransform rightWrapCenter;
+    
+    private bool leftWrapped;
+    private bool rightWrapped;
+
+    [SerializeField] private float requiredWrapRotation = 720f;
+
+    private float leftWrapRotation;
+    private float rightWrapRotation;
+
+    private float previousTapeAngle;
+    private bool isWrapping;
+
+    //required objects
+    [SerializeField] private GameObject requiredItemMessage;
+    [SerializeField] private TextMeshProUGUI requiredItemMessageText;
+
+    private RectTransform currentWrapCenter;
+    private bool wrappingLeft;
+
+    private string requiredCableName = "New Cable";
+    private string requiredPliersName = "Alicate";
+    private string requiredTapeName = "Tape";
+
+    [SerializeField] private RectTransform wrapProgressRect;
+    [SerializeField] private Image wrapProgressImage;
+    [SerializeField] private Vector2 wrapProgressOffset;
+
 
     private void Update() {
         if (content.activeSelf && gameInput.GetExitPressed()) {
@@ -75,9 +114,8 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
     private void UpdatePhaseUI() {
         brokenCable.SetActive(true);
-        newCable.SetActive(true);
-        socket.SetActive(true);
-        tape.SetActive(true);
+        newCable.SetActive(HasRequiredCable());
+        tape.SetActive(HasRequiredTape());
 
         leftCutPoint.SetActive(
             currentPhase == RepairPhase.CutBrokenCable &&
@@ -87,6 +125,16 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         rightCutPoint.SetActive(
             currentPhase == RepairPhase.CutBrokenCable &&
             !rightCut
+        );
+
+        leftTwistPoint.SetActive(
+            currentPhase == RepairPhase.TwistEnds &&
+            !leftTwisted
+        );
+
+        rightTwistPoint.SetActive(
+            currentPhase == RepairPhase.TwistEnds &&
+            !rightTwisted
         );
 
         UpdateInstruction();
@@ -109,6 +157,10 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
                     "Coloca el cable nuevo";
                 break;
 
+            case RepairPhase.TwistEnds:
+                instructionText.text = "Conecta las puntas del cable";
+                break;
+
             case RepairPhase.Wrap:
                 instructionText.text =
                     "Encinta la reparacion";
@@ -128,6 +180,11 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         if (leftCut)
             return;
 
+        if (!HasRequiredPliers()) {
+            ShowMessage("ALICATE NECESARIO");
+            return;
+        }
+
         leftCut = true;
 
         UpdatePhaseUI();
@@ -140,6 +197,11 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
         if (rightCut)
             return;
+
+        if (!HasRequiredPliers()) {
+            ShowMessage("ALICATE NECESARIO");
+            return;
+        }
 
         rightCut = true;
 
@@ -181,6 +243,10 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
                 break;
 
             case RepairPhase.PlaceNewCable:
+                currentPhase = RepairPhase.TwistEnds;
+                break;
+
+            case RepairPhase.TwistEnds:
                 currentPhase = RepairPhase.Wrap;
                 break;
 
@@ -193,9 +259,232 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         UpdatePhaseUI();
     }
 
+    public void NewCablePlaced() {
+        if (!brokenCableRemoved)
+            return;
+
+        if (currentPhase != RepairPhase.PlaceNewCable)
+            return;
+
+        if (!HasRequiredCable())
+            return;
+
+        CompleteCurrentPhase();
+    }
+
+    public void TwistLeftSide() {
+        if (currentPhase != RepairPhase.TwistEnds)
+            return;
+
+        if (leftTwisted)
+            return;
+
+        leftTwisted = true;
+
+        UpdatePhaseUI();
+        CheckTwistsComplete();
+    }
+
+    public void TwistRightSide() {
+        if (currentPhase != RepairPhase.TwistEnds)
+            return;
+
+        if (rightTwisted)
+            return;
+
+        rightTwisted = true;
+
+        UpdatePhaseUI();
+        CheckTwistsComplete();
+    }
+
+    private void CheckTwistsComplete() {
+        if (leftTwisted && rightTwisted) {
+            CompleteCurrentPhase();
+        }
+    }
+
+    public void StartWrapping(Vector2 tapePosition) {
+        if (currentPhase != RepairPhase.Wrap)
+            return;
+
+        if (!HasRequiredTape())
+            return;
+
+        isWrapping = true;
+
+        UpdateCurrentWrapTarget(tapePosition);
+
+        previousTapeAngle = GetTapeAngle(
+            tapePosition,
+            currentWrapCenter
+        );
+
+        wrapProgressRect.gameObject.SetActive(true);
+
+        UpdateWrapProgressUI(tapePosition);
+    }
+
+
+    public void UpdateWrapping(Vector2 tapePosition) {
+        if (!isWrapping)
+            return;
+
+        UpdateCurrentWrapTarget(tapePosition);
+
+        float currentTapeAngle = GetTapeAngle(
+            tapePosition,
+            currentWrapCenter
+        );
+
+        float angleDifference = Mathf.DeltaAngle(
+            previousTapeAngle,
+            currentTapeAngle
+        );
+
+        previousTapeAngle = currentTapeAngle;
+
+        if (angleDifference < 0f) {
+            float rotationAmount = Mathf.Abs(angleDifference);
+
+            if (wrappingLeft) {
+                leftWrapRotation += rotationAmount;
+
+                if (leftWrapRotation >= requiredWrapRotation) {
+                    leftWrapped = true;
+                    ShowMessage("Punta izquierda encintada");
+                }
+            } else {
+                rightWrapRotation += rotationAmount;
+
+                if (rightWrapRotation >= requiredWrapRotation) {
+                    rightWrapped = true;
+                    ShowMessage("Punta derecha encintada");
+                }
+            }
+        }
+
+        if (leftWrapped && rightWrapped) {
+            isWrapping = false;
+
+            currentInventory.RemoveItem(requiredTapeName);
+
+            CompleteCurrentPhase();
+        }
+
+        UpdateWrapProgressUI(tapePosition);
+    }
+
+    private void UpdateCurrentWrapTarget(Vector2 tapePosition) {
+        float distanceToLeft = Vector2.Distance(tapePosition, leftWrapCenter.position);
+
+        float distanceToRight = Vector2.Distance(tapePosition, rightWrapCenter.position);
+
+        if (!leftWrapped &&
+            distanceToLeft < distanceToRight) {
+            currentWrapCenter = leftWrapCenter;
+            wrappingLeft = true;
+        } else if (!rightWrapped) {
+            currentWrapCenter = rightWrapCenter;
+            wrappingLeft = false;
+        }
+    }
+
+    public void StopWrapping() {
+        isWrapping = false;
+        wrapProgressRect.gameObject.SetActive(false);
+    }
+
+    private float GetTapeAngle(Vector2 tapePosition, RectTransform center) {
+        Vector2 direction = tapePosition - (Vector2)center.position;
+
+        return Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+    }
+
     private void CompleteRepair() {
         currentComponent.Repair();
 
         Close();
+    }
+
+    private void UpdateWrapProgressUI(Vector2 tapePosition) {
+        wrapProgressRect.position =
+            tapePosition + wrapProgressOffset;
+
+        float currentRotation;
+
+        if (wrappingLeft) {
+            currentRotation = leftWrapRotation;
+        } else {
+            currentRotation = rightWrapRotation;
+        }
+
+        wrapProgressImage.fillAmount =
+            currentRotation / requiredWrapRotation;
+
+        Debug.Log("Mostrando progreso");
+    }
+
+    private void ShowMessage(string message) {
+        requiredItemMessageText.text = message;
+        requiredItemMessage.SetActive(true);
+
+        CancelInvoke(nameof(HideRequiredItemMessage));
+        Invoke(nameof(HideRequiredItemMessage), 2f);
+    }
+
+    private void HideRequiredItemMessage() {
+        requiredItemMessage.SetActive(false);
+    }
+
+    public void CheckCableRequired() {
+        if (currentPhase != RepairPhase.PlaceNewCable)
+            return;
+
+        if (HasRequiredCable())
+            return;
+
+        ShowMessage("CABLE NECESARIO");
+    }
+
+    private bool HasRequiredCable()
+{
+        if (currentInventory == null)
+        {
+            Debug.Log("currentInventory es null");
+            return false;
+        }
+
+        bool hasCable = currentInventory.HasItem(requiredCableName);
+
+        Debug.Log("Buscando cable: " + requiredCableName);
+        Debug.Log("Tiene cable: " + hasCable);
+            
+        return hasCable;
+    }
+
+
+    private bool HasRequiredPliers() {
+        if (currentInventory == null)
+            return false;
+
+        return currentInventory.HasItem(requiredPliersName);
+    }
+
+    public void CheckTapeRequired() {
+        if (currentPhase != RepairPhase.Wrap)
+            return;
+
+        if (HasRequiredTape())
+            return;
+
+        ShowMessage("TAPE NECESARIA");
+    }
+
+    private bool HasRequiredTape() {
+        if (currentInventory == null)
+            return false;
+
+        return currentInventory.HasItem(requiredTapeName);
     }
 }
