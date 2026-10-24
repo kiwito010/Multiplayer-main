@@ -23,16 +23,19 @@ public class EngineerDiagnostic : MonoBehaviour
     [SerializeField] private float scanLoseSpeed = 1f;
 
     //Lupa
-    private bool hasMagnifiynGlass;
+    private bool hasMagnifyingGlass;
 
     private IDiagnosable currentDiagnosable;
+
+    public event System.Action<bool> OnMagnifyingGlassStateChanged;
+
 
     private void Awake() {
         gameInput = GetComponent<GameInput>();
     }
 
     private void Update() {
-        if (!hasMagnifiynGlass || !gameInput.GetDiagnosticPressed()) { 
+        if (!hasMagnifyingGlass || !gameInput.GetDiagnosticPressed()) { 
             playerCamera.fieldOfView = normalFov;
             StopCurrentScan();
             scanUI.HideAll();
@@ -76,9 +79,13 @@ public class EngineerDiagnostic : MonoBehaviour
     }
 
     public void GiveMagnifyingGlass() { 
-        hasMagnifiynGlass = true;
+        hasMagnifyingGlass = true;
+        OnMagnifyingGlassStateChanged?.Invoke(true);
 
         Debug.Log("ENGINEER AHORA TIENE LUPA");
+    }
 
+    public bool HasMagnifyingGlass() {
+        return hasMagnifyingGlass;
     }
 }

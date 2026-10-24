@@ -11,43 +11,66 @@ public class InventoryUI : MonoBehaviour {
     [SerializeField] private Color normalColor;
     [SerializeField] private Color selectedColor;
 
-    [SerializeField] private GameObject closedInventory;
-    [SerializeField] private GameObject openInventory;
+    [SerializeField] private RectTransform inventoryPanel;
 
+    [SerializeField] private Vector2 openPosition;
+    [SerializeField] private Vector2 closedPosition;
+
+    [SerializeField] private float moveSpeed = 8f;
     [SerializeField] private float closeDelay = 1f;
 
-    private bool wasInventoryOpen;
+    private Vector2 targetPosition;
+    private bool closeScheduled;
+
+    [SerializeField] private EngineerDiagnostic engineerDiagnostic;
+
+    [SerializeField] private Image magnifyingGlassImage;
+
+    [SerializeField] private Color magnifyingGlassLockedColor;
+    [SerializeField] private Color magnifyingGlassUnlockedColor;
 
     private void OnEnable() {
         playerInventory.OnInventoryChanged += UpdateUI;
+        playerInventory.OnInventoryOpened += ShowInventoryTemporarily;
+
+        engineerDiagnostic.OnMagnifyingGlassStateChanged += EngineerDiagnostic_OnMagnifyingGlassStateChanged;
     }
 
     private void OnDisable() {
         playerInventory.OnInventoryChanged -= UpdateUI;
+        playerInventory.OnInventoryOpened -= ShowInventoryTemporarily;
+
+        engineerDiagnostic.OnMagnifyingGlassStateChanged -= EngineerDiagnostic_OnMagnifyingGlassStateChanged; 
+    }
+
+    private void EngineerDiagnostic_OnMagnifyingGlassStateChanged(
+    bool hasMagnifyingGlass) {
+        if (hasMagnifyingGlass) {
+            magnifyingGlassImage.color = magnifyingGlassUnlockedColor;
+        } else {
+            magnifyingGlassImage.color = magnifyingGlassLockedColor;
+        }
     }
 
     private void Start() {
+        targetPosition = closedPosition;
+        inventoryPanel.anchoredPosition = closedPosition;
+
         UpdateUI();
+
+        EngineerDiagnostic_OnMagnifyingGlassStateChanged(engineerDiagnostic.HasMagnifyingGlass());
+    }
+
+    private void Update() {
+        inventoryPanel.anchoredPosition = Vector2.Lerp(
+            inventoryPanel.anchoredPosition,
+            targetPosition,
+            Time.deltaTime * moveSpeed
+        );
     }
 
     private void UpdateUI() {
         int selectedSlot = playerInventory.GetSelectedSlot();
-
-        bool inventoryOpen = selectedSlot != -1;
-
-        if (inventoryOpen) {
-            CancelInvoke(nameof(CloseInventory));
-
-            openInventory.SetActive(true);
-            closedInventory.SetActive(false);
-
-            wasInventoryOpen = true;
-        } else if (wasInventoryOpen) {
-            CancelInvoke(nameof(CloseInventory));
-            Invoke(nameof(CloseInventory), closeDelay);
-
-            wasInventoryOpen = false;
-        }
 
         for (int i = 0; i < slotTexts.Length; i++) {
             PickableItem item = playerInventory.GetItemInSlot(i);
@@ -66,8 +89,16 @@ public class InventoryUI : MonoBehaviour {
         }
     }
 
+    private void ShowInventoryTemporarily() {
+        CancelInvoke(nameof(CloseInventory));
+
+        targetPosition = openPosition;
+
+        Invoke(nameof(CloseInventory), closeDelay);
+    }
+
     private void CloseInventory() {
-        openInventory.SetActive(false);
-        closedInventory.SetActive(true);
+        targetPosition = closedPosition;
+        closeScheduled = false;
     }
 }

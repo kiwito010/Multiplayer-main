@@ -24,6 +24,8 @@ public class PlayerInventory : MonoBehaviour
 
     public event System.Action OnInventoryChanged;
 
+    public event System.Action OnInventoryOpened;
+
     private void Awake() {
         slots = new PickableItem[maxSlots];
     }
@@ -52,6 +54,7 @@ public class PlayerInventory : MonoBehaviour
                 slots[i] = item;
 
                 OnInventoryChanged?.Invoke();
+                OnInventoryOpened?.Invoke();
 
                 Debug.Log(
                     item.GetItemName() +
@@ -89,6 +92,7 @@ public class PlayerInventory : MonoBehaviour
         EquipSelectedItem();
 
         OnInventoryChanged?.Invoke();
+        OnInventoryOpened?.Invoke();
 
         Debug.Log("Slot seleccionado: " + selectedSlot);
     }
