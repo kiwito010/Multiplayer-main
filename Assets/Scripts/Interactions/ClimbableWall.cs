@@ -1,17 +1,36 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class ClimbableWall : MonoBehaviour
-{
-    [SerializeField] private Transform topDestination;
-    [SerializeField] private Transform bottomDestination;
+public class ClimbableWall : MonoBehaviour, IInteractable {
+    [SerializeField] private Transform climbPoint;
 
-    public Vector3 GetTopDestination() { 
-        return topDestination.transform.position;
+    [SerializeField] private Vector3 wallNormal = Vector3.forward;
+
+    [SerializeField] private Collider climbCollider;
+
+    [SerializeField] private BoxCollider topExitArea;
+
+    public BoxCollider GetTopExitArea() {
+        return topExitArea;
     }
 
-    public Vector3 GetBottomDestination() { 
-        return bottomDestination.transform.position;
+    public Collider GetClimbCollider() {
+        return climbCollider;
+    }
+
+    public Transform GetClimbPoint() {
+        return climbPoint;
+    }
+
+    public Vector3 GetWallNormal() {
+        return transform.TransformDirection(wallNormal).normalized;
+    }
+
+    private void OnDrawGizmos() {
+        Vector3 normal = transform.TransformDirection(wallNormal).normalized;
+
+        Gizmos.DrawRay(transform.position, normal * 2f);
+    }
+
+    public void Interact() {
     }
 }

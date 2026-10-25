@@ -42,8 +42,12 @@ public class PlayerMovementSingle : MonoBehaviour {
     [SerializeField] private float proneHeight = 0.5f;
     [SerializeField] private float proneCameraOffset = 0.95f;
 
+    //explorer
     private Vector3 proneCenter;
     private bool isProne;
+
+    private bool isClimbing;
+    //
 
     [SerializeField] private LayerMask obstacleLayer;
 
@@ -51,7 +55,7 @@ public class PlayerMovementSingle : MonoBehaviour {
 
     private GameInput gameInput;
     private Rigidbody rb;
-
+    
     private bool jumpRequested;
 
 
@@ -74,14 +78,17 @@ public class PlayerMovementSingle : MonoBehaviour {
     }
 
     private void Update() {
+        if (isClimbing)
+            return;
+
         if (gameInput.GetJumpPressed() && IsGrounded() && !emptyStamina) {
             jumpRequested = true;
 
-                currentStamina -= jumpStaminaCost;
+            currentStamina -= jumpStaminaCost;
 
-                if (currentStamina < 0f) { 
-                    currentStamina = 0f;
-                }
+            if (currentStamina < 0f) {
+                currentStamina = 0f;
+            }
         }
 
         HandleStance();
@@ -89,6 +96,9 @@ public class PlayerMovementSingle : MonoBehaviour {
     }
 
     private void FixedUpdate() {
+        if (isClimbing)
+            return;
+
         HandleMovement();
 
         if (jumpRequested) {
@@ -158,6 +168,17 @@ public class PlayerMovementSingle : MonoBehaviour {
 
     public bool IsProne() {
         return isProne;
+    }
+
+    public void SetClimbing(bool climbing) {
+        isClimbing = climbing;
+
+        if (isClimbing) {
+            rb.useGravity = false;
+            rb.velocity = Vector3.zero;
+        } else {
+            rb.useGravity = true;
+        }
     }
 
     private void HandleMovement() {
