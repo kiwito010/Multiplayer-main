@@ -40,7 +40,6 @@ public class PlayerMovement : NetworkBehaviour
 
     // Si estábamos tocando el piso al terminar el tick anterior.
     [Networked] private NetworkBool IsGrounded { get; set; }
-
     // --- Estado del sprint y la stamina (antes eran variables comunes) ---
     [Networked] private float CurrentStamina { get; set; }
     [Networked] private NetworkBool EmptyStamina { get; set; }

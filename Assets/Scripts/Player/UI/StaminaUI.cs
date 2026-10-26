@@ -11,7 +11,7 @@ public class StaminaUI : MonoBehaviour
     [SerializeField] private Slider staminaSlider;
 
     [FormerlySerializedAs("playerMovement")]
-    [SerializeField] private PlayerMovementSingle playerMovementSingle; // opcional
+    [SerializeField] private PlayerMovement playerMovement; // opcional
 
     // Visibilidad forzada desde afuera (por ejemplo, Computer.cs al usar la terminal).
     private bool _forceHidden;
@@ -36,10 +36,10 @@ public class StaminaUI : MonoBehaviour
         float normalized;
         bool show;
 
-        if (playerMovementSingle != null)
+        if (playerMovement != null)
         {
-            normalized = playerMovementSingle.GetStaminaNormalized();
-            show = playerMovementSingle.ShouldShowStaminaUI();
+            normalized = playerMovement.GetStaminaNormalized();
+            show = playerMovement.ShouldShowStaminaUI();
         }
         else if (PlayerMovement.Local != null)
         {
