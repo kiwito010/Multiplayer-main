@@ -1,279 +1,197 @@
 using Fusion;
 using UnityEngine;
 
-// PlayerMovement multijugador (Fusion). Combina:
-//  - PlayerMovementSingle: caminar, sprint, stamina, salto, agacharse, boca abajo
-//  - PlayerLook: mirar con el mouse (yaw en el cuerpo, pitch en la cámara)
-//  - PlayerMovement (Fusion): simulación por ticks con CharacterController
+// NetworkBehaviour es como MonoBehaviour, pero con superpoderes de red:
+// nos da acceso a FixedUpdateNetwork(), a la propiedad "Object" (el
+// NetworkObject) y al atributo [Networked].
 //
-// IMPORTANTE: en el prefab del jugador NO deben estar PlayerMovementSingle,
-// PlayerLook ni el Rigidbody. Este script los reemplaza.
+// Este script combina:
+//  - El movimiento multijugador que ya funcionaba (CharacterController + Fusion).
+//  - El sprint y la stamina de PlayerMovementSingle, adaptados a la red.
 public class PlayerMovement : NetworkBehaviour
 {
-    // ---------------------------------------------------------
-    //  ACCESO AL JUGADOR LOCAL (para UI y para recolectar input)
-    // ---------------------------------------------------------
+    // Acceso rápido al jugador LOCAL (el tuyo). Sirve para que la UI de
+    // stamina encuentre al jugador, que aparece en runtime y no se puede
+    // arrastrar en el Inspector. Es null hasta que tu jugador aparece.
     public static PlayerMovement Local { get; private set; }
-    public static GameInput LocalGameInput { get; private set; }
 
-    // ---------------------------------------------------------
-    //  VALORES (tomados de PlayerMovementSingle y PlayerLook)
-    // ---------------------------------------------------------
-    [Header("Movimiento")]
-    public float moveSpeed = 5f;
-    [SerializeField] private float sprintSpeed = 8.5f;
-    [SerializeField] private float jumpForce = 5f;
-    [SerializeField] private float jumpStaminaCost = 1f;
+    [Header("Configuración de movimiento")]
+    public float moveSpeed = 5f;                       // CONFIRMAR: velocidad de caminata de PlayerMovementSingle
+    [SerializeField] private float sprintSpeed = 8.5f; // CONFIRMAR: velocidad de sprint de PlayerMovementSingle
+    public float lookSensitivity = 2f;                 // Qué tan rápido gira la cámara con el mouse
 
     [Header("Stamina")]
-    [SerializeField] private float maxStamina = 5f;
-    [SerializeField] private float staminaRechargeSpeed = 1f;
-
-    [Header("Mirar")]
-    public float lookSensitivity = 1f;
+    [SerializeField] private float maxStamina = 5f;              // CONFIRMAR: stamina máxima de PlayerMovementSingle
+    [SerializeField] private float staminaRechargeSpeed = 1f;    // CONFIRMAR: velocidad de recarga de PlayerMovementSingle
 
     [Header("Referencias (arrastrar desde el prefab)")]
-    public Transform cameraPivot; // La cámara: recibe el pitch y el desplazamiento al agacharse
-    [SerializeField] private Transform groundCheck;
-    [SerializeField] private float groundCheckRadius = 0.2f;
-    [SerializeField] private LayerMask groundLayer;
-    [SerializeField] private LayerMask obstacleLayer;
+    public Transform cameraPivot; // El objeto PlayerCamera
 
-    [Header("Postura")]
-    [SerializeField] private float crouchingHeight = 1f;
-    [SerializeField] private float proneHeight = 0.5f;
-    [SerializeField] private float crouchCameraOffset = 0.5f;
-    [SerializeField] private float proneCameraOffset = 0.95f;
-    [SerializeField] private float crouchSpeed = 8f; // velocidad con que se mueve la cámara al cambiar de postura
+    // Referencia al Character Controller del jugador.
+    private CharacterController _characterController;
 
-    // ---------------------------------------------------------
-    //  ESTADO SINCRONIZADO ([Networked])
-    //  Todo lo que afecta la simulación va acá para que el host y el
-    //  cliente calculen lo mismo y Fusion pueda rebobinar sin errores.
-    // ---------------------------------------------------------
+    // [Networked] le dice al motor "esta variable tiene que estar sincronizada
+    // entre todas las máquinas". Todo lo que afecta la simulación va acá,
+    // porque cuando el cliente corrige su predicción Fusion "rebobina" y
+    // vuelve a simular: las variables [Networked] se rebobinan con él, las
+    // variables comunes no.
     [Networked] private float NetworkedPitch { get; set; }
     [Networked] private float VerticalVelocity { get; set; }
-    [Networked] private NetworkBool GroundedAfterMove { get; set; }
+
+    // Si estábamos tocando el piso al terminar el tick anterior.
+    [Networked] private NetworkBool IsGrounded { get; set; }
+
+    // --- Estado del sprint y la stamina (antes eran variables comunes) ---
     [Networked] private float CurrentStamina { get; set; }
     [Networked] private NetworkBool EmptyStamina { get; set; }
-    [Networked] private NetworkBool Sprinting { get; set; }
-    [Networked] private NetworkBool Crouching { get; set; }
-    [Networked] private NetworkBool Prone { get; set; }
-    [Networked] private NetworkButtons ButtonsPrevious { get; set; }
+    [Networked] private NetworkBool IsSprinting { get; set; }
 
-    // ---------------------------------------------------------
-    //  ESTADO LOCAL (no necesita sincronizarse)
-    // ---------------------------------------------------------
-    private CharacterController _cc;
-    private float _standingHeight;
-    private Vector3 _standingCenter;
-    private Vector3 _standingCameraLocalPos;
-
-    private bool IsReady => Object != null && Object.IsValid;
-
-    // ---------------------------------------------------------
-    //  SPAWN
-    // ---------------------------------------------------------
+    // Spawned() se llama UNA sola vez, apenas este objeto aparece en la red.
     public override void Spawned()
     {
-        _cc = GetComponent<CharacterController>();
+        _characterController = GetComponent<CharacterController>();
 
-        // Si cameraPivot está vacío o apunta a algo que no es hijo de ESTE
-        // jugador (ej: el prefab del Project), usamos la cámara propia.
+        // Si cameraPivot esta vacio o apunta a algo que no es hijo de ESTE
+        // jugador (ej: el prefab del Project), usamos la camara propia.
         if (cameraPivot == null || !cameraPivot.IsChildOf(transform))
         {
             var ownCamera = GetComponentInChildren<Camera>(true);
             if (ownCamera != null) cameraPivot = ownCamera.transform;
         }
 
-        // Medidas de pie, tomadas del CharacterController del prefab.
-        _standingHeight = _cc.height;
-        _standingCenter = _cc.center;
-        if (cameraPivot != null) _standingCameraLocalPos = cameraPivot.localPosition;
-
-        // Obliga al CharacterController a releer la posición real del spawn.
-        _cc.enabled = false;
-        _cc.enabled = true;
+        // El CharacterController guarda internamente su propia posición; apagarlo
+        // y prenderlo lo obliga a releer la posición REAL actual del transform
+        // (la del SpawnPoint).
+        _characterController.enabled = false;
+        _characterController.enabled = true;
         Physics.SyncTransforms();
 
-        // Sensibilidad configurada en el menú de opciones (si existe).
+        // Sensibilidad configurada en el panel de Opciones (si existe).
         lookSensitivity = PlayerPrefs.GetFloat("OptionSensitivity", lookSensitivity);
 
-        // La stamina arranca llena (solo quien tiene autoridad puede escribirla).
+        // La stamina arranca llena. Solo quien tiene autoridad sobre el
+        // objeto (el Host) puede escribir el valor inicial.
         if (Object.HasStateAuthority)
         {
             CurrentStamina = maxStamina;
         }
 
+        // HasInputAuthority es true SOLO en la máquina del dueño de este personaje.
         if (Object.HasInputAuthority)
         {
             Local = this;
-
-            LocalGameInput = GetComponent<GameInput>();
-            if (LocalGameInput == null)
-            {
-                LocalGameInput = gameObject.AddComponent<GameInput>();
-            }
-
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }
-        else
-        {
-            // Los jugadores remotos no deben reaccionar a MI teclado.
-            var interaction = GetComponent<PlayerInteraction>();
-            if (interaction != null) interaction.enabled = false;
-        }
     }
 
+    // Se llama cuando el jugador desaparece de la red.
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
         if (Local == this)
         {
             Local = null;
-            LocalGameInput = null;
+        }
+    }
+
+    // FixedUpdateNetwork() es el corazón de la simulación en Fusion: corre a
+    // un ritmo FIJO (los "ticks" de red), así todas las máquinas calculan lo
+    // mismo con el mismo input.
+    public override void FixedUpdateNetwork()
+    {
+        if (GetInput(out NetworkInputData input))
+        {
+            // --- ROTACIÓN HORIZONTAL (girar el cuerpo) ---
+            float yaw = input.lookYaw * lookSensitivity;
+            transform.Rotate(0, yaw, 0);
+
+            // --- ROTACIÓN VERTICAL (mirar arriba/abajo, solo la cámara) ---
+            NetworkedPitch -= input.lookPitch * lookSensitivity;
+            NetworkedPitch = Mathf.Clamp(NetworkedPitch, -80f, 80f);
+
+            if (cameraPivot != null)
+            {
+                cameraPivot.localRotation = Quaternion.Euler(NetworkedPitch, 0, 0);
+            }
+
+            // --- MOVIMIENTO HORIZONTAL ---
+            Vector3 moveDirection = transform.right * input.moveDirection.x
+                                   + transform.forward * input.moveDirection.y;
+
+            // --- SPRINT Y STAMINA (de PlayerMovementSingle) ---
+            HandleSprint(input, Runner.DeltaTime);
+
+            // Igual que en el script viejo: si está en sprint usa sprintSpeed.
+            float currentSpeed = IsSprinting ? sprintSpeed : moveSpeed;
+
+            // --- GRAVEDAD ---
+            if (IsGrounded)
+            {
+                VerticalVelocity = -2f; // caída chica constante: queda "pegado" al piso
+            }
+            else
+            {
+                VerticalVelocity += Physics.gravity.y * Runner.DeltaTime;
+            }
+
+            // --- LA CLAVE PARA QUE NO SE DESFASE EN EL CLIENTE ---
+            // Apagar y prender el CharacterController lo obliga a releer la
+            // posición del transform después de una corrección de Fusion.
+            _characterController.enabled = false;
+            _characterController.enabled = true;
+            Physics.SyncTransforms();
+
+            // Movimiento horizontal + caída vertical en un solo Move().
+            Vector3 finalMove = (moveDirection * currentSpeed) + (Vector3.up * VerticalVelocity);
+            _characterController.Move(finalMove * Runner.DeltaTime);
+
+            // Guardamos si quedamos en el piso para el próximo tick.
+            IsGrounded = _characterController.isGrounded;
         }
     }
 
     // ---------------------------------------------------------
-    //  SIMULACIÓN (corre por tick de red)
+    //  SPRINT Y STAMINA (adaptado de PlayerMovementSingle)
+    //  Cambios respecto al original:
+    //   - Time.deltaTime -> dt (Runner.DeltaTime), porque corre por tick de red.
+    //   - gameInput.GetMovementVector() -> input.moveDirection
+    //   - gameInput.GetSprintPressed()  -> input.sprintPressed
+    //   - IsGrounded() -> IsGrounded (dato de red, sale del CharacterController)
     // ---------------------------------------------------------
-    public override void FixedUpdateNetwork()
+    private void HandleSprint(NetworkInputData input, float dt)
     {
-        if (!GetInput(out NetworkInputData input)) return;
-
-        float dt = Runner.DeltaTime;
-
-        // Botones que se apretaron en ESTE tick (no los que siguen apretados).
-        NetworkButtons pressed = input.buttons.GetPressed(ButtonsPrevious);
-        ButtonsPrevious = input.buttons;
-
-        // --- MIRAR (de PlayerLook) ---
-        transform.Rotate(0f, input.lookYaw * lookSensitivity, 0f);
-        NetworkedPitch = Mathf.Clamp(NetworkedPitch - input.lookPitch * lookSensitivity, -90f, 90f);
-
-        bool grounded = CheckGrounded();
-
-        // --- SALTO: pedido y costo de stamina (de PlayerMovementSingle) ---
-        bool jumpRequested = false;
-        if (pressed.IsSet((int)PlayerButtons.Jump) && grounded && !EmptyStamina)
-        {
-            jumpRequested = true;
-            CurrentStamina = Mathf.Max(0f, CurrentStamina - jumpStaminaCost);
-        }
-
-        // --- POSTURA ---
-        if (pressed.IsSet((int)PlayerButtons.Crouch))
-        {
-            if (Crouching && CanStandUp())
-            {
-                Crouching = false;
-            }
-            else if (!Crouching)
-            {
-                Crouching = true;
-            }
-        }
-        ApplyStanceToController();
-
-        // --- SPRINT Y STAMINA ---
-        bool sprintHeld = input.buttons.IsSet((int)PlayerButtons.Sprint);
         bool isMovingForward = input.moveDirection.y > 0f;
 
         if (EmptyStamina)
         {
-            Sprinting = false;
+            IsSprinting = false;
             RechargeStamina(dt);
+            return;
         }
-        else if (sprintHeld && isMovingForward && CurrentStamina > 0f && !Crouching && !Prone)
-        {
-            Sprinting = true;
 
-            if (grounded)
+        // NOTA: el original también pedía "&& !isCrouching && !isProne".
+        // Esas variables están en la parte del script que no me pasaste;
+        // cuando agreguemos agacharse/boca abajo se suman acá.
+        if (input.sprintPressed && isMovingForward && CurrentStamina > 0f)
+        {
+            IsSprinting = true;
+
+            if (IsGrounded)
             {
                 CurrentStamina -= dt;
             }
             if (CurrentStamina <= 0f)
             {
                 CurrentStamina = 0f;
-                Sprinting = false;
+                IsSprinting = false;
                 EmptyStamina = true;
             }
         }
         else
         {
-            Sprinting = false;
+            IsSprinting = false;
             RechargeStamina(dt);
         }
-
-        // --- GRAVEDAD Y SALTO ---
-        if (GroundedAfterMove)
-        {
-            VerticalVelocity = -2f; // pegado al piso
-        }
-        else
-        {
-            VerticalVelocity += Physics.gravity.y * dt;
-        }
-
-        if (jumpRequested)
-        {
-            VerticalVelocity = jumpForce;
-        }
-
-        // --- MOVIMIENTO ---
-        Vector3 moveDirection = transform.right * input.moveDirection.x
-                              + transform.forward * input.moveDirection.y;
-
-        float currentSpeed = Sprinting ? sprintSpeed : moveSpeed;
-
-        // El CharacterController guarda su propia posición interna; si Fusion
-        // corrigió el transform (predicción del cliente), hay que obligarlo a
-        // releerla antes de mover, o el jugador se desfasa.
-        _cc.enabled = false;
-        _cc.enabled = true;
-        Physics.SyncTransforms();
-
-        Vector3 finalMove = (moveDirection * currentSpeed) + (Vector3.up * VerticalVelocity);
-        _cc.Move(finalMove * dt);
-
-        GroundedAfterMove = _cc.isGrounded;
-    }
-
-    // ---------------------------------------------------------
-    //  VISUAL (corre cada frame, en todas las copias del jugador)
-    // ---------------------------------------------------------
-    public override void Render()
-    {
-        if (cameraPivot == null) return;
-
-        // Pitch: lo aplicamos acá para que también se vea en los jugadores remotos.
-        cameraPivot.localRotation = Quaternion.Euler(NetworkedPitch, 0f, 0f);
-
-        // Altura de la cámara según la postura (suavizada).
-        Vector3 target = _standingCameraLocalPos;
-        if (Prone)
-        {
-            target += Vector3.down * proneCameraOffset;
-        }
-        else if (Crouching)
-        {
-            target += Vector3.down * crouchCameraOffset;
-        }
-
-        cameraPivot.localPosition = Vector3.Lerp(cameraPivot.localPosition, target, crouchSpeed * Time.deltaTime);
-    }
-
-    // ---------------------------------------------------------
-    //  AUXILIARES (de PlayerMovementSingle)
-    // ---------------------------------------------------------
-    private bool CheckGrounded()
-    {
-        if (groundCheck != null)
-        {
-            return Physics.CheckSphere(groundCheck.position, groundCheckRadius, groundLayer);
-        }
-        return GroundedAfterMove;
     }
 
     private void RechargeStamina(float dt)
@@ -287,69 +205,20 @@ public class PlayerMovement : NetworkBehaviour
         }
     }
 
-    private bool CanStandUp()
-    {
-        float radius = _cc.radius;
-
-        Vector3 bottom = transform.position + Vector3.up * radius;
-        Vector3 top = transform.position + Vector3.up * (_standingHeight - radius);
-
-        return !Physics.CheckCapsule(bottom, top, radius, obstacleLayer);
-    }
-
-    // El CharacterController no puede ser más bajo que el doble de su radio;
-    // si crouchingHeight o proneHeight son menores, Unity los limita.
-    private void ApplyStanceToController()
-    {
-        float targetHeight = Prone ? proneHeight : (Crouching ? crouchingHeight : _standingHeight);
-        targetHeight = Mathf.Max(targetHeight, 2f * _cc.radius);
-
-        // Mantiene los pies a la misma altura al cambiar de postura.
-        Vector3 center = _standingCenter;
-        center.y = _standingCenter.y - (_standingHeight - targetHeight) / 2f;
-
-        _cc.height = targetHeight;
-        _cc.center = center;
-    }
-
     // ---------------------------------------------------------
-    //  API PÚBLICA (igual que en PlayerMovementSingle)
+    //  API PÚBLICA (mismos nombres que en PlayerMovementSingle)
+    //  Leer una variable [Networked] antes de que el objeto esté listo da
+    //  error, por eso el chequeo de Object.IsValid.
     // ---------------------------------------------------------
-    public void EnterProne() { SetProne(true); }
-    public void ExitProne() { SetProne(false); }
-    public bool IsProne() { return Prone; }
-
-    // La postura "boca abajo" es estado sincronizado: lo escribe el host.
-    // Si lo llama el dueño del jugador en un cliente, se lo pide al host.
-    private void SetProne(bool value)
-    {
-        if (!IsReady) return;
-
-        if (Object.HasStateAuthority)
-        {
-            Prone = value;
-        }
-        else if (Object.HasInputAuthority)
-        {
-            RPC_SetProne(value);
-        }
-    }
-
-    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
-    private void RPC_SetProne(bool value)
-    {
-        Prone = value;
-    }
-
     public float GetStaminaNormalized()
     {
-        if (!IsReady) return 1f;
+        if (Object == null || !Object.IsValid) return 1f;
         return CurrentStamina / maxStamina;
     }
 
     public bool ShouldShowStaminaUI()
     {
-        if (!IsReady) return false;
-        return Sprinting || CurrentStamina < maxStamina;
+        if (Object == null || !Object.IsValid) return false;
+        return IsSprinting || CurrentStamina < maxStamina;
     }
 }

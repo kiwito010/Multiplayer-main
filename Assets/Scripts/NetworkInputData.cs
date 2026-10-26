@@ -1,31 +1,27 @@
 using Fusion;
 using UnityEngine;
 
-// Botones de "mantener apretado" que viajan por la red. Fusion detecta solo
-// cuáles se apretaron en cada tick (NetworkButtons.GetPressed).
-public enum PlayerButtons
-{
-    Jump = 0,
-    Crouch = 1,
-    Sprint = 2
-}
-
 // Esta estructura representa "el input de un jugador en un instante".
 // Fusion no sincroniza el MOVIMIENTO directamente: sincroniza el INPUT
-// y cada máquina simula el resultado usando ese mismo input.
+// (que teclas apretaste, hacia donde miraba el mouse) y cada maquina
+// (la tuya, la del servidor, la de tus rivales) simula el resultado
+// usando ese mismo input.
 public struct NetworkInputData : INetworkInput
 {
-    // Vector de movimiento en el plano XZ (WASD).
+    // Vector de movimiento en el plano XZ.
     public Vector2 moveDirection;
 
-    // Movimiento del mouse ACUMULADO desde el tick anterior (en X para girar
-    // el cuerpo, en Y para mirar arriba/abajo).
+    // Rotacion horizontal acumulada del mouse (girar el cuerpo).
     public float lookYaw;
+
+    // Rotacion vertical del mouse (mirar arriba/abajo, solo afecta camara).
     public float lookPitch;
 
-    // Botón genérico de "usar" (click izquierdo), usado por PlayerNetworkInteraction.
+    // Boton generico de "usar/interactuar". Que hace exactamente al
+    // apretarlo es decision tuya (arma, herramienta, lo que sea) — este
+    // struct solo transporta el dato por la red, no le pone lógica encima.
     public NetworkBool useButtonPressed;
 
-    // Salto, agacharse y sprint.
-    public NetworkButtons buttons;
+    // True mientras el jugador mantiene apretada la tecla de sprint.
+    public NetworkBool sprintPressed;
 }

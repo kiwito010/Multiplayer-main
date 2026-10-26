@@ -253,17 +253,13 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
         // que definas vos) es responsabilidad de OTRO script, no de este.
         data.useButtonPressed = Input.GetButton("Fire1"); // Click izquierdo por defecto
 
+        // Sprint mientras se mantiene apretada la tecla. CONFIRMAR: usé Shift
+        // izquierdo; si tu GameInput usa otra tecla, cambiala acá.
+        data.sprintPressed = Input.GetKey(KeyCode.LeftShift);
+
         input.Set(data); // Le entregamos el paquete armado a Fusion
     }
 
-    public void OnBackButtonPressed()
-    {
-        // El nombre tiene que coincidir EXACTO con el de la escena
-        // (sensible a mayúsculas) y la escena tiene que estar en
-        // File > Build Settings, como ya hicimos con las otras.
-        SceneManager.LoadScene("TitleScreen");
-    }
-    
     // ---------------------------------------------------------
     //  El resto de estas funciones las exige la interfaz
     //  INetworkRunnerCallbacks, pero no las necesitamos para
