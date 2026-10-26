@@ -17,7 +17,6 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
     [SerializeField] private GameObject brokenCable;
     [SerializeField] private GameObject newCable;
-    [SerializeField] private GameObject socket;
     [SerializeField] private GameObject tape;
 
     [SerializeField] private TextMeshProUGUI instructionText;
@@ -26,6 +25,16 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     [SerializeField] private GameInput gameInput;
 
     private RepairPhase currentPhase;
+
+
+    //CablePanels
+    [SerializeField] private GameObject cutPanel;
+    [SerializeField] private GameObject removePanel;
+    [SerializeField] private GameObject placeCablePanel;
+    [SerializeField] private GameObject twistPanel;
+    [SerializeField] private GameObject wrapPanel;
+    [SerializeField] private GameObject completePanel;
+    //
 
     private RepairableComponent currentComponent;
     private PlayerInventory currentInventory;
@@ -59,7 +68,7 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
     private float previousTapeAngle;
     private bool isWrapping;
-
+    
     //required objects
     [SerializeField] private GameObject requiredItemMessage;
     [SerializeField] private TextMeshProUGUI requiredItemMessageText;
@@ -70,7 +79,7 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     private string requiredCableName = "New Cable";
     private string requiredPliersName = "Alicate";
     private string requiredTapeName = "Tape";
-
+    
     [SerializeField] private RectTransform wrapProgressRect;
     [SerializeField] private Image wrapProgressImage;
     [SerializeField] private Vector2 wrapProgressOffset;
@@ -78,7 +87,7 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
     private void Update() {
         if (content.activeSelf && gameInput.GetExitPressed()) {
-            Close();
+            ExitRepair();
         }
     }
 
@@ -106,7 +115,7 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         UpdatePhaseUI();
     }
 
-    public void Close() {
+    public void ExitRepair() {
         playerManager.ExitUIMode();
 
         content.SetActive(false);
@@ -117,25 +126,18 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         newCable.SetActive(HasRequiredCable());
         tape.SetActive(HasRequiredTape());
 
-        leftCutPoint.SetActive(
-            currentPhase == RepairPhase.CutBrokenCable &&
-            !leftCut
-        );
+        cutPanel.SetActive(currentPhase == RepairPhase.CutBrokenCable);
+        removePanel.SetActive(currentPhase == RepairPhase.RemoveBrokenCable);
+        placeCablePanel.SetActive (currentPhase == RepairPhase.PlaceNewCable);
+        twistPanel.SetActive(currentPhase == RepairPhase.TwistEnds);
+        wrapPanel.SetActive(currentPhase == RepairPhase.Wrap);
+        completePanel.SetActive(currentPhase == RepairPhase.Complete);
 
-        rightCutPoint.SetActive(
-            currentPhase == RepairPhase.CutBrokenCable &&
-            !rightCut
-        );
+        leftCutPoint.SetActive(currentPhase == RepairPhase.CutBrokenCable && !leftCut);
+        rightCutPoint.SetActive(currentPhase == RepairPhase.CutBrokenCable && !rightCut);
 
-        leftTwistPoint.SetActive(
-            currentPhase == RepairPhase.TwistEnds &&
-            !leftTwisted
-        );
-
-        rightTwistPoint.SetActive(
-            currentPhase == RepairPhase.TwistEnds &&
-            !rightTwisted
-        );
+        leftTwistPoint.SetActive(currentPhase == RepairPhase.TwistEnds && !leftTwisted);
+        rightTwistPoint.SetActive(currentPhase == RepairPhase.TwistEnds && !rightTwisted);
 
         UpdateInstruction();
     }
@@ -404,7 +406,7 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     private void CompleteRepair() {
         currentComponent.Repair();
 
-        Close();
+        ExitRepair();
     }
 
     private void UpdateWrapProgressUI(Vector2 tapePosition) {

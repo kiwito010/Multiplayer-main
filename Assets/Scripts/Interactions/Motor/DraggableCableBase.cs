@@ -8,7 +8,7 @@ public abstract class DraggableCableBase :
     [SerializeField] protected RectTransform cableRect;
     [SerializeField] protected RectTransform connectionZone;
 
-    public void OnDrag(PointerEventData eventData) {
+    public virtual void OnDrag(PointerEventData eventData) {
         cableRect.anchoredPosition += eventData.delta;
     }
 
