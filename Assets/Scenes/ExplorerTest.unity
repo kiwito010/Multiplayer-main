@@ -878,6 +878,10 @@ PrefabInstance:
       propertyPath: climbableLayerMask.m_Bits
       value: 4096
       objectReference: {fileID: 0}
+    - target: {fileID: 2941627287687080524, guid: b6e2bf408d5d50e49aa880344bce81c3, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 13400000, guid: 7663475b8788a47479d773f27ccec711, type: 2}
     - target: {fileID: 7430534757746923119, guid: b6e2bf408d5d50e49aa880344bce81c3, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
