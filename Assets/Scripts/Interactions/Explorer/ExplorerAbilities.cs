@@ -33,8 +33,13 @@ public class ExplorerAbilities : MonoBehaviour {
     }
 
     private void Update() {
-        if (isClimbing)
+        if (isClimbing) {
+            if (gameInput.GetJumpPressed()) {
+                StopClimbing();
+            }
+
             return;
+        }
 
         HandleProne();
     }
