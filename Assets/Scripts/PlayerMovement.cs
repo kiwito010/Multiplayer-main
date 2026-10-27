@@ -20,12 +20,24 @@ public class PlayerMovement : NetworkBehaviour
     [SerializeField] private float sprintSpeed = 8.5f; // CONFIRMAR: velocidad de sprint de PlayerMovementSingle
     public float lookSensitivity = 2f;                 // Qué tan rápido gira la cámara con el mouse
 
+    [Header("Salto")]
+    [SerializeField] private float jumpForce = 5f;          // CONFIRMAR: fuerza de salto
+    [SerializeField] private float jumpStaminaCost = 1f;    // CONFIRMAR: stamina que cuesta cada salto
+
     [Header("Stamina")]
     [SerializeField] private float maxStamina = 5f;              // CONFIRMAR: stamina máxima de PlayerMovementSingle
     [SerializeField] private float staminaRechargeSpeed = 1f;    // CONFIRMAR: velocidad de recarga de PlayerMovementSingle
 
     [Header("Referencias (arrastrar desde el prefab)")]
     public Transform cameraPivot; // El objeto PlayerCamera
+
+    [Header("UI")]
+    // Arrastrá acá tu prefab de la barra de stamina (el que tiene StaminaUI).
+    // Se crea SOLO para el jugador local, así cada uno ve únicamente su barra.
+    [SerializeField] private GameObject staminaUIPrefab;
+
+    // Lo que se creó para la barra, para poder borrarlo cuando el jugador se va.
+    private GameObject _hudRoot;
 
     // Referencia al Character Controller del jugador.
     private CharacterController _characterController;
@@ -40,10 +52,15 @@ public class PlayerMovement : NetworkBehaviour
 
     // Si estábamos tocando el piso al terminar el tick anterior.
     [Networked] private NetworkBool IsGrounded { get; set; }
+
     // --- Estado del sprint y la stamina (antes eran variables comunes) ---
     [Networked] private float CurrentStamina { get; set; }
     [Networked] private NetworkBool EmptyStamina { get; set; }
     [Networked] private NetworkBool IsSprinting { get; set; }
+
+    // Si la tecla de salto estaba apretada en el tick anterior. Sirve para
+    // saltar UNA vez por pulsación y no seguir saltando mientras la mantenés.
+    [Networked] private NetworkBool JumpWasPressed { get; set; }
 
     // Spawned() se llama UNA sola vez, apenas este objeto aparece en la red.
     public override void Spawned()
@@ -79,6 +96,7 @@ public class PlayerMovement : NetworkBehaviour
         if (Object.HasInputAuthority)
         {
             Local = this;
+            SpawnStaminaUI();
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }
@@ -90,6 +108,11 @@ public class PlayerMovement : NetworkBehaviour
         if (Local == this)
         {
             Local = null;
+        }
+
+        if (_hudRoot != null)
+        {
+            Destroy(_hudRoot);
         }
     }
 
@@ -131,6 +154,19 @@ public class PlayerMovement : NetworkBehaviour
             else
             {
                 VerticalVelocity += Physics.gravity.y * Runner.DeltaTime;
+            }
+
+            // --- SALTO ---
+            // "jumpDown" es true solo en el tick en que se aprieta la tecla
+            // (no mientras se mantiene). Solo se puede saltar desde el piso
+            // y con stamina disponible; cada salto cuesta stamina.
+            bool jumpDown = input.jumpPressed && !JumpWasPressed;
+            JumpWasPressed = input.jumpPressed;
+
+            if (jumpDown && IsGrounded && !EmptyStamina)
+            {
+                CurrentStamina = Mathf.Max(0f, CurrentStamina - jumpStaminaCost);
+                VerticalVelocity = jumpForce;
             }
 
             // --- LA CLAVE PARA QUE NO SE DESFASE EN EL CLIENTE ---
@@ -191,6 +227,37 @@ public class PlayerMovement : NetworkBehaviour
             IsSprinting = false;
             RechargeStamina(dt);
         }
+    }
+
+    // Crea la barra de stamina para el jugador local.
+    private void SpawnStaminaUI()
+    {
+        if (staminaUIPrefab == null) return;
+
+        GameObject instance = Instantiate(staminaUIPrefab);
+
+        // Si el prefab trae su propio Canvas, lo forzamos a "Screen Space -
+        // Overlay": se dibuja siempre sobre la pantalla del jugador, sin
+        // depender de ninguna cámara. Si estuviera en World Space o en
+        // Screen Space - Camera (apuntando a otra cámara), la barra quedaría
+        // en el mundo o en una cámara que no es la tuya.
+        Canvas ownCanvas = instance.GetComponentInChildren<Canvas>(true);
+        if (ownCanvas != null)
+        {
+            ownCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            _hudRoot = instance;
+            return;
+        }
+
+        // Si es solo la barra (sin Canvas), le creamos un Canvas propio.
+        // No usamos uno de la escena a propósito: podría ser el de una
+        // computadora u otra UI en el mundo, y la barra quedaría escondida.
+        var canvasObject = new GameObject("StaminaHUD Canvas",
+            typeof(Canvas), typeof(UnityEngine.UI.CanvasScaler), typeof(UnityEngine.UI.GraphicRaycaster));
+        canvasObject.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+
+        instance.transform.SetParent(canvasObject.transform, false);
+        _hudRoot = canvasObject;
     }
 
     private void RechargeStamina(float dt)

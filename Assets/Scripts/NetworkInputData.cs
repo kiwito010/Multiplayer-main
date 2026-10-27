@@ -24,4 +24,7 @@ public struct NetworkInputData : INetworkInput
 
     // True mientras el jugador mantiene apretada la tecla de sprint.
     public NetworkBool sprintPressed;
+
+    // True mientras el jugador mantiene apretada la tecla de salto.
+    public NetworkBool jumpPressed;
 }
