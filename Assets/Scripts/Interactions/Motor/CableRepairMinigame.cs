@@ -30,10 +30,17 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     //CablePanels
     [SerializeField] private GameObject cutPanel;
     [SerializeField] private GameObject removePanel;
-    [SerializeField] private GameObject placeCablePanel;
     [SerializeField] private GameObject twistPanel;
     [SerializeField] private GameObject wrapPanel;
-    [SerializeField] private GameObject completePanel;
+    //
+
+    //Signs
+    [SerializeField] private GameObject cutSign;
+    [SerializeField] private GameObject removeSign;
+    [SerializeField] private GameObject placeSign;
+    [SerializeField] private GameObject twistSign;
+    [SerializeField] private GameObject wrapSign;
+    [SerializeField] private GameObject repairedSign;
     //
 
     private RepairableComponent currentComponent;
@@ -57,7 +64,10 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
     [SerializeField] private RectTransform leftWrapCenter;
     [SerializeField] private RectTransform rightWrapCenter;
-    
+
+    [SerializeField] private GameObject leftWrappedPanel;
+    [SerializeField] private GameObject rightWrappedPanel;
+
     private bool leftWrapped;
     private bool rightWrapped;
 
@@ -127,17 +137,23 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         tape.SetActive(HasRequiredTape());
 
         cutPanel.SetActive(currentPhase == RepairPhase.CutBrokenCable);
-        removePanel.SetActive(currentPhase == RepairPhase.RemoveBrokenCable);
-        placeCablePanel.SetActive (currentPhase == RepairPhase.PlaceNewCable);
-        twistPanel.SetActive(currentPhase == RepairPhase.TwistEnds);
+        removePanel.SetActive(currentPhase == RepairPhase.RemoveBrokenCable || currentPhase == RepairPhase.PlaceNewCable || currentPhase == RepairPhase.TwistEnds);
+        removeSign.SetActive(currentPhase == RepairPhase.RemoveBrokenCable);
+        placeSign.SetActive (currentPhase == RepairPhase.PlaceNewCable);
+        twistSign.SetActive(currentPhase == RepairPhase.TwistEnds);
         wrapPanel.SetActive(currentPhase == RepairPhase.Wrap);
-        completePanel.SetActive(currentPhase == RepairPhase.Complete);
+        wrapSign.SetActive(currentPhase == RepairPhase.Wrap || currentPhase == RepairPhase.Complete);
+        repairedSign.SetActive(currentPhase == RepairPhase.Complete);
 
         leftCutPoint.SetActive(currentPhase == RepairPhase.CutBrokenCable && !leftCut);
         rightCutPoint.SetActive(currentPhase == RepairPhase.CutBrokenCable && !rightCut);
 
         leftTwistPoint.SetActive(currentPhase == RepairPhase.TwistEnds && !leftTwisted);
         rightTwistPoint.SetActive(currentPhase == RepairPhase.TwistEnds && !rightTwisted);
+
+        leftWrappedPanel.SetActive( currentPhase == RepairPhase.Wrap && leftWrapped);
+
+        rightWrappedPanel.SetActive(currentPhase == RepairPhase.Wrap && rightWrapped);
 
         UpdateInstruction();
     }
@@ -354,6 +370,9 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
                 if (leftWrapRotation >= requiredWrapRotation) {
                     leftWrapped = true;
+
+                    UpdatePhaseUI();
+
                     ShowMessage("Punta izquierda encintada");
                 }
             } else {
@@ -361,6 +380,9 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
                 if (rightWrapRotation >= requiredWrapRotation) {
                     rightWrapped = true;
+
+                    UpdatePhaseUI();
+
                     ShowMessage("Punta derecha encintada");
                 }
             }
@@ -406,7 +428,7 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     private void CompleteRepair() {
         currentComponent.Repair();
 
-        ExitRepair();
+        UpdatePhaseUI();
     }
 
     private void UpdateWrapProgressUI(Vector2 tapePosition) {
