@@ -81,6 +81,11 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
         StartGame(GameMode.Host, code);
     }
 
+    public void OnBackButtonPressed()
+{
+    SceneManager.LoadScene("TitleScreen");
+}
+
     // Esta función la vamos a enganchar al OnClick() del botón "Unirse"
     public void OnJoinButtonPressed()
     {
