@@ -3,7 +3,9 @@ guid: aacdccd3d645a54459c6af94b44c3ff3
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - cameraPivot: {instanceID: 0}
+  - staminaUIPrefab: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

@@ -10,6 +10,13 @@ public class DraggableBrokenCable : DraggableCableBase {
         startPosition = cableRect.anchoredPosition;
     }
 
+    public override void OnDrag(PointerEventData eventData) {
+        if (!cableRepairMinigame.CanRemoveBrokenCable())
+            return;
+
+        base.OnDrag(eventData);
+    }
+
     public override void OnEndDrag(PointerEventData eventData) {
         if (!cableRepairMinigame.CanRemoveBrokenCable())
             return;

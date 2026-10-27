@@ -262,6 +262,12 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
         // izquierdo; si tu GameInput usa otra tecla, cambiala acá.
         data.sprintPressed = Input.GetKey(KeyCode.LeftShift);
 
+        // Salto con Espacio. CONFIRMAR: cambiá la tecla si tu GameInput usa otra.
+        // Leemos si está MANTENIDA (GetKey) y no el instante en que se aprieta
+        // (GetKeyDown): OnInput no corre en cada frame y podría perderse la
+        // pulsación. El script detecta el momento exacto del apretado por su cuenta.
+        data.jumpPressed = Input.GetKey(KeyCode.Space);
+
         input.Set(data); // Le entregamos el paquete armado a Fusion
     }
 

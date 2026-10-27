@@ -217,9 +217,12 @@ MonoBehaviour:
   moveSpeed: 5
   sprintSpeed: 8.5
   lookSensitivity: 2
+  jumpForce: 5
+  jumpStaminaCost: 1
   maxStamina: 5
   staminaRechargeSpeed: 1
   cameraPivot: {fileID: 4916090557827576219}
+  staminaUIPrefab: {fileID: 4787919162647619806, guid: 5577647c0c099be47a831728f9d4fe1d, type: 3}
 --- !u!114 &4516032627377954848
 MonoBehaviour:
   m_ObjectHideFlags: 0
