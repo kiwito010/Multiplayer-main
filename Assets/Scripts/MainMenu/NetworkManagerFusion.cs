@@ -1,10 +1,8 @@
 using System.Collections.Generic;
 using Fusion;
 using Fusion.Sockets;
-using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.Serialization;
 
 // MonoBehaviour = un script normal de Unity que se puede poner en un GameObject.
 // INetworkRunnerCallbacks = una interfaz de Fusion con "avisos" (eventos) de red:
@@ -15,23 +13,18 @@ using UnityEngine.Serialization;
 // (aunque estén vacías) porque la interfaz las exige.
 public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
 {
-    [Header("Referencias de UI (arrastrar desde la Hierarchy)")]
-    // Campo donde el jugador que CREA la sala escribe el código que quiere usar.
-    // [FormerlySerializedAs] le dice a Unity "este campo antes se llamaba
-    // roomNameInput", así conserva lo que ya tenías arrastrado en el Inspector
-    // en vez de dejarlo vacío al cambiar el nombre de la variable.
-    [FormerlySerializedAs("roomNameInput")]
-    public TMP_InputField createRoomInput;
+    [Header("Personajes (el orden importa: 0=Ingeniero, 1=Hacker, 2=Científico, 3=Explorador)")]
+    // Un prefab por personaje. NetworkPrefabRef es como un "GameObject", pero
+    // apuntando a un prefab registrado en el sistema de red de Fusion (cada
+    // uno tiene que tener el componente Network Object). El número de cada
+    // casillero es el que manda cada botón de ChooseCharacter.
+    public NetworkPrefabRef[] characterPrefabs;
 
-    // Campo donde el jugador que SE UNE escribe el código de la sala a la que quiere entrar.
-    public TMP_InputField joinRoomInput;
-
-    [Header("Prefab del jugador")]
-    // NetworkPrefabRef es como un "GameObject" normal, pero apuntando
-    // específicamente a un prefab registrado en el sistema de red de Fusion.
-    // Fusion lo necesita así (no un GameObject común) para poder instanciarlo
-    // de forma sincronizada en todas las máquinas conectadas.
-    public NetworkPrefabRef playerPrefab;
+    [Header("Escenas")]
+    // Nombre exacto de la escena de juego (tiene que estar en Build Settings).
+    // La buscamos por nombre y no por número, así agregar o reordenar
+    // escenas no rompe nada.
+    [SerializeField] private string gameplaySceneName = "Gameplay";
 
     // Esta variable va a guardar la instancia del NetworkRunner una vez
     // que la creamos. La necesitamos para poder usarla en varias funciones.
@@ -53,120 +46,92 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
     }
 
     // ---------------------------------------------------------
-    //  FUNCIONES QUE SE CONECTAN A LOS BOTONES DEL MENÚ
-    // ---------------------------------------------------------
-
-    // Esta función la vamos a enganchar al OnClick() del botón "Crear Partida"
-    public void OnHostButtonPressed()
-    {
-        // Si ya hay un runner conectándose o conectado, ignoramos clics
-        // repetidos (por ejemplo, si el jugador hace doble clic sin querer,
-        // o aprieta el botón varias veces mientras espera la conexión).
-        if (_runner != null) return;
-
-        // Leemos el código del campo de "Crear sala". Trim() le saca los
-        // espacios del principio y del final, para que "abc " y "abc" sean
-        // el mismo código (si no, un espacio de más haría que no coincidan).
-        string code = createRoomInput.text.Trim();
-
-        // Exigimos que haya un código; si no, avisamos y no hacemos nada.
-        if (string.IsNullOrEmpty(code))
-        {
-            Debug.LogWarning("Escribí un código en el campo de 'Crear sala' antes de apretar Crear.");
-            return;
-        }
-
-        // GameMode.Host: esta máquina va a ser servidor Y jugador al mismo tiempo.
-        // Tiene autoridad total sobre la partida (es el "dueño" de la sala).
-        StartGame(GameMode.Host, code);
-    }
-
-    public void OnBackButtonPressed()
-{
-    SceneManager.LoadScene("TitleScreen");
-}
-
-    // Esta función la vamos a enganchar al OnClick() del botón "Unirse"
-    public void OnJoinButtonPressed()
-    {
-        if (_runner != null) return;
-
-        // Acá leemos el campo de "Unirse a sala", que es otro distinto.
-        string code = joinRoomInput.text.Trim();
-
-        if (string.IsNullOrEmpty(code))
-        {
-            Debug.LogWarning("Escribí el código de la sala en el campo de 'Unirse a sala' antes de apretar Unirse.");
-            return;
-        }
-
-        // GameMode.Client: esta máquina se conecta a una sala que ya existe,
-        // creada por otro jugador en modo Host.
-        StartGame(GameMode.Client, code);
-    }
-
-    // ---------------------------------------------------------
     //  LÓGICA PRINCIPAL DE CONEXIÓN
     // ---------------------------------------------------------
 
+    // Se llama desde CharacterSelect (escena ChooseCharacter) apenas el
+    // jugador elige su personaje. El modo (Host/Client) y el código de sala
+    // los dejó guardados el MainMenu en GameSession.
+    public void StartConnection()
+    {
+        // Si ya hay un runner conectándose, ignoramos clics repetidos.
+        if (_runner != null) return;
+
+        if (string.IsNullOrEmpty(GameSession.RoomCode))
+        {
+            Debug.LogWarning("No hay un código de sala guardado. Volvé al menú principal y escribilo.");
+            UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+            return;
+        }
+
+        StartGame(GameSession.Mode, GameSession.RoomCode);
+    }
+
     // async void: esta función corre en paralelo sin trabar el juego mientras
-    // espera la respuesta del servidor de Photon (conectarse tarda un ratito,
-    // y no queremos que el juego se "congele" mientras tanto).
+    // espera la respuesta del servidor de Photon.
     private async void StartGame(GameMode mode, string roomCode)
     {
-        // Creamos un GameObject vacío en tiempo de ejecución (no lo vas a ver
-        // en la Hierarchy hasta que le des Play) y le agregamos el componente
-        // NetworkRunner: es el objeto que realmente maneja toda la conexión.
+        // El número de la escena de juego en Build Settings, buscado por nombre.
+        int gameplayIndex = GetBuildIndexByName(gameplaySceneName);
+        if (gameplayIndex < 0)
+        {
+            Debug.LogError($"No encontré la escena '{gameplaySceneName}' en Build Settings. Agregala en File > Build Settings.");
+            return;
+        }
+
+        // Creamos el NetworkRunner: el componente que maneja toda la conexión.
         _runner = gameObject.AddComponent<NetworkRunner>();
+        _runner.ProvideInput = true; // este runner manda el input del jugador local
 
-        // Le decimos al runner "avisame a MÍ (este mismo script) cuando pase
-        // algo en la red" — por eso este script implementa INetworkRunnerCallbacks.
-        _runner.ProvideInput = true; // Además, este runner va a mandar el input del jugador local
-
-        // NetworkSceneManagerDefault es el componente que le permite a Fusion
-        // cargar/cambiar de escena de forma sincronizada entre todos los jugadores.
+        // Permite a Fusion cambiar de escena de forma sincronizada.
         var sceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>();
 
-        // Armamos el "paquete de argumentos" para iniciar la partida:
         var startGameArgs = new StartGameArgs()
         {
-            GameMode = mode, // Host o Client, según qué botón se apretó
+            GameMode = mode,             // Host o Client
+            SessionName = roomCode,      // todos los que usen este código van a la MISMA sala
+            Scene = SceneRef.FromIndex(gameplayIndex),
+            SceneManager = sceneManager,
 
-            // SessionName es el "nombre de la sala". Todos los jugadores que
-            // usen el mismo nombre se van a conectar a la MISMA partida.
-            // Acá usamos el código que escribió el jugador (del campo de
-            // "Crear" o del de "Unirse", según el botón que apretó).
-            SessionName = roomCode,
-
-            Scene = SceneRef.FromIndex(2), // Índice 2 = la escena "Gameplay" (0=TitleScreen, 1=MainMenu, 2=Gameplay)
-            SceneManager = sceneManager
+            // El "ConnectionToken" viaja al Host junto con la conexión. Acá
+            // mandamos 1 solo byte: el número del personaje elegido. El Host
+            // lo lee en OnPlayerJoined para saber qué prefab spawnearte.
+            ConnectionToken = new byte[] { (byte)GameSession.CharacterIndex }
         };
 
-        // Esta línea es la que realmente dispara la conexión a los servidores
-        // de Photon. "await" significa "esperá acá a que termine, sin trabar
-        // el resto del juego mientras tanto".
         var result = await _runner.StartGame(startGameArgs);
 
-        // Si algo salió mal (por ejemplo, no hay internet, o la sala no existe
-        // cuando intentás unirte), result.Ok va a ser false.
         if (!result.Ok)
         {
             Debug.LogError($"Fusion: no se pudo iniciar la partida. Motivo: {result.ShutdownReason}");
 
-            // Limpiamos los componentes que creamos y dejamos _runner en null.
-            // Si no hiciéramos esto, el chequeo "if (_runner != null) return;"
-            // de los botones bloquearía para siempre cualquier reintento
-            // (por ejemplo, si te equivocaste de código al unirte).
+            // Limpiamos lo que creamos y volvemos al menú, para que el jugador
+            // pueda corregir el código (por ejemplo, si la sala no existía).
             Destroy(sceneManager);
             Destroy(_runner);
             _runner = null;
+            UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
             return;
         }
 
         // Este objeto (el que tiene el NetworkRunner) tiene que sobrevivir
-        // cuando cambiemos de la escena MainMenu a la escena Gameplay,
-        // porque ahí vive toda la conexión de red.
+        // al cambio a la escena Gameplay, porque ahí vive la conexión de red.
         DontDestroyOnLoad(gameObject);
+    }
+
+    // Busca el número de una escena en Build Settings a partir de su nombre.
+    private static int GetBuildIndexByName(string sceneName)
+    {
+        int count = UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings;
+        for (int i = 0; i < count; i++)
+        {
+            string path = UnityEngine.SceneManagement.SceneUtility.GetScenePathByBuildIndex(i);
+            if (System.IO.Path.GetFileNameWithoutExtension(path) == sceneName)
+            {
+                return i;
+            }
+        }
+        return -1;
     }
 
     // ---------------------------------------------------------
@@ -204,13 +169,45 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
                 Debug.LogWarning("No se encontró ningún objeto con la Tag 'SpawnPoint' en la escena. Los jugadores van a aparecer en (0,0,0).");
             }
 
+            // --- ELEGIR EL PREFAB SEGÚN EL PERSONAJE ---
+            if (characterPrefabs == null || characterPrefabs.Length == 0)
+            {
+                Debug.LogError("El array 'Character Prefabs' está vacío en el NetworkManagerFusion.");
+                return;
+            }
+
+            int characterIndex = 0;
+
+            if (player == runner.LocalPlayer)
+            {
+                // El Host: su elección está guardada en esta misma máquina.
+                characterIndex = GameSession.CharacterIndex;
+            }
+            else
+            {
+                // Un cliente: su elección llegó en el ConnectionToken.
+                // Devuelve null si no mandó ninguno.
+                byte[] token = runner.GetPlayerConnectionToken(player);
+                if (token != null && token.Length > 0)
+                {
+                    characterIndex = token[0];
+                }
+            }
+
+            // Si el número no corresponde a ningún prefab, usamos el primero.
+            if (characterIndex < 0 || characterIndex >= characterPrefabs.Length)
+            {
+                Debug.LogWarning($"Personaje {characterIndex} fuera de rango; se usa el 0.");
+                characterIndex = 0;
+            }
+
             // Runner.Spawn crea el objeto en TODAS las máquinas conectadas
             // de forma sincronizada (no es un Instantiate normal de Unity).
             // El parámetro "player" le dice a Fusion "este jugador es el
             // dueño de este objeto" (Input Authority) — así luego el script
             // de movimiento sabe si tiene que escuchar el teclado local o no.
             NetworkObject networkPlayerObject = runner.Spawn(
-                playerPrefab,
+                characterPrefabs[characterIndex],
                 spawnPosition,
                 Quaternion.identity,
                 player

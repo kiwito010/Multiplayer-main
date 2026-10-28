@@ -232,19 +232,31 @@ public class PlayerMovement : NetworkBehaviour
     // Crea la barra de stamina para el jugador local.
     private void SpawnStaminaUI()
     {
-        if (staminaUIPrefab == null) return;
+        if (staminaUIPrefab == null)
+        {
+            Debug.LogWarning("[PlayerMovement] SpawnStaminaUI: el campo 'Stamina UI Prefab' esta vacio en este jugador.");
+            return;
+        }
 
         GameObject instance = Instantiate(staminaUIPrefab);
 
         // Si el prefab trae su propio Canvas, lo forzamos a "Screen Space -
         // Overlay": se dibuja siempre sobre la pantalla del jugador, sin
-        // depender de ninguna cámara. Si estuviera en World Space o en
-        // Screen Space - Camera (apuntando a otra cámara), la barra quedaría
-        // en el mundo o en una cámara que no es la tuya.
+        // depender de ninguna cámara.
         Canvas ownCanvas = instance.GetComponentInChildren<Canvas>(true);
         if (ownCanvas != null)
         {
             ownCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            ownCanvas.sortingOrder = 100; // por encima de otras UI
+
+            // Sin CanvasScaler, la barra queda con medidas fijas en píxeles:
+            // en una ventana chica (como la del Editor) puede quedar fuera
+            // de la pantalla, y a pantalla completa se ve bien.
+            if (ownCanvas.GetComponent<UnityEngine.UI.CanvasScaler>() == null)
+            {
+                ConfigureScaler(ownCanvas.gameObject.AddComponent<UnityEngine.UI.CanvasScaler>());
+            }
+
             _hudRoot = instance;
             return;
         }
@@ -254,10 +266,24 @@ public class PlayerMovement : NetworkBehaviour
         // computadora u otra UI en el mundo, y la barra quedaría escondida.
         var canvasObject = new GameObject("StaminaHUD Canvas",
             typeof(Canvas), typeof(UnityEngine.UI.CanvasScaler), typeof(UnityEngine.UI.GraphicRaycaster));
-        canvasObject.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+
+        var canvas = canvasObject.GetComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 100;
+        ConfigureScaler(canvasObject.GetComponent<UnityEngine.UI.CanvasScaler>());
 
         instance.transform.SetParent(canvasObject.transform, false);
         _hudRoot = canvasObject;
+    }
+
+    // Hace que la UI escale con el tamaño de la ventana, tomando como base
+    // 1920x1080. Así se ve igual de bien en el Editor y en el build.
+    private static void ConfigureScaler(UnityEngine.UI.CanvasScaler scaler)
+    {
+        scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920f, 1080f);
+        scaler.screenMatchMode = UnityEngine.UI.CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+        scaler.matchWidthOrHeight = 0.5f;
     }
 
     private void RechargeStamina(float dt)
