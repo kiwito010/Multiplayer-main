@@ -205,8 +205,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 330084263}
-        m_TargetAssemblyTypeName: NetworkManagerFusion, Assembly-CSharp
+      - m_Target: {fileID: 1882860251}
+        m_TargetAssemblyTypeName: MainMenuFlow, Assembly-CSharp
         m_MethodName: OnHostButtonPressed
         m_Mode: 1
         m_Arguments:
@@ -255,54 +255,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 235926538}
   m_CullTransparentMesh: 1
---- !u!1 &330084262
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 330084264}
-  - component: {fileID: 330084263}
-  m_Layer: 0
-  m_Name: NetworkManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &330084263
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 330084262}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7942d1a2397a60c409269046b93f9b23, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  createRoomInput: {fileID: 900395229}
-  joinRoomInput: {fileID: 2055499525}
-  playerPrefab:
-    RawGuidValue: d53e7d05874e43a439234dcf3acd4220
---- !u!4 &330084264
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 330084262}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 181.08395, y: 112.90069, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &343829594
 GameObject:
   m_ObjectHideFlags: 0
@@ -386,8 +338,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 330084263}
-        m_TargetAssemblyTypeName: NetworkManagerFusion, Assembly-CSharp
+      - m_Target: {fileID: 1882860251}
+        m_TargetAssemblyTypeName: MainMenuFlow, Assembly-CSharp
         m_MethodName: OnJoinButtonPressed
         m_Mode: 1
         m_Arguments:
@@ -519,8 +471,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 330084263}
-        m_TargetAssemblyTypeName: NetworkManagerFusion, Assembly-CSharp
+      - m_Target: {fileID: 1882860251}
+        m_TargetAssemblyTypeName: MainMenuFlow, Assembly-CSharp
         m_MethodName: OnBackButtonPressed
         m_Mode: 1
         m_Arguments:
@@ -2232,6 +2184,53 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1816264049}
   m_CullTransparentMesh: 1
+--- !u!1 &1882860250
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1882860252}
+  - component: {fileID: 1882860251}
+  m_Layer: 0
+  m_Name: Flow
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1882860251
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1882860250}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9011e03909395dd4d98d372f51466c52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  createRoomInput: {fileID: 900395229}
+  joinRoomInput: {fileID: 2055499525}
+  chooseCharacterScene: ChooseCharacter
+--- !u!4 &1882860252
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1882860250}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 346.44, y: 452.79062, z: 35.374146}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1938643943
 GameObject:
   m_ObjectHideFlags: 0
@@ -2869,4 +2868,4 @@ SceneRoots:
   - {fileID: 705507995}
   - {fileID: 2098349693}
   - {fileID: 1568128340}
-  - {fileID: 330084264}
+  - {fileID: 1882860252}
