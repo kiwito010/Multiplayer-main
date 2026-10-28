@@ -20,6 +20,13 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     [SerializeField] private GameObject newCable;
     [SerializeField] private GameObject tape;
 
+        //ChangeCable
+        [SerializeField] private GameObject changeLeftCable;
+        [SerializeField] private GameObject changeRightCable;
+        [SerializeField] private GameObject changeLeftTwistedCable;
+        [SerializeField] private GameObject changeRightTwistedCable;
+        //
+
         //NewCable
         [SerializeField] private GameObject leftCable;
         [SerializeField] private GameObject rightCable;
@@ -144,12 +151,19 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         //componentes
         brokenCable.SetActive(!(currentPhase == RepairPhase.CutBrokenCable));
         newCable.SetActive(currentPhase == RepairPhase.CutBrokenCable || currentPhase == RepairPhase.RemoveBrokenCable || currentPhase == RepairPhase.PlaceNewCable || currentPhase == RepairPhase.TwistEnds);
-        
+        //newCable
         leftCable.SetActive(!leftTwisted);
-        leftTwistedCable.SetActive(leftTwisted);
         rightCable.SetActive(!rightTwisted);
+        leftTwistedCable.SetActive(leftTwisted);
         rightTwistedCable.SetActive(rightTwisted);
+        //
 
+        //ChangePanel
+        changeLeftCable.SetActive(!leftTwisted);
+        changeRightCable.SetActive(!rightTwisted);
+        changeLeftTwistedCable.SetActive(leftTwisted);
+        changeRightTwistedCable.SetActive(rightTwisted);
+        //
         tape.SetActive(HasRequiredTape());
 
         //paneles + signs
