@@ -32,7 +32,10 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         [SerializeField] private GameObject rightCable;
         [SerializeField] private GameObject leftTwistedCable;
         [SerializeField] private GameObject rightTwistedCable;
+
+        private bool newCablePlaced;
         //
+
 
     //
 
@@ -130,6 +133,7 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
             rightCut = false;
 
             brokenCableRemoved = false;
+            newCablePlaced = false;
 
             repairStarted = true;
         }
@@ -150,7 +154,8 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     private void UpdatePhaseUI() {
         //componentes
         brokenCable.SetActive(!(currentPhase == RepairPhase.CutBrokenCable));
-        newCable.SetActive(currentPhase == RepairPhase.CutBrokenCable || currentPhase == RepairPhase.RemoveBrokenCable || currentPhase == RepairPhase.PlaceNewCable || currentPhase == RepairPhase.TwistEnds);
+        newCable.SetActive((currentPhase == RepairPhase.PlaceNewCable && HasRequiredCable()) || (currentPhase == RepairPhase.TwistEnds && newCablePlaced));
+
         //newCable
         leftCable.SetActive(!leftTwisted);
         rightCable.SetActive(!rightTwisted);
@@ -318,6 +323,10 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
         if (!HasRequiredCable())
             return;
+
+        newCablePlaced = true;
+
+        currentInventory.RemoveItem(requiredCableName);
 
         CompleteCurrentPhase();
     }
