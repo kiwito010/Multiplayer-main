@@ -24,7 +24,7 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
     // Nombre exacto de la escena de juego (tiene que estar en Build Settings).
     // La buscamos por nombre y no por número, así agregar o reordenar
     // escenas no rompe nada.
-    [SerializeField] private string gameplaySceneName = "Gameplay";
+    [SerializeField] private string gameplaySceneName = "GameTest1";
     [SerializeField] private string mainMenuSceneName = "MainMenu";
 
     [Header("Salir de la partida")]

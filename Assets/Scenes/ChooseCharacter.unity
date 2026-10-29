@@ -289,7 +289,9 @@ MonoBehaviour:
   - RawGuidValue: c9cd7cd6f94b4114ab1a33e02d9503d7
   - RawGuidValue: 5fac4298bb0de7e43b628aaefcc9f1f9
   - RawGuidValue: 812f9ca6ad1913f47987a4ed520f3898
-  gameplaySceneName: Gameplay
+  gameplaySceneName: GameTest1
+  mainMenuSceneName: MainMenu
+  leaveKey: 27
 --- !u!4 &86330514
 Transform:
   m_ObjectHideFlags: 0
@@ -1706,6 +1708,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   networkManager: {fileID: 86330513}
   mainMenuScene: MainMenu
+  messageText: {fileID: 0}
 --- !u!4 &2068884465
 Transform:
   m_ObjectHideFlags: 0
