@@ -25,6 +25,11 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
     // La buscamos por nombre y no por número, así agregar o reordenar
     // escenas no rompe nada.
     [SerializeField] private string gameplaySceneName = "Gameplay";
+    [SerializeField] private string mainMenuSceneName = "MainMenu";
+
+    [Header("Salir de la partida")]
+    // Tecla para volver al menú principal mientras se juega.
+    [SerializeField] private KeyCode leaveKey = KeyCode.Escape;
 
     // Esta variable va a guardar la instancia del NetworkRunner una vez
     // que la creamos. La necesitamos para poder usarla en varias funciones.
@@ -35,6 +40,22 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
     // Nos sirve para poder destruir su personaje si se desconecta.
     private Dictionary<PlayerRef, NetworkObject> _spawnedCharacters = new Dictionary<PlayerRef, NetworkObject>();
 
+    // Qué personaje tiene cada jugador (solo lo usa el Host). Sirve para
+    // saber cuáles están ocupados y no dejar que dos jugadores repitan.
+    private Dictionary<PlayerRef, int> _characterByPlayer = new Dictionary<PlayerRef, int>();
+
+
+    // true cuando la conexión salió bien y estamos jugando.
+    private bool _inGame;
+
+    // true cuando NUESTRO jugador ya apareció en la escena. Si nos desconectan
+    // y esto sigue en false, es porque el Host nos rechazó (por ejemplo, porque
+    // el personaje que elegimos ya estaba ocupado).
+    private bool _hadLocalPlayer;
+
+    // true cuando ya estamos saliendo de la partida (evita hacerlo dos veces).
+    private bool _leaving;
+
     private void Awake()
     {
         // Por defecto, Unity frena (o ralentiza muchisimo) el juego cuando su
@@ -43,6 +64,23 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
         // simula el juego en camara lenta y las posiciones no coinciden.
         // Con esto ambas siguen corriendo normal aunque no las estes mirando.
         Application.runInBackground = true;
+    }
+
+    private void Update()
+    {
+        // Solo cuando ya estamos jugando (conectados) y no estamos saliendo.
+        if (!_inGame || _leaving) return;
+
+        // Anotamos el momento en que aparece NUESTRO jugador.
+        if (!_hadLocalPlayer && PlayerMovement.Local != null)
+        {
+            _hadLocalPlayer = true;
+        }
+
+        if (Input.GetKeyDown(leaveKey))
+        {
+            ExitToScene(mainMenuSceneName, null, true);
+        }
     }
 
     // ---------------------------------------------------------
@@ -60,7 +98,7 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
         if (string.IsNullOrEmpty(GameSession.RoomCode))
         {
             Debug.LogWarning("No hay un código de sala guardado. Volvé al menú principal y escribilo.");
-            UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+            UnityEngine.SceneManagement.SceneManager.LoadScene(mainMenuSceneName);
             return;
         }
 
@@ -105,17 +143,35 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
         {
             Debug.LogError($"Fusion: no se pudo iniciar la partida. Motivo: {result.ShutdownReason}");
 
+            // Mensaje para el popup del menú. Comparamos por texto el nombre del
+            // motivo (en vez de usar el enum) para que compile en cualquier
+            // versión del SDK.
+            string reason = result.ShutdownReason.ToString();
+            if (reason == "GameNotFound")
+            {
+                GameSession.Message = "No existe ninguna sala con ese código.";
+            }
+            else if (reason == "GameIdAlreadyExists")
+            {
+                GameSession.Message = "Ya existe una sala con ese código. Probá con otro.";
+            }
+            else
+            {
+                GameSession.Message = $"No se pudo conectar a la sala ({reason}).";
+            }
+
             // Limpiamos lo que creamos y volvemos al menú, para que el jugador
             // pueda corregir el código (por ejemplo, si la sala no existía).
             Destroy(sceneManager);
             Destroy(_runner);
             _runner = null;
-            UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+            UnityEngine.SceneManagement.SceneManager.LoadScene(mainMenuSceneName);
             return;
         }
 
         // Este objeto (el que tiene el NetworkRunner) tiene que sobrevivir
         // al cambio a la escena Gameplay, porque ahí vive la conexión de red.
+        _inGame = true;
         DontDestroyOnLoad(gameObject);
     }
 
@@ -201,6 +257,16 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
                 characterIndex = 0;
             }
 
+            // --- UN PERSONAJE POR SALA ---
+            // Si otro jugador ya tiene este personaje, expulsamos al que llega
+            // (el cliente deduce el motivo). (El Host no se chequea a sí mismo: es
+            // el primero en entrar.)
+            if (player != runner.LocalPlayer && _characterByPlayer.ContainsValue(characterIndex))
+            {
+                StartCoroutine(KickAfterDelay(runner, player));
+                return;
+            }
+
             // Runner.Spawn crea el objeto en TODAS las máquinas conectadas
             // de forma sincronizada (no es un Instantiate normal de Unity).
             // El parámetro "player" le dice a Fusion "este jugador es el
@@ -216,18 +282,104 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
             // Guardamos la referencia para poder limpiarla después si el
             // jugador se desconecta.
             _spawnedCharacters.Add(player, networkPlayerObject);
+            _characterByPlayer[player] = characterIndex; // este personaje queda ocupado
         }
     }
 
     // Se llama cuando un jugador se desconecta de la partida.
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
+        // Su personaje vuelve a quedar libre para otro jugador.
+        _characterByPlayer.Remove(player);
+
         // Si el servidor tenía guardado el objeto de este jugador, lo destruimos
         // (esto también lo saca de las pantallas de todos los demás jugadores).
         if (_spawnedCharacters.TryGetValue(player, out NetworkObject networkObject))
         {
             runner.Despawn(networkObject);
             _spawnedCharacters.Remove(player);
+        }
+    }
+
+    // ---------------------------------------------------------
+    //  SALIR DE LA PARTIDA
+    // ---------------------------------------------------------
+
+    // Fusion lo llama cuando la sesión terminó: el Host cerró la sala,
+    // se cortó la conexión, o terminamos de cerrarla nosotros.
+    public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
+    {
+        // Si todavía no estábamos jugando, o ya estamos saliendo a propósito
+        // (tecla de salida), no hay nada que hacer acá.
+        if (!_inGame || _leaving) return;
+
+        HandleSessionEnded(runner, false);
+    }
+
+    // Fusion lo llama en un cliente cuando lo desconectan del Host.
+    public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
+    {
+        if (!_inGame || _leaving) return;
+
+        HandleSessionEnded(runner, true);
+    }
+
+    // La sesión terminó sin que nosotros lo pidiéramos: volvemos al menú
+    // principal y le dejamos un mensaje para mostrar en un popup.
+    private void HandleSessionEnded(NetworkRunner runner, bool shutdownRunner)
+    {
+        // Si somos cliente y nos desconectaron SIN que nuestro jugador haya
+        // llegado a aparecer, el Host nos rechazó: lo más probable es que el
+        // personaje elegido ya estuviera ocupado.
+        bool rejectedBeforeSpawn = !_hadLocalPlayer && GameSession.Mode == GameMode.Client;
+
+        string message = rejectedBeforeSpawn
+            ? "No pudiste entrar a la sala: ese personaje ya está ocupado."
+            : "Se cerró la sala o se perdió la conexión.";
+
+        ExitToScene(mainMenuSceneName, message, shutdownRunner);
+    }
+
+    // El Host espera un instante antes de expulsar, para que el cliente
+    // termine de conectarse primero y se entere bien de que lo desconectan.
+    private System.Collections.IEnumerator KickAfterDelay(NetworkRunner runner, PlayerRef player)
+    {
+        yield return new WaitForSeconds(0.5f);
+
+        if (runner != null)
+        {
+            runner.Disconnect(player);
+        }
+    }
+
+    // Cierra la conexión (si hace falta) y carga la escena indicada.
+    //  - message: texto para mostrar en la escena siguiente (puede ser null).
+    //  - shutdownRunner: false cuando ya nos estamos cerrando solos (OnShutdown).
+    private async void ExitToScene(string sceneName, string message, bool shutdownRunner)
+    {
+        if (_leaving) return;
+        _leaving = true;
+        _inGame = false;
+
+        GameSession.Message = message ?? "";
+
+        // Devolvemos el mouse al jugador (en el juego estaba bloqueado y oculto).
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
+        NetworkRunner runner = _runner;
+        if (shutdownRunner && runner != null)
+        {
+            await runner.Shutdown(); // cierra la conexión de red
+        }
+
+        UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
+
+        // Este objeto sobrevivía entre escenas (DontDestroyOnLoad); ya no hace
+        // falta. "this != null" evita un error si Fusion ya lo destruyó.
+        if (this != null)
+        {
+            Destroy(gameObject);
         }
     }
 
@@ -274,9 +426,7 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
     //  este proyecto todavía. Las dejamos vacías a propósito.
     // ---------------------------------------------------------
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
-    public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason) { }
     public void OnConnectedToServer(NetworkRunner runner) { }
-    public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason) { }
     public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token) { }
     public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason) { }
     public void OnUserSimulationMessage(NetworkRunner runner, SimulationMessagePtr message) { }

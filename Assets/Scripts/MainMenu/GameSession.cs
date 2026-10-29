@@ -15,4 +15,8 @@ public static class GameSession
     // Personaje elegido: 0 = Ingeniero, 1 = Hacker, 2 = Cientifico, 3 = Explorador.
     // Es la posicion en el array "Character Prefabs" del NetworkManagerFusion.
     public static int CharacterIndex = 0;
+
+    // Mensaje para mostrar en la escena siguiente (por ejemplo, "ese personaje
+    // ya esta ocupado"). Quien lo muestra lo borra despues de leerlo.
+    public static string Message = "";
 }

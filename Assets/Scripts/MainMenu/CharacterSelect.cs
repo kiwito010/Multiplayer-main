@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -10,6 +11,21 @@ public class CharacterSelect : MonoBehaviour
     [SerializeField] private NetworkManagerFusion networkManager;
 
     [SerializeField] private string mainMenuScene = "MainMenu";
+
+    // Opcional: un texto (TMP) donde mostrar avisos, por ejemplo cuando el
+    // personaje que elegiste ya estaba ocupado en la sala.
+    [SerializeField] private TMP_Text messageText;
+
+    private void Start()
+    {
+        if (messageText != null)
+        {
+            messageText.text = GameSession.Message;
+        }
+
+        // El mensaje se muestra una sola vez.
+        GameSession.Message = "";
+    }
 
     // Conectar al OnClick() de cada boton, poniendo el numero a mano en el
     // Inspector: 0 = Ingeniero, 1 = Hacker, 2 = Cientifico, 3 = Explorador.
