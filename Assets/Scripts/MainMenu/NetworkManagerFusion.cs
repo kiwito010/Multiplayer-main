@@ -279,6 +279,8 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
                 player
             );
 
+            runner.SetPlayerObject(player, networkPlayerObject);
+
             // Guardamos la referencia para poder limpiarla después si el
             // jugador se desconecta.
             _spawnedCharacters.Add(player, networkPlayerObject);
@@ -405,7 +407,7 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
         // GetButton (no GetButtonDown) porque queremos saber si se mantiene
         // apretado. Qué acción dispara este botón (arma, herramienta, lo
         // que definas vos) es responsabilidad de OTRO script, no de este.
-        data.useButtonPressed = Input.GetButton("Fire1"); // Click izquierdo por defecto
+        data.useButtonPressed = Input.GetKey(KeyCode.E);
 
         // Sprint mientras se mantiene apretada la tecla. CONFIRMAR: usé Shift
         // izquierdo; si tu GameInput usa otra tecla, cambiala acá.

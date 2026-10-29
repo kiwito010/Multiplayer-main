@@ -123,6 +123,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: ExplorerMultiplayer
       objectReference: {fileID: 0}
+    - target: {fileID: 4516032627377954848, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}
+      propertyPath: interactableLayers.m_Bits
+      value: 64
+      objectReference: {fileID: 0}
     - target: {fileID: 7818607686653380624, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

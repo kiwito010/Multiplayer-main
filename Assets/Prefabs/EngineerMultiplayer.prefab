@@ -117,9 +117,21 @@ PrefabInstance:
       propertyPath: SortKey
       value: 57567136
       objectReference: {fileID: 0}
+    - target: {fileID: -7055532277082615512, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}
+      propertyPath: NetworkedBehaviours.Array.size
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: -7055532277082615512, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}
+      propertyPath: NetworkedBehaviours.Array.data[4]
+      value: 
+      objectReference: {fileID: 82237511832658865}
     - target: {fileID: 378695112004466499, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}
       propertyPath: m_Name
       value: EngineerMultiplayer
+      objectReference: {fileID: 0}
+    - target: {fileID: 4516032627377954848, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}
+      propertyPath: interactableLayers.m_Bits
+      value: 64
       objectReference: {fileID: 0}
     - target: {fileID: 7818607686653380624, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}
       propertyPath: m_LocalPosition.x
@@ -161,7 +173,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: -7606604537178633786, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 5110690479083329799, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}
@@ -169,6 +182,17 @@ PrefabInstance:
       addedObject: {fileID: 4098275529881624998}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}
+--- !u!114 &82237511832658865 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6203016693621385032, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}
+  m_PrefabInstance: {fileID: 6282979175802438905}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a59eebad234dfe84d85276fef97180fa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &1287310053427781118 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5110690479083329799, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}

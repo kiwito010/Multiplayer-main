@@ -1,10 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Fusion;
 
 public class PlayerInventory : MonoBehaviour
 {
     //VARIABLES:
+    //Fusion
+    private NetworkObject networkObject;
+
     //Referencias:
     [SerializeField] private GameInput gameInput;
 
@@ -27,10 +31,15 @@ public class PlayerInventory : MonoBehaviour
     public event System.Action OnInventoryOpened;
 
     private void Awake() {
+        networkObject = GetComponent<NetworkObject>();
+
         slots = new PickableItem[maxSlots];
     }
 
     private void Update() {
+        if (networkObject == null || !networkObject.IsValid || !networkObject.HasInputAuthority)
+            return;
+
         if (gameInput.GetInventorySlot1Pressed()) {
             SelectSlot(0);
         }

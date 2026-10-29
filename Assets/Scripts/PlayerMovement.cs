@@ -32,9 +32,9 @@ public class PlayerMovement : NetworkBehaviour
     public Transform cameraPivot; // El objeto PlayerCamera
 
     [Header("UI")]
-    // Arrastrá acá tu prefab de la barra de stamina (el que tiene StaminaUI).
-    // Se crea SOLO para el jugador local, así cada uno ve únicamente su barra.
-    [SerializeField] private GameObject staminaUIPrefab;
+    // Arrastrá acá tu prefab del playerHUD.
+    // Se crea SOLO para el jugador local, así cada uno ve únicamente su HUD.
+    [SerializeField] private GameObject playerHUDPrefab;
 
     // Lo que se creó para la barra, para poder borrarlo cuando el jugador se va.
     private GameObject _hudRoot;
@@ -93,10 +93,9 @@ public class PlayerMovement : NetworkBehaviour
         }
 
         // HasInputAuthority es true SOLO en la máquina del dueño de este personaje.
-        if (Object.HasInputAuthority)
-        {
+        if (Object.HasInputAuthority) {
             Local = this;
-            SpawnStaminaUI();
+            SpawnPlayerHUD();
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }
@@ -230,51 +229,47 @@ public class PlayerMovement : NetworkBehaviour
     }
 
     // Crea la barra de stamina para el jugador local.
-    private void SpawnStaminaUI()
-    {
-        if (staminaUIPrefab == null)
-        {
-            Debug.LogWarning("[PlayerMovement] SpawnStaminaUI: el campo 'Stamina UI Prefab' esta vacio en este jugador.");
+
+    private void SpawnPlayerHUD() {
+        if (playerHUDPrefab == null) {
+            Debug.LogWarning("PlayerHUD Prefab no asignado");
             return;
         }
 
-        GameObject instance = Instantiate(staminaUIPrefab);
+        GameObject instance = Instantiate(playerHUDPrefab);
 
-        // Si el prefab trae su propio Canvas, lo forzamos a "Screen Space -
-        // Overlay": se dibuja siempre sobre la pantalla del jugador, sin
-        // depender de ninguna cámara.
-        Canvas ownCanvas = instance.GetComponentInChildren<Canvas>(true);
-        if (ownCanvas != null)
-        {
-            ownCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            ownCanvas.sortingOrder = 100; // por encima de otras UI
+        _hudRoot = instance;
 
-            // Sin CanvasScaler, la barra queda con medidas fijas en píxeles:
-            // en una ventana chica (como la del Editor) puede quedar fuera
-            // de la pantalla, y a pantalla completa se ve bien.
-            if (ownCanvas.GetComponent<UnityEngine.UI.CanvasScaler>() == null)
-            {
-                ConfigureScaler(ownCanvas.gameObject.AddComponent<UnityEngine.UI.CanvasScaler>());
+        // Configuramos el Canvas.
+        Canvas canvas = instance.GetComponent<Canvas>();
+
+        if (canvas != null) {
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 100;
+
+            UnityEngine.UI.CanvasScaler scaler =
+                canvas.GetComponent<UnityEngine.UI.CanvasScaler>();
+
+            if (scaler != null) {
+                ConfigureScaler(scaler);
             }
-
-            _hudRoot = instance;
-            return;
         }
 
-        // Si es solo la barra (sin Canvas), le creamos un Canvas propio.
-        // No usamos uno de la escena a propósito: podría ser el de una
-        // computadora u otra UI en el mundo, y la barra quedaría escondida.
-        var canvasObject = new GameObject("StaminaHUD Canvas",
-            typeof(Canvas), typeof(UnityEngine.UI.CanvasScaler), typeof(UnityEngine.UI.GraphicRaycaster));
+        // Buscamos los componentes del jugador.
+        PlayerInventory playerInventory =
+            GetComponent<PlayerInventory>();
 
-        var canvas = canvasObject.GetComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 100;
-        ConfigureScaler(canvasObject.GetComponent<UnityEngine.UI.CanvasScaler>());
+        NetworkInventoryState networkInventory =
+            GetComponent<NetworkInventoryState>();
 
-        instance.transform.SetParent(canvasObject.transform, false);
-        _hudRoot = canvasObject;
+        // Conectamos el HUD.
+        PlayerHUD playerHUD = instance.GetComponent<PlayerHUD>();
+
+        if (playerHUD != null) {
+            playerHUD.Initialize(playerInventory, networkInventory);
+        }
     }
+
 
     // Hace que la UI escale con el tamaño de la ventana, tomando como base
     // 1920x1080. Así se ve igual de bien en el Editor y en el build.

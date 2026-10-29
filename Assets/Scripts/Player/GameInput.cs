@@ -74,4 +74,13 @@ public class GameInput : MonoBehaviour
     public bool GetDropPressed() {
         return inputActions.Player.Drop.WasPressedThisFrame();
     }
+
+
+    private void OnDestroy() {
+        if (inputActions != null) {
+            inputActions.Player.Disable();
+            inputActions.Dispose();
+        }
+    }
+
 }

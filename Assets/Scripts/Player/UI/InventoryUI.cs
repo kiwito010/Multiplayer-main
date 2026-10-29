@@ -1,9 +1,14 @@
+
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class InventoryUI : MonoBehaviour {
-    [SerializeField] private PlayerInventory playerInventory;
+    // VARIABLES:
+
+    // Referencias:
+    private PlayerInventory playerInventory;
+    private NetworkInventoryState networkInventory;
 
     [SerializeField] private TextMeshProUGUI[] slotTexts;
     [SerializeField] private Image[] slotImages;
@@ -20,66 +25,76 @@ public class InventoryUI : MonoBehaviour {
     [SerializeField] private float closeDelay = 1f;
 
     private Vector2 targetPosition;
-    private bool closeScheduled;
 
-    [SerializeField] private EngineerDiagnostic engineerDiagnostic;
+    private string[] lastSlotNames;
+    private bool isInitialized;
 
-    [SerializeField] private Image magnifyingGlassImage;
+    // MÉTODOS:
 
-    [SerializeField] private Color magnifyingGlassLockedColor;
-    [SerializeField] private Color magnifyingGlassUnlockedColor;
+    public void Initialize(PlayerInventory inventory, NetworkInventoryState networkState) {
+        // Evitamos dejar eventos conectados al inventario anterior.
+        UnsubscribeEvents();
 
-    private void OnEnable() {
+        playerInventory = inventory;
+        networkInventory = networkState;
+
+        lastSlotNames = new string[slotTexts.Length];
+
         playerInventory.OnInventoryChanged += UpdateUI;
         playerInventory.OnInventoryOpened += ShowInventoryTemporarily;
 
-        engineerDiagnostic.OnMagnifyingGlassStateChanged += EngineerDiagnostic_OnMagnifyingGlassStateChanged;
-    }
-
-    private void OnDisable() {
-        playerInventory.OnInventoryChanged -= UpdateUI;
-        playerInventory.OnInventoryOpened -= ShowInventoryTemporarily;
-
-        engineerDiagnostic.OnMagnifyingGlassStateChanged -= EngineerDiagnostic_OnMagnifyingGlassStateChanged; 
-    }
-
-    private void EngineerDiagnostic_OnMagnifyingGlassStateChanged(
-    bool hasMagnifyingGlass) {
-        if (hasMagnifyingGlass) {
-            magnifyingGlassImage.color = magnifyingGlassUnlockedColor;
-        } else {
-            magnifyingGlassImage.color = magnifyingGlassLockedColor;
-        }
-    }
-
-    private void Start() {
         targetPosition = closedPosition;
         inventoryPanel.anchoredPosition = closedPosition;
 
-        UpdateUI();
+        isInitialized = true;
 
-        EngineerDiagnostic_OnMagnifyingGlassStateChanged(engineerDiagnostic.HasMagnifyingGlass());
+        UpdateUI();
     }
 
     private void Update() {
+        if (!isInitialized)
+            return;
+
         inventoryPanel.anchoredPosition = Vector2.Lerp(
             inventoryPanel.anchoredPosition,
             targetPosition,
             Time.deltaTime * moveSpeed
         );
+
+        if (networkInventory == null ||
+            networkInventory.Object == null ||
+            !networkInventory.Object.IsValid)
+            return;
+
+        // Comprobamos si cambiaron los objetos sincronizados.
+        for (int i = 0; i < slotTexts.Length; i++) {
+            string itemName = networkInventory.GetItemNameInSlot(i);
+
+            if (lastSlotNames[i] != itemName) {
+                UpdateUI();
+                ShowInventoryTemporarily();
+                break;
+            }
+        }
     }
 
     private void UpdateUI() {
+        if (!isInitialized)
+            return;
+
+        if (networkInventory == null ||
+            networkInventory.Object == null ||
+            !networkInventory.Object.IsValid)
+            return;
+
         int selectedSlot = playerInventory.GetSelectedSlot();
 
         for (int i = 0; i < slotTexts.Length; i++) {
-            PickableItem item = playerInventory.GetItemInSlot(i);
+            string itemName = networkInventory.GetItemNameInSlot(i);
 
-            if (item == null) {
-                slotTexts[i].text = "";
-            } else {
-                slotTexts[i].text = item.GetItemName();
-            }
+            slotTexts[i].text = itemName;
+
+            lastSlotNames[i] = itemName;
 
             if (i == selectedSlot) {
                 slotImages[i].color = selectedColor;
@@ -90,6 +105,9 @@ public class InventoryUI : MonoBehaviour {
     }
 
     private void ShowInventoryTemporarily() {
+        if (!isInitialized)
+            return;
+
         CancelInvoke(nameof(CloseInventory));
 
         targetPosition = openPosition;
@@ -99,6 +117,18 @@ public class InventoryUI : MonoBehaviour {
 
     private void CloseInventory() {
         targetPosition = closedPosition;
-        closeScheduled = false;
+    }
+
+    private void UnsubscribeEvents() {
+        if (playerInventory == null)
+            return;
+
+        playerInventory.OnInventoryChanged -= UpdateUI;
+        playerInventory.OnInventoryOpened -= ShowInventoryTemporarily;
+    }
+
+    private void OnDestroy() {
+        UnsubscribeEvents();
+        CancelInvoke(nameof(CloseInventory));
     }
 }

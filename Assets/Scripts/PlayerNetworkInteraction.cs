@@ -26,6 +26,7 @@ public class PlayerNetworkInteraction : NetworkBehaviour
     // NetworkObject lo usó.
     public static event System.Action<PlayerRef, NetworkObject> OnUsedOnTarget;
 
+
     public override void Spawned()
     {
         // Si interactPoint esta vacio o apunta a algo que no es hijo de ESTE
@@ -37,48 +38,65 @@ public class PlayerNetworkInteraction : NetworkBehaviour
         }
     }
 
-    public override void FixedUpdateNetwork()
-    {
-        if (GetInput(out NetworkInputData input))
-        {
-            bool canUse = UseCooldown.ExpiredOrNotRunning(Runner);
 
-            if (input.useButtonPressed && canUse)
-            {
-                UseCooldown = TickTimer.CreateFromSeconds(Runner, useRate);
+
+
+    public override void FixedUpdateNetwork() {
+        if (!Object.HasInputAuthority)
+            return;
+
+        if (GetInput(out NetworkInputData input)) {
+            if (input.useButtonPressed) {
+                Debug.Log("BOTON DE INTERACCION DETECTADO");
+
                 TryDetectAndNotify();
             }
         }
     }
 
-    private void TryDetectAndNotify()
-    {
-        if (interactPoint == null) return;
 
-        if (Physics.Raycast(interactPoint.position, interactPoint.forward, out RaycastHit hit, range, interactableLayers))
-        {
-            // Buscamos si lo que golpeamos (o algún padre suyo) es un
-            // NetworkObject. Si no lo es, no hay nada que sincronizar.
-            var targetNetworkObject = hit.collider.GetComponentInParent<NetworkObject>();
-            if (targetNetworkObject != null)
-            {
-                // Le pedimos a quien tiene autoridad sobre ESTE jugador que
-                // confirme el evento hacia todos (así todos los clientes se
-                // enteran del mismo "uso", en el mismo momento).
+
+
+
+    private void TryDetectAndNotify() {
+        if (interactPoint == null) {
+            Debug.Log("ERROR: InteractPoint es null");
+            return;
+        }
+
+        Debug.Log("Intentando detectar objeto");
+
+        if (Physics.Raycast(interactPoint.position, interactPoint.forward, out RaycastHit hit, range, interactableLayers)) {
+
+            Debug.Log("Raycast detectó: " + hit.collider.name);
+
+            NetworkObject targetNetworkObject = hit.collider.GetComponentInParent<NetworkObject>();
+
+            if (targetNetworkObject != null) {
+                Debug.Log("NetworkObject encontrado: " + targetNetworkObject.name);
+
                 RPC_NotifyUse(targetNetworkObject, Object.InputAuthority);
+            } else {
+                Debug.Log("ERROR: El objeto no tiene NetworkObject");
             }
+
+        } else {
+            Debug.Log("ERROR: Raycast no detectó ningún objeto");
         }
     }
+
 
     // RpcSources.InputAuthority: solo el dueño de este jugador puede
     // disparar este RPC (nadie puede simular que otro jugador usó algo).
     // RpcTargets.All: el evento se replica en todas las máquinas, así
     // cualquier script de gameplay puede reaccionar en cualquier cliente.
-    [Rpc(RpcSources.InputAuthority, RpcTargets.All)]
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     private void RPC_NotifyUse(NetworkObject target, PlayerRef fromPlayer)
     {
         // Acá NO decidimos qué pasa. Solo avisamos "esto ocurrió" para que
         // tus propios scripts de gameplay decidan qué hacer.
+        Debug.Log("Jugador " + fromPlayer + " interactuó con " + target.name);
+
         OnUsedOnTarget?.Invoke(fromPlayer, target);
     }
 }
