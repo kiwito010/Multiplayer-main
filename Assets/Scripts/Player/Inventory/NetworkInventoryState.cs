@@ -50,6 +50,41 @@ public class NetworkInventoryState : NetworkBehaviour {
         return false;
     }
 
+    public bool TryRemoveItem(int slotIndex, out NetworkId itemId) {
+        itemId = default(NetworkId);
+
+        if (!Object.HasStateAuthority)
+            return false;
+
+        switch (slotIndex) {
+            case 0:
+                itemId = Slot0;
+                if (itemId == default(NetworkId))
+                    return false;
+
+                Slot0 = default(NetworkId);
+                return true;
+
+            case 1:
+                itemId = Slot1;
+                if (itemId == default(NetworkId))
+                    return false;
+
+                Slot1 = default(NetworkId);
+                return true;
+
+            case 2:
+                itemId = Slot2;
+                if (itemId == default(NetworkId))
+                    return false;
+
+                Slot2 = default(NetworkId);
+                return true;
+
+            default:
+                return false;
+        }
+    }
 
     public NetworkId GetItemIdInSlot(int index) {
         switch (index) {

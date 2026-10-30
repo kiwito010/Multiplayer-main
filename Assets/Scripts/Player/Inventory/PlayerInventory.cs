@@ -98,7 +98,8 @@ public class PlayerInventory : MonoBehaviour
 
         selectedSlot = slotIndex;
 
-        EquipSelectedItem();
+        // El equipamiento de objetos de red se implementará por separado.
+        // Por ahora conservamos la selección visual del slot.
 
         OnInventoryChanged?.Invoke();
         OnInventoryOpened?.Invoke();

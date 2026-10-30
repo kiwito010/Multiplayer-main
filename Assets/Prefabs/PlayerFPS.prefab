@@ -22,6 +22,7 @@ GameObject:
   - component: {fileID: 3653672449038802419}
   - component: {fileID: 643688764067791398}
   - component: {fileID: 6203016693621385032}
+  - component: {fileID: 8661151902438196635}
   m_Layer: 0
   m_Name: PlayerFPS
   m_TagString: Untagged
@@ -145,6 +146,7 @@ MonoBehaviour:
   - {fileID: -5549801434036328598}
   - {fileID: 4516032627377954848}
   - {fileID: 6203016693621385032}
+  - {fileID: 8661151902438196635}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &5397311817566387592
 MonoBehaviour:
@@ -222,7 +224,6 @@ MonoBehaviour:
   maxStamina: 5
   staminaRechargeSpeed: 1
   cameraPivot: {fileID: 4916090557827576219}
-  playerHUDPrefab: {fileID: 226949744358700336, guid: b0876fff6e62f5b49bb0ecce168a6d6a, type: 3}
 --- !u!114 &4516032627377954848
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -239,7 +240,7 @@ MonoBehaviour:
   interactPoint: {fileID: 4916090557827576219}
   interactableLayers:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 64
   useRate: 0.2
 --- !u!114 &-6935682901151754486
 MonoBehaviour:
@@ -313,6 +314,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a59eebad234dfe84d85276fef97180fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &8661151902438196635
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 378695112004466499}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebc0982943d9ce945b839beb47872e36, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerHUDPrefab: {fileID: 226949744358700336, guid: b0876fff6e62f5b49bb0ecce168a6d6a, type: 3}
 --- !u!1001 &4264906278637596370
 PrefabInstance:
   m_ObjectHideFlags: 0
