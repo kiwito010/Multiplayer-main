@@ -4,10 +4,13 @@ using UnityEngine;
 
 public class PlayerNetworkItemDrop : NetworkBehaviour {
     // VARIABLES:
+    //Referencias
+    private NetworkInventoryState networkInventory;
+    //
 
     [SerializeField] private float dropDistance = 1.5f;
 
-    private NetworkInventoryState networkInventory;
+    [SerializeField] private float throwForce = 3f;
 
     // MÉTODOS:
 
@@ -48,17 +51,28 @@ public class PlayerNetworkItemDrop : NetworkBehaviour {
         if (pickableItem == null)
             return;
 
-        // La posición se calcula en el Host usando el personaje.
-        Vector3 dropPosition =
-            transform.position +
-            transform.forward * dropDistance +
-            Vector3.up * 0.5f;
 
-        // El objeto debe pertenecer al jugador.
-        if (!pickableItem.TryDrop(Object.InputAuthority, dropPosition))
+        Vector3 throwDirection = transform.forward;
+
+        Vector3 dropOrigin =
+            transform.position + Vector3.up * 1.2f;
+
+        Vector3 dropPosition =
+            dropOrigin + throwDirection * dropDistance;
+
+        // Evitamos colocar el cubo detrás de una pared cercana.
+        if (Physics.Raycast(dropOrigin, throwDirection, out RaycastHit hit, dropDistance)) {
+            dropPosition = hit.point - throwDirection * 0.3f;
+        }
+
+        if (!pickableItem.TryDrop(Object.InputAuthority, dropPosition, throwDirection, throwForce))
             return;
 
-        // Quitamos el objeto del inventario sincronizado.
+        // Quitamos el objeto del inventario de red.
         networkInventory.TryRemoveItem(slotIndex, out NetworkId removedItemId);
+
+        // Ningún slot queda equipado después de lanzar.
+        networkInventory.SetEquippedSlot(-1);
+
     }
 }

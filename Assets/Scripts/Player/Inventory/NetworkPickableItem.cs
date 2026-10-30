@@ -13,50 +13,13 @@ public class NetworkPickableItem : NetworkBehaviour {
 
     [Networked] private NetworkBool isPickedUp { get; set; }
     [Networked] private PlayerRef pickedBy { get; set; }
-    [Networked] private NetworkBool isEquipped { get; set; }
 
     // EVENTOS:
     private void Awake() {
         itemRigidbody = GetComponent<Rigidbody>();
     }
 
-    public override void FixedUpdateNetwork() {
-        if (!Object.HasStateAuthority)
-            return;
 
-        if (!isPickedUp) {
-            isEquipped = false;
-            return;
-        }
-
-        if (!Runner.TryGetPlayerObject(pickedBy, out NetworkObject playerObject))
-            return;
-
-        NetworkInventoryState inventory = playerObject.GetComponent<NetworkInventoryState>();
-
-        if (inventory == null)
-            return;
-
-        int equippedSlot = inventory.EquippedSlot;
-
-        bool shouldEquip = equippedSlot >= 0 && inventory.GetItemIdInSlot(equippedSlot) == Object.Id;
-
-        isEquipped = shouldEquip;
-
-        if (!isEquipped)
-            return;
-
-        Transform handPoint = playerObject.transform.Find("ItemHolder");
-
-        if (handPoint == null) {
-            Debug.LogWarning("No se encontró ItemHolder");
-            return;
-        }
-
-        // Mientras está equipado, la autoridad mueve el objeto real.
-        transform.SetPositionAndRotation(handPoint.position, handPoint.rotation);
-        Debug.Log("OBJETO EQUIPADO | Posición: " + transform.position + " | HandPoint: " + handPoint.position + " | Kinematic: " + itemRigidbody.isKinematic);
-    }
 
     public override void Spawned() {
         PlayerNetworkInteraction.OnUsedOnTarget += PlayerNetworkInteraction_OnUsedOnTarget;
@@ -105,7 +68,6 @@ public class NetworkPickableItem : NetworkBehaviour {
         pickedBy = player;
         isPickedUp = true;
 
-        isEquipped = false;
         SetPhysicsEnabled(false);
 
         Debug.Log("Objeto guardado en el inventario de " + player);
@@ -118,7 +80,7 @@ public class NetworkPickableItem : NetworkBehaviour {
 
     private void UpdateVisual() {
         if (itemVisual != null) {
-            itemVisual.SetActive(!isPickedUp || isEquipped);
+            itemVisual.SetActive(!isPickedUp);
         }
 
         if (itemCollider != null) {
@@ -130,46 +92,60 @@ public class NetworkPickableItem : NetworkBehaviour {
         return itemVisual;
     }
 
-    public bool TryDrop(PlayerRef player, Vector3 dropPosition) {
-        // Solo el Host puede cambiar el estado del objeto.
+
+    public bool TryDrop(PlayerRef player, Vector3 dropPosition, Vector3 throwDirection, float throwForce) {
         if (!Object.HasStateAuthority)
             return false;
 
-        // El objeto debe estar recogido y pertenecer al jugador.
         if (!isPickedUp || pickedBy != player)
             return false;
 
-        NetworkTransform networkTransform = GetComponent<NetworkTransform>();
+        NetworkTransform networkTransform =
+            GetComponent<NetworkTransform>();
 
-        if (networkTransform == null) {
-            Debug.LogWarning("El objeto no tiene NetworkTransform");
+        if (networkTransform == null || itemRigidbody == null) {
+            Debug.LogWarning("Falta NetworkTransform o Rigidbody en el objeto");
             return false;
         }
 
-        // Lo colocamos nuevamente en el mundo.
+        if (throwDirection.sqrMagnitude < 0.001f)
+            return false;
+
+        // Reubicamos el objeto mientras todavía está oculto.
         networkTransform.Teleport(dropPosition);
 
+        // Reactivamos el objeto en el mundo.
         pickedBy = PlayerRef.None;
         isPickedUp = false;
 
+        SetPhysicsEnabled(true);
         UpdateVisual();
 
-        Debug.Log("Objeto soltado por " + player);
+        // Reiniciamos el movimiento anterior.
+        itemRigidbody.velocity = Vector3.zero;
+        itemRigidbody.angularVelocity = Vector3.zero;
+
+        // Aplicamos el impulso desde la autoridad.
+        itemRigidbody.AddForce(throwDirection.normalized * throwForce, ForceMode.Impulse);
+
+        Debug.Log("Objeto lanzado por " + player);
 
         return true;
     }
+
 
     private void SetPhysicsEnabled(bool enabled) {
         if (!Object.HasStateAuthority || itemRigidbody == null)
             return;
 
-        itemRigidbody.isKinematic = !enabled;
-        itemRigidbody.useGravity = enabled;
-
-        if (!enabled) {
+        if (!enabled && !itemRigidbody.isKinematic) {
             itemRigidbody.velocity = Vector3.zero;
             itemRigidbody.angularVelocity = Vector3.zero;
         }
+
+        itemRigidbody.isKinematic = !enabled;
+        itemRigidbody.useGravity = enabled;
     }
+
 
 }

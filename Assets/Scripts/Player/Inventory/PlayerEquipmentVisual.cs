@@ -23,10 +23,15 @@ public class PlayerEquipmentVisual : MonoBehaviour {
         if (networkInventory.Object == null || !networkInventory.Object.IsValid)
             return;
 
-        if (!networkInventory.Object.HasInputAuthority)
-            return;
+        int selectedSlot;
 
-        int selectedSlot = playerInventory.GetSelectedSlot();
+        if (networkInventory.Object.HasInputAuthority) {
+            // Jugador local: respuesta inmediata.
+            selectedSlot = playerInventory.GetSelectedSlot();
+        } else {
+            // Jugadores remotos: selección sincronizada por Fusion.
+            selectedSlot = networkInventory.EquippedSlot;
+        }
 
         NetworkId itemId = selectedSlot >= 0 ? networkInventory.GetItemIdInSlot(selectedSlot) : default(NetworkId);
 
