@@ -12,7 +12,15 @@ public class NetworkInventoryState : NetworkBehaviour {
     [Networked] private NetworkId Slot1 { get; set; }
     [Networked] private NetworkId Slot2 { get; set; }
 
+    [Networked] public int EquippedSlot { get; private set; }
+
     // MÉTODOS:
+
+    public override void Spawned() {
+        if (Object.HasStateAuthority) {
+            EquippedSlot = -1;
+        }
+    }
 
     public bool HasFreeSlot() {
         return Slot0 == default(NetworkId) ||
@@ -100,6 +108,27 @@ public class NetworkInventoryState : NetworkBehaviour {
             default:
                 return default(NetworkId);
         }
+    }
+
+    public void SetEquippedSlot(int slotIndex) {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (slotIndex < -1 || slotIndex > 2)
+            return;
+
+        if (slotIndex >= 0 && GetItemIdInSlot(slotIndex) == default(NetworkId))
+            return;
+
+        EquippedSlot = slotIndex;
+
+        Debug.Log("Fusion - Slot equipado: " + EquippedSlot);
+    }
+
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_SetEquippedSlot(int slotIndex) {
+        SetEquippedSlot(slotIndex);
     }
 
     public string GetItemNameInSlot(int index) {
