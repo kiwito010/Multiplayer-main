@@ -81,10 +81,9 @@ public class PlayerNetworkInteraction : NetworkBehaviour
             }
 
         } else {
-            Debug.Log("ERROR: Raycast no detectó ningún objeto");
+            Debug.Log("Raycast sin detección de objeto interactuable");
         }
     }
-
 
     // RpcSources.InputAuthority: solo el dueño de este jugador puede
     // disparar este RPC (nadie puede simular que otro jugador usó algo).

@@ -32,12 +32,6 @@ public class PlayerMovement : NetworkBehaviour
     public Transform cameraPivot; // El objeto PlayerCamera
 
     [Header("UI")]
-    // Arrastrá acá tu prefab del playerHUD.
-    // Se crea SOLO para el jugador local, así cada uno ve únicamente su HUD.
-    [SerializeField] private GameObject playerHUDPrefab;
-
-    // Lo que se creó para la barra, para poder borrarlo cuando el jugador se va.
-    private GameObject _hudRoot;
 
     // Referencia al Character Controller del jugador.
     private CharacterController _characterController;
@@ -95,23 +89,16 @@ public class PlayerMovement : NetworkBehaviour
         // HasInputAuthority es true SOLO en la máquina del dueño de este personaje.
         if (Object.HasInputAuthority) {
             Local = this;
-            SpawnPlayerHUD();
+
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }
     }
 
     // Se llama cuando el jugador desaparece de la red.
-    public override void Despawned(NetworkRunner runner, bool hasState)
-    {
-        if (Local == this)
-        {
+    public override void Despawned(NetworkRunner runner, bool hasState) {
+        if (Local == this) {
             Local = null;
-        }
-
-        if (_hudRoot != null)
-        {
-            Destroy(_hudRoot);
         }
     }
 
@@ -226,59 +213,6 @@ public class PlayerMovement : NetworkBehaviour
             IsSprinting = false;
             RechargeStamina(dt);
         }
-    }
-
-    // Crea la barra de stamina para el jugador local.
-
-    private void SpawnPlayerHUD() {
-        if (playerHUDPrefab == null) {
-            Debug.LogWarning("PlayerHUD Prefab no asignado");
-            return;
-        }
-
-        GameObject instance = Instantiate(playerHUDPrefab);
-
-        _hudRoot = instance;
-
-        // Configuramos el Canvas.
-        Canvas canvas = instance.GetComponent<Canvas>();
-
-        if (canvas != null) {
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 100;
-
-            UnityEngine.UI.CanvasScaler scaler =
-                canvas.GetComponent<UnityEngine.UI.CanvasScaler>();
-
-            if (scaler != null) {
-                ConfigureScaler(scaler);
-            }
-        }
-
-        // Buscamos los componentes del jugador.
-        PlayerInventory playerInventory =
-            GetComponent<PlayerInventory>();
-
-        NetworkInventoryState networkInventory =
-            GetComponent<NetworkInventoryState>();
-
-        // Conectamos el HUD.
-        PlayerHUD playerHUD = instance.GetComponent<PlayerHUD>();
-
-        if (playerHUD != null) {
-            playerHUD.Initialize(playerInventory, networkInventory);
-        }
-    }
-
-
-    // Hace que la UI escale con el tamaño de la ventana, tomando como base
-    // 1920x1080. Así se ve igual de bien en el Editor y en el build.
-    private static void ConfigureScaler(UnityEngine.UI.CanvasScaler scaler)
-    {
-        scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920f, 1080f);
-        scaler.screenMatchMode = UnityEngine.UI.CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-        scaler.matchWidthOrHeight = 0.5f;
     }
 
     private void RechargeStamina(float dt)
