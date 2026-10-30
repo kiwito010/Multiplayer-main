@@ -54,6 +54,11 @@ public class MainMenuFlow : MonoBehaviour
         GoToCharacterSelect(GameMode.Client, joinRoomInput.text);
     }
 
+    public void OnBackButtonPressed()
+    {
+        SceneManager.LoadScene("TitleScreen");
+    }
+
     private void GoToCharacterSelect(GameMode mode, string rawCode)
     {
         // Trim() saca espacios del principio y del final.

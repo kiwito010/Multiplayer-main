@@ -25,7 +25,7 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
     // La buscamos por nombre y no por número, así agregar o reordenar
     // escenas no rompe nada.
     [SerializeField] private string gameplaySceneName = "GameTest1";
-    [SerializeField] private string mainMenuSceneName = "MainMenu";
+    [SerializeField] private string mainMenuSceneName = "Main Menu";
 
     [Header("Salir de la partida")]
     // Tecla para volver al menú principal mientras se juega.

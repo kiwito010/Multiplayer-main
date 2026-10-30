@@ -10,7 +10,7 @@ public class CharacterSelect : MonoBehaviour
     // El NetworkManagerFusion que ahora vive en ESTA escena.
     [SerializeField] private NetworkManagerFusion networkManager;
 
-    [SerializeField] private string mainMenuScene = "MainMenu";
+    [SerializeField] private string mainMenuScene = "Main Menu";
 
     // Opcional: un texto (TMP) donde mostrar avisos, por ejemplo cuando el
     // personaje que elegiste ya estaba ocupado en la sala.
