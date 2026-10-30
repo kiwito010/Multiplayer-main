@@ -66,20 +66,31 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
         Application.runInBackground = true;
     }
 
+    [SerializeField] private float leaveHoldDuration = 2f;
+    private float _leaveHoldTimer = 0f;
+
     private void Update()
     {
-        // Solo cuando ya estamos jugando (conectados) y no estamos saliendo.
         if (!_inGame || _leaving) return;
 
-        // Anotamos el momento en que aparece NUESTRO jugador.
         if (!_hadLocalPlayer && PlayerMovement.Local != null)
         {
             _hadLocalPlayer = true;
         }
 
-        if (Input.GetKeyDown(leaveKey))
+        // Si mantiene apretada la tecla, suma tiempo
+        if (Input.GetKey(leaveKey))
         {
-            ExitToScene(mainMenuSceneName, null, true);
+            _leaveHoldTimer += Time.deltaTime;
+
+            if (_leaveHoldTimer >= leaveHoldDuration)
+            {
+                ExitToScene(mainMenuSceneName, null, true);
+            }
+        }
+        else
+        {
+            _leaveHoldTimer = 0f; // Si la suelta, se reinicia el contador
         }
     }
 
