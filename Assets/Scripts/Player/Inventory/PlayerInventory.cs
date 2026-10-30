@@ -15,6 +15,8 @@ public class PlayerInventory : MonoBehaviour
     //
     [SerializeField] private GameInput gameInput;
 
+    private NetworkInventoryState networkInventory;
+
     [SerializeField] private Transform handPoint;
     //
 
@@ -37,6 +39,7 @@ public class PlayerInventory : MonoBehaviour
     private void Awake() {
         networkObject = GetComponent<NetworkObject>();
         networkItemDrop = GetComponent<PlayerNetworkItemDrop>();
+        networkInventory = GetComponent<NetworkInventoryState>();
 
         slots = new PickableItem[maxSlots];
     }
@@ -100,14 +103,17 @@ public class PlayerInventory : MonoBehaviour
 
             selectedSlot = -1;
 
+            if (networkInventory != null)
+                networkInventory.RPC_SetEquippedSlot(-1);
+
             OnInventoryChanged?.Invoke();
             return;
         }
 
         selectedSlot = slotIndex;
 
-        // El equipamiento de objetos de red se implementará por separado.
-        // Por ahora conservamos la selección visual del slot.
+        if (networkInventory != null)
+            networkInventory.RPC_SetEquippedSlot(selectedSlot);
 
         OnInventoryChanged?.Invoke();
         OnInventoryOpened?.Invoke();
@@ -225,6 +231,9 @@ public class PlayerInventory : MonoBehaviour
         }
 
         selectedSlot = -1;
+
+        if (networkInventory != null)
+            networkInventory.RPC_SetEquippedSlot(-1);
 
         OnInventoryChanged?.Invoke();
     }
