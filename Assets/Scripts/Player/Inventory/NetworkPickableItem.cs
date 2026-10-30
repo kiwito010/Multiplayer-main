@@ -78,4 +78,37 @@ public class NetworkPickableItem : NetworkBehaviour {
             itemCollider.enabled = !isPickedUp;
         }
     }
+
+    public GameObject GetItemVisual() {
+        return itemVisual;
+    }
+
+    public bool TryDrop(PlayerRef player, Vector3 dropPosition) {
+        // Solo el Host puede cambiar el estado del objeto.
+        if (!Object.HasStateAuthority)
+            return false;
+
+        // El objeto debe estar recogido y pertenecer al jugador.
+        if (!isPickedUp || pickedBy != player)
+            return false;
+
+        NetworkTransform networkTransform = GetComponent<NetworkTransform>();
+
+        if (networkTransform == null) {
+            Debug.LogWarning("El objeto no tiene NetworkTransform");
+            return false;
+        }
+
+        // Lo colocamos nuevamente en el mundo.
+        networkTransform.Teleport(dropPosition);
+
+        pickedBy = PlayerRef.None;
+        isPickedUp = false;
+
+        UpdateVisual();
+
+        Debug.Log("Objeto soltado por " + player);
+
+        return true;
+    }
 }

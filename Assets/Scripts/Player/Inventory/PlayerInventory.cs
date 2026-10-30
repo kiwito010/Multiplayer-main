@@ -6,13 +6,17 @@ using Fusion;
 public class PlayerInventory : MonoBehaviour
 {
     //VARIABLES:
-    //Fusion
-    private NetworkObject networkObject;
 
     //Referencias:
+    
+    //Fusion
+    private NetworkObject networkObject;
+    private PlayerNetworkItemDrop networkItemDrop;
+    //
     [SerializeField] private GameInput gameInput;
 
     [SerializeField] private Transform handPoint;
+    //
 
     [SerializeField] private int maxSlots = 3;
 
@@ -32,6 +36,7 @@ public class PlayerInventory : MonoBehaviour
 
     private void Awake() {
         networkObject = GetComponent<NetworkObject>();
+        networkItemDrop = GetComponent<PlayerNetworkItemDrop>();
 
         slots = new PickableItem[maxSlots];
     }
@@ -53,7 +58,10 @@ public class PlayerInventory : MonoBehaviour
         }
 
         if (gameInput.GetDropPressed()) {
-            DropSelectedItem();
+            if (selectedSlot >= 0 && networkItemDrop != null) {
+                networkItemDrop.RequestDrop(selectedSlot);
+                DeselectSlot();
+            }
         }
     }
 
@@ -206,4 +214,19 @@ public class PlayerInventory : MonoBehaviour
 
         return false;
     }
+
+    public void DeselectSlot() {
+        if (selectedSlot == -1)
+            return;
+
+        if (equippedItem != null) {
+            equippedItem.Unequip();
+            equippedItem = null;
+        }
+
+        selectedSlot = -1;
+
+        OnInventoryChanged?.Invoke();
+    }
+
 }

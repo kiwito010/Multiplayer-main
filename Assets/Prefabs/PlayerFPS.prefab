@@ -23,6 +23,8 @@ GameObject:
   - component: {fileID: 643688764067791398}
   - component: {fileID: 6203016693621385032}
   - component: {fileID: 8661151902438196635}
+  - component: {fileID: 3833499360900281797}
+  - component: {fileID: 8426112057967049426}
   m_Layer: 0
   m_Name: PlayerFPS
   m_TagString: Untagged
@@ -147,6 +149,7 @@ MonoBehaviour:
   - {fileID: 4516032627377954848}
   - {fileID: 6203016693621385032}
   - {fileID: 8661151902438196635}
+  - {fileID: 8426112057967049426}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &5397311817566387592
 MonoBehaviour:
@@ -327,6 +330,34 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerHUDPrefab: {fileID: 226949744358700336, guid: b0876fff6e62f5b49bb0ecce168a6d6a, type: 3}
+--- !u!114 &3833499360900281797
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 378695112004466499}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a28d6fa6d510b640926e4bb549828b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerInventory: {fileID: -6935682901151754486}
+  networkInventory: {fileID: 6203016693621385032}
+  handPoint: {fileID: 5110690479083329799}
+--- !u!114 &8426112057967049426
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 378695112004466499}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21feaf972c0f82449813eb5b0948d3af, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dropDistance: 1.5
 --- !u!1001 &4264906278637596370
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -409,7 +440,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1902654396497665327, guid: 3338216f1795a244d9483d8bea3400c9, type: 3}
       propertyPath: m_Name
-      value: ItemHolder
+      value: HandPoint
       objectReference: {fileID: 0}
     - target: {fileID: 3935241199649564873, guid: 3338216f1795a244d9483d8bea3400c9, type: 3}
       propertyPath: m_LocalPosition.x
