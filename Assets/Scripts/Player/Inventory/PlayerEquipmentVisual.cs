@@ -63,7 +63,7 @@ public class PlayerEquipmentVisual : MonoBehaviour {
         if (pickableItem == null)
             return;
 
-        GameObject visualPrefab = pickableItem.GetItemVisual();
+        GameObject visualPrefab = pickableItem.GetEquippedVisualPrefab();
 
         if (visualPrefab == null)
             return;

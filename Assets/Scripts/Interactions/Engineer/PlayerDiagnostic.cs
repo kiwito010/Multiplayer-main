@@ -1,16 +1,24 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Fusion;
 
-public class EngineerDiagnostic : MonoBehaviour
+public class PlayerDiagnostic : MonoBehaviour
 {
     //VARIABLES:
     //Referencias
     private GameInput gameInput;
+
+        //Fusion
+        private NetworkObject networkObject;
+        private NetworkInventoryState networkInventory;
+        private PlayerInventory playerInventory;
+        //
+
     [SerializeField] private Camera playerCamera;
     [SerializeField] private Transform cameraTransform;
 
-    [SerializeField] private ScanUI scanUI;
+    private ScanUI scanUI;
     
     //FOV
     [SerializeField] private float normalFov = 60f;
@@ -32,10 +40,22 @@ public class EngineerDiagnostic : MonoBehaviour
 
     private void Awake() {
         gameInput = GetComponent<GameInput>();
+        
+        //Fusion
+        networkObject = GetComponent<NetworkObject>();
+        networkInventory = GetComponent<NetworkInventoryState>();
+        playerInventory = GetComponent<PlayerInventory>();
+        //
     }
 
     private void Update() {
-        if (!hasMagnifyingGlass || !gameInput.GetDiagnosticPressed()) { 
+        if (networkObject == null || !networkObject.IsValid || !networkObject.HasInputAuthority)
+            return;
+
+        if (scanUI == null || playerCamera == null || cameraTransform == null)
+            return;
+
+        if (!HasMagnifyingGlassEquipped() || !gameInput.GetDiagnosticPressed()) {
             playerCamera.fieldOfView = normalFov;
             StopCurrentScan();
             scanUI.HideAll();
@@ -52,6 +72,14 @@ public class EngineerDiagnostic : MonoBehaviour
             }
         }
         StopCurrentScan();
+    }
+
+    public void Initialize(ScanUI scanUI) {
+        this.scanUI = scanUI;
+
+        if (scanUI != null) {
+            scanUI.HideAll();
+        }
     }
 
     private void Scan(IDiagnosable diagnosable) {
@@ -88,4 +116,30 @@ public class EngineerDiagnostic : MonoBehaviour
     public bool HasMagnifyingGlass() {
         return hasMagnifyingGlass;
     }
+
+    private bool HasMagnifyingGlassEquipped() {
+        if (networkInventory == null || playerInventory == null)
+            return false;
+
+        int selectedSlot = playerInventory.GetSelectedSlot();
+
+        if (selectedSlot < 0)
+            return false;
+
+        NetworkId itemId = networkInventory.GetItemIdInSlot(selectedSlot);
+
+        if (itemId == default(NetworkId))
+            return false;
+
+        if (!networkInventory.Runner.TryFindObject(itemId, out NetworkObject itemObject))
+            return false;
+
+        NetworkPickableItem item = itemObject.GetComponent<NetworkPickableItem>();
+
+        if (item == null)
+            return false;
+
+        return item.GetItemType() == ItemType.MagnifyingGlass;
+    }
+
 }

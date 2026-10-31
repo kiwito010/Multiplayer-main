@@ -14,6 +14,16 @@ public class NetworkPickableItem : NetworkBehaviour {
     [Networked] private NetworkBool isPickedUp { get; set; }
     [Networked] private PlayerRef pickedBy { get; set; }
 
+    [SerializeField] private GameObject equippedVisualPrefab;
+
+
+    [SerializeField] private float remoteDropVisibilityDelay = 0.15f;
+
+    private bool wasPickedUp;
+    private float showVisualAt;
+
+    [SerializeField] private ItemType itemType;
+
     // EVENTOS:
     private void Awake() {
         itemRigidbody = GetComponent<Rigidbody>();
@@ -25,6 +35,8 @@ public class NetworkPickableItem : NetworkBehaviour {
         PlayerNetworkInteraction.OnUsedOnTarget += PlayerNetworkInteraction_OnUsedOnTarget;
 
         UpdateVisual();
+
+        wasPickedUp = isPickedUp;
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState) {
@@ -75,8 +87,23 @@ public class NetworkPickableItem : NetworkBehaviour {
 
 
     public override void Render() {
+        // Detectamos cuando el objeto pasa de recogido a soltado.
+        if (wasPickedUp && !isPickedUp && !Object.HasStateAuthority) {
+            showVisualAt = Time.time + remoteDropVisibilityDelay;
+        }
+
+        wasPickedUp = isPickedUp;
+
         UpdateVisual();
+
+        // El Client espera brevemente antes de mostrar el cubo.
+        if (!Object.HasStateAuthority && itemVisual != null) {
+            if (!isPickedUp && Time.time < showVisualAt) {
+                itemVisual.SetActive(false);
+            }
+        }
     }
+
 
     private void UpdateVisual() {
         if (itemVisual != null) {
@@ -100,8 +127,7 @@ public class NetworkPickableItem : NetworkBehaviour {
         if (!isPickedUp || pickedBy != player)
             return false;
 
-        NetworkTransform networkTransform =
-            GetComponent<NetworkTransform>();
+        NetworkTransform networkTransform = GetComponent<NetworkTransform>();
 
         if (networkTransform == null || itemRigidbody == null) {
             Debug.LogWarning("Falta NetworkTransform o Rigidbody en el objeto");
@@ -111,8 +137,13 @@ public class NetworkPickableItem : NetworkBehaviour {
         if (throwDirection.sqrMagnitude < 0.001f)
             return false;
 
-        // Reubicamos el objeto mientras todavía está oculto.
+        // El objeto todavía está oculto y es cinemático.
         networkTransform.Teleport(dropPosition);
+
+        // Alineamos también la posición física del Rigidbody.
+        itemRigidbody.position = dropPosition;
+
+        Physics.SyncTransforms();
 
         // Reactivamos el objeto en el mundo.
         pickedBy = PlayerRef.None;
@@ -147,5 +178,12 @@ public class NetworkPickableItem : NetworkBehaviour {
         itemRigidbody.useGravity = enabled;
     }
 
+    //Get Events
+    public GameObject GetEquippedVisualPrefab() { 
+        return equippedVisualPrefab;
+    }
 
+    public ItemType GetItemType() {
+        return itemType;
+    }
 }

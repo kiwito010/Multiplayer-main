@@ -5,7 +5,7 @@ using UnityEngine;
 public class MagnifyingGlassPickup : MonoBehaviour, IInteractable
 {
     [SerializeField] private PlayerInteraction playerInteraction;
-    [SerializeField] private EngineerDiagnostic engineerDiagnostic;
+    [SerializeField] private PlayerDiagnostic playerDiagnostic;
 
     private void OnEnable() {
         playerInteraction.OnInteract += PlayerInteraction_OnInteract;
@@ -22,7 +22,7 @@ public class MagnifyingGlassPickup : MonoBehaviour, IInteractable
     }
 
     public void Interact() {
-        engineerDiagnostic.GiveMagnifyingGlass();
+        playerDiagnostic.GiveMagnifyingGlass();
         gameObject.SetActive(false);
     }
 }

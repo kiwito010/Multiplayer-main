@@ -48,17 +48,17 @@ public class PlayerHUDSpawner : NetworkBehaviour {
         }
 
         // Buscamos los componentes del jugador.
-        PlayerInventory playerInventory =
-            GetComponent<PlayerInventory>();
+        PlayerInventory playerInventory = GetComponent<PlayerInventory>();
 
-        NetworkInventoryState networkInventory =
-            GetComponent<NetworkInventoryState>();
+        NetworkInventoryState networkInventory = GetComponent<NetworkInventoryState>();
+
+        PlayerDiagnostic playerDiagnostic = GetComponent<PlayerDiagnostic>();
 
         // Conectamos las interfaces.
         PlayerHUD playerHUD = hudInstance.GetComponent<PlayerHUD>();
 
         if (playerHUD != null) {
-            playerHUD.Initialize(playerInventory, networkInventory);
+            playerHUD.Initialize(playerInventory, networkInventory, playerDiagnostic);
         }
     }
 

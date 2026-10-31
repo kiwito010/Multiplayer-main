@@ -25,6 +25,7 @@ GameObject:
   - component: {fileID: 8661151902438196635}
   - component: {fileID: 3833499360900281797}
   - component: {fileID: 8426112057967049426}
+  - component: {fileID: 3119491342833392601}
   m_Layer: 0
   m_Name: PlayerFPS
   m_TagString: Untagged
@@ -358,6 +359,28 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dropDistance: 1.5
+  throwForce: 3
+--- !u!114 &3119491342833392601
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 378695112004466499}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c446fbef30670f44eaec11e6bf7c828b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerCamera: {fileID: 3018098544571956420}
+  cameraTransform: {fileID: 4916090557827576219}
+  normalFov: 60
+  diagnosticFov: 35
+  diagnosticLayerMask:
+    serializedVersion: 2
+    m_Bits: 512
+  diagnosticDistance: 2
+  scanLoseSpeed: 1
 --- !u!1001 &4264906278637596370
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -377,6 +400,10 @@ PrefabInstance:
     - target: {fileID: 9062135529532651477, guid: 442aad2f130bf304686b964f5a40c6ac, type: 3}
       propertyPath: m_LocalPosition.y
       value: -0.654
+      objectReference: {fileID: 0}
+    - target: {fileID: 9062135529532651477, guid: 442aad2f130bf304686b964f5a40c6ac, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.571
       objectReference: {fileID: 0}
     - target: {fileID: 9157660794613145417, guid: 442aad2f130bf304686b964f5a40c6ac, type: 3}
       propertyPath: m_LocalPosition.x
