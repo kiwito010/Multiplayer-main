@@ -16,7 +16,7 @@ public class CharacterSelect : MonoBehaviour
     [SerializeField] private NetworkManagerFusion networkManager;
     [SerializeField] private string mainMenuScene = "MainMenu";
 
-    [Header("Botones de personaje (el orden importa: 0=Ingeniero, 1=Hacker, 3=Exploradora)")]
+    [Header("Botones de personaje (el orden importa: 0=Ingeniero, 1=Hacker, 2=Exploradora)")]
     [SerializeField] private Button[] characterButtons;
     [SerializeField] private Color selectedButtonColor = new Color(1f, 0.6f, 0.6f, 1f);
 
@@ -36,7 +36,7 @@ public class CharacterSelect : MonoBehaviour
     [SerializeField] private Sprite defaultPortrait;      // cuando no hay nada elegido
     [SerializeField] private Sprite[] characterPortraits; // una por personaje, en el mismo orden
 
-    [Header("Paneles de descripción por personaje (0=Ingeniero, 1=Hacker, 3=Exploradora)")]
+    [Header("Paneles de descripción por personaje (0=Ingeniero, 1=Hacker, 2=Exploradora)")]
     [SerializeField] private GameObject[] characterDescriptionPanels;
 
     [Header("Aviso animado (sube desde abajo, se queda un momento y vuelve a caer)")]
@@ -106,7 +106,7 @@ public class CharacterSelect : MonoBehaviour
         RefreshUI();
     }
 
-    // Conectado al OnClick() de cada botón de personaje, con su número (0 a 3).
+    // Conectado al OnClick() de cada botón de personaje, con su número (0 a 2).
     public void OnCharacterSelected(int characterIndex)
     {
         // Si tocás el que ya estaba elegido, se deselecciona; si no, se elige este.

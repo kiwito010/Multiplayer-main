@@ -13,7 +13,7 @@ using UnityEngine.SceneManagement;
 // (aunque estén vacías) porque la interfaz las exige.
 public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
 {
-    [Header("Personajes (el orden importa: 0=Ingeniero, 1=Hacker, 2=Científico, 3=Explorador)")]
+    [Header("Personajes (el orden importa: 0=Ingeniero, 1=Hacker, 2=Explorador)")]
     // Un prefab por personaje. NetworkPrefabRef es como un "GameObject", pero
     // apuntando a un prefab registrado en el sistema de red de Fusion (cada
     // uno tiene que tener el componente Network Object). El número de cada

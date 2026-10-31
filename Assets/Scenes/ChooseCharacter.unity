@@ -421,7 +421,6 @@ MonoBehaviour:
   characterPrefabs:
   - RawGuidValue: 0b275d76cf1a3754eab10419d72bf8b0
   - RawGuidValue: c9cd7cd6f94b4114ab1a33e02d9503d7
-  - RawGuidValue: 5fac4298bb0de7e43b628aaefcc9f1f9
   - RawGuidValue: 812f9ca6ad1913f47987a4ed520f3898
   gameplaySceneName: GameTest1
   mainMenuSceneName: Main Menu
@@ -1031,7 +1030,7 @@ MonoBehaviour:
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 3
+          m_IntArgument: 2
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
@@ -1132,14 +1131,14 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_text: "La exploradora sabe mucho sobre explorar ya que la forma de exploraci\xF3n
-    que ella usa en las exploraciones fueron ense\xF1adas por su tio que era explorador
-    Dave \"el explorador\" Watterson que exploraba por lugares que los exploradores
-    hacen exploraciones y ahi fue su ultima exploraci\xF3n cuando mientras exploraba
-    su exploraci\xF3n termino en un triste y chato final debido a una gigante y redonda
-    piedra mientras salvaba a un se\xF1or con sombrero gracioso y latigo. \nsiempre
-    intenta que el hacker salga a tomar sol, va perdiendo 17-0.\n\n\"Las br\xFAjulas
-    son para gente d\xE9bil que le teme al destino\", afirma mientras camina directo
-    hacia una pared de ladrillos."
+    que ella usa en las exploraciones fueron ense\xF1adas por su tio que era explorador,
+    su nombre era Hector \"el explorador\" Tanonni que exploraba por lugares que
+    los exploradores hacen exploraciones y ahi fue su ultima exploraci\xF3n cuando
+    mientras exploraba su exploraci\xF3n termino en un triste y chato final debido
+    a una gigante y redonda piedra mientras salvaba a un se\xF1or con sombrero gracioso
+    y latigo. \nsiempre intenta que el hacker salga a tomar sol, va perdiendo 17-0.\n\n\"Las
+    br\xFAjulas son para gente d\xE9bil que le teme al destino\", afirma mientras
+    camina directo hacia una pared de ladrillos."
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b200bc31676ed6f4ea9a7b23d33506e6, type: 2}
   m_sharedMaterial: {fileID: 5939935552063893384, guid: b200bc31676ed6f4ea9a7b23d33506e6, type: 2}
@@ -2863,7 +2862,6 @@ MonoBehaviour:
   characterButtons:
   - {fileID: 1656501691}
   - {fileID: 1693633965}
-  - {fileID: 0}
   - {fileID: 406299743}
   selectedButtonColor: {r: 1, g: 0.6, b: 0.6, a: 1}
   selectedMarkers: []
@@ -2875,11 +2873,9 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
-  - {fileID: 0}
   characterDescriptionPanels:
   - {fileID: 675887529}
   - {fileID: 2045763982}
-  - {fileID: 347300063}
   - {fileID: 347300063}
   warningText: {fileID: 16225111}
   warningMessage: "Eleg\xED un personaje primero"
