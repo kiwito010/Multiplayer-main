@@ -25,6 +25,7 @@ public class PlayerNetworkInteraction : NetworkBehaviour
     // necesite saber nada de ellos. Parámetros: quién usó, y sobre qué
     // NetworkObject lo usó.
     public static event System.Action<PlayerRef, NetworkObject> OnUsedOnTarget;
+    public event System.Action<NetworkObject> OnLocalUsedOnTarget;
 
 
     public override void Spawned()
@@ -74,6 +75,8 @@ public class PlayerNetworkInteraction : NetworkBehaviour
 
             if (targetNetworkObject != null) {
                 Debug.Log("NetworkObject encontrado: " + targetNetworkObject.name);
+
+                OnLocalUsedOnTarget?.Invoke(targetNetworkObject);
 
                 RPC_NotifyUse(targetNetworkObject, Object.InputAuthority);
             } else {

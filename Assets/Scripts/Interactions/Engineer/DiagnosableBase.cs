@@ -1,21 +1,28 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Fusion;
 
-public abstract class DiagnosableBase : MonoBehaviour, IDiagnosable
+public abstract class DiagnosableBase : NetworkBehaviour, IDiagnosable
 {
     [SerializeField] private float scanTime = 2f;
     [SerializeField] private float scanLoseSpeed = 0.5f;
 
-    private float currentScanTime;
-    private bool isDiagnosed;
-    private bool isBeingScanned;
+    [Networked] private float currentScanTime { get; set; }
+    [Networked] private NetworkBool isDiagnosed { get; set; }
+    [Networked] private NetworkBool isBeingScanned { get; set; }
 
-    private void Update() {
+    public override void FixedUpdateNetwork() {
+        if (!Object.HasStateAuthority)
+            return;
+
         LoseScanProgress();
     }
 
-    public void AddScanProgress(float amount) { 
+    public void AddScanProgress(float amount) {
+        if (!Object.HasStateAuthority)
+            return;
+
         if (isDiagnosed)
             return;
 
@@ -40,7 +47,9 @@ public abstract class DiagnosableBase : MonoBehaviour, IDiagnosable
         currentScanTime -= scanLoseSpeed * Time.deltaTime;
     }
 
-    public void SetBeingScanned(bool isBeingScanned) { 
+    public void SetBeingScanned(bool isBeingScanned) {
+        if (!Object.HasStateAuthority)
+            return;
         this.isBeingScanned = isBeingScanned;
     }
 

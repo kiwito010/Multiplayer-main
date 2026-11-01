@@ -13,6 +13,7 @@ public class PlayerDiagnostic : MonoBehaviour
         private NetworkObject networkObject;
         private NetworkInventoryState networkInventory;
         private PlayerInventory playerInventory;
+        private PlayerNetworkScan networkScan;
         //
 
     [SerializeField] private Camera playerCamera;
@@ -45,6 +46,7 @@ public class PlayerDiagnostic : MonoBehaviour
         networkObject = GetComponent<NetworkObject>();
         networkInventory = GetComponent<NetworkInventoryState>();
         playerInventory = GetComponent<PlayerInventory>();
+        networkScan = GetComponent<PlayerNetworkScan>();
         //
     }
 
@@ -82,27 +84,36 @@ public class PlayerDiagnostic : MonoBehaviour
         }
     }
 
+
     private void Scan(IDiagnosable diagnosable) {
         if (currentDiagnosable != diagnosable) {
             StopCurrentScan();
 
             currentDiagnosable = diagnosable;
-            currentDiagnosable.SetBeingScanned(true);
+
+            Component component = diagnosable as Component;
+
+            NetworkObject target = component != null ? component.GetComponent<NetworkObject>() : null;
+
+            if (networkScan != null)
+                networkScan.RequestScan(target);
 
             if (!currentDiagnosable.IsDiagnosed()) {
                 scanUI.ResetScanFeedback();
             }
         }
-        currentDiagnosable.AddScanProgress(Time.deltaTime);
 
         scanUI.ShowScanFeedback(currentDiagnosable.GetScanProgress(), currentDiagnosable.IsDiagnosed());
     }
+
 
     private void StopCurrentScan() {
         if (currentDiagnosable == null)
             return;
 
-        currentDiagnosable.SetBeingScanned(false);
+        if (networkScan != null)
+            networkScan.RequestScan(null);
+
         currentDiagnosable = null;
     }
 

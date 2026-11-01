@@ -13,6 +13,19 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         Complete
     }
 
+    //Referencias:
+    private NetworkInventoryState networkInventory;
+
+    private PlayerManager playerManager;
+    private GameInput gameInput;
+    private PlayerNetworkRepairActions networkRepairActions;
+    //[SerializeField] private TextMeshProUGUI instructionText;
+    //
+
+    private bool waitingForCableInstallation;
+
+    private RepairPhase currentPhase;
+
     [SerializeField] private GameObject content;
 
     //Components:
@@ -39,12 +52,6 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
     //
 
-    //[SerializeField] private TextMeshProUGUI instructionText;
-
-    [SerializeField] private PlayerManager playerManager;
-    [SerializeField] private GameInput gameInput;
-
-    private RepairPhase currentPhase;
 
 
     //CablePanels
@@ -113,18 +120,41 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     [SerializeField] private Image wrapProgressImage;
     [SerializeField] private Vector2 wrapProgressOffset;
 
+    public void Initialize(PlayerManager playerManager, GameInput gameInput) {
+        this.playerManager = playerManager;
+        this.gameInput = gameInput;
+
+        content.SetActive(false);
+    }
 
     private void Update() {
         if (content.activeSelf && gameInput.GetExitPressed()) {
             ExitRepair();
         }
+
+        if (waitingForCableInstallation && currentComponent != null && currentComponent.cableInstalled) {
+
+            waitingForCableInstallation = false;
+            newCablePlaced = true;
+
+            CompleteCurrentPhase();
+        }
+
+        if (content.activeSelf && currentComponent != null && currentPhase == RepairPhase.CutBrokenCable) {
+
+            SyncCableCuts();
+        }
     }
 
-    public void Open(
-        RepairableComponent component,
-        PlayerInventory inventory) {
+    public void Open(RepairableComponent component, PlayerInventory inventory) {
         currentComponent = component;
         currentInventory = inventory;
+
+        networkRepairActions = inventory.GetComponent<PlayerNetworkRepairActions>();
+
+        waitingForCableInstallation = false;
+
+        networkInventory = inventory.GetComponent<NetworkInventoryState>();
 
         if (!repairStarted) {
             currentPhase = RepairPhase.CutBrokenCable;
@@ -139,10 +169,19 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         }
 
         content.SetActive(true);
+        Debug.Log("PlayerManager: " + playerManager);
+        Debug.Log("GameInput: " + gameInput);
+        Debug.Log("Content: " + content);
 
         playerManager.EnterUIMode();
 
+        SyncCableCuts();
+
         UpdatePhaseUI();
+    }
+
+    public bool IsOpen() {
+        return content.activeSelf;
     }
 
     public void ExitRepair() {
@@ -242,6 +281,10 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
         leftCut = true;
 
+        if (networkRepairActions != null) {
+            networkRepairActions.RequestCableCut(currentComponent, true);
+        }
+
         UpdatePhaseUI();
         CheckCutsComplete();
     }
@@ -259,6 +302,10 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         }
 
         rightCut = true;
+
+        if (networkRepairActions != null) {
+            networkRepairActions.RequestCableCut(currentComponent, false);
+        }
 
         UpdatePhaseUI();
         CheckCutsComplete();
@@ -314,6 +361,7 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         UpdatePhaseUI();
     }
 
+
     public void NewCablePlaced() {
         if (!brokenCableRemoved)
             return;
@@ -321,15 +369,20 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         if (currentPhase != RepairPhase.PlaceNewCable)
             return;
 
+        if (waitingForCableInstallation)
+            return;
+
         if (!HasRequiredCable())
             return;
 
-        newCablePlaced = true;
+        if (networkRepairActions == null || currentComponent == null)
+            return;
 
-        currentInventory.RemoveItem(requiredCableName);
-
-        CompleteCurrentPhase();
+        // Solicitamos al Host instalar y consumir el cable.
+        waitingForCableInstallation = true;
+        networkRepairActions.RequestInstallCable(currentComponent);
     }
+
 
     public void TwistLeftSide() {
         if (currentPhase != RepairPhase.TwistEnds)
@@ -432,7 +485,7 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         if (leftWrapped && rightWrapped) {
             isWrapping = false;
 
-            currentInventory.RemoveItem(requiredTapeName);
+            //currentInventory.RemoveItem(requiredTapeName);
 
             CompleteCurrentPhase();
         }
@@ -445,8 +498,7 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
         float distanceToRight = Vector2.Distance(tapePosition, rightWrapCenter.position);
 
-        if (!leftWrapped &&
-            distanceToLeft < distanceToRight) {
+        if (!leftWrapped && distanceToLeft < distanceToRight) {
             currentWrapCenter = leftWrapCenter;
             wrappingLeft = true;
         } else if (!rightWrapped) {
@@ -512,28 +564,19 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         ShowMessage("CABLE NECESARIO");
     }
 
-    private bool HasRequiredCable()
-{
-        if (currentInventory == null)
-        {
-            Debug.Log("currentInventory es null");
+    private bool HasRequiredCable() {
+        if (networkInventory == null)
             return false;
-        }
 
-        bool hasCable = currentInventory.HasItem(requiredCableName);
-
-        Debug.Log("Buscando cable: " + requiredCableName);
-        Debug.Log("Tiene cable: " + hasCable);
-            
-        return hasCable;
+        return networkInventory.HasItem(ItemType.Cable);
     }
 
 
     private bool HasRequiredPliers() {
-        if (currentInventory == null)
+        if (networkInventory == null)
             return false;
 
-        return currentInventory.HasItem(requiredPliersName);
+        return networkInventory.HasItem(ItemType.Pliers);
     }
 
     public void CheckTapeRequired() {
@@ -547,9 +590,32 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     }
 
     private bool HasRequiredTape() {
-        if (currentInventory == null)
+        if (networkInventory == null)
             return false;
 
-        return currentInventory.HasItem(requiredTapeName);
+        return networkInventory.HasItem(ItemType.Tape);
+    }
+
+    private void SyncCableCuts() {
+        if (currentComponent == null)
+            return;
+
+        bool previousLeftCut = leftCut;
+        bool previousRightCut = rightCut;
+
+        leftCut = currentComponent.leftCut;
+        rightCut = currentComponent.rightCut;
+
+        if (currentPhase == RepairPhase.CutBrokenCable &&
+            leftCut && rightCut) {
+
+            currentPhase = RepairPhase.RemoveBrokenCable;
+        }
+
+        if (previousLeftCut != leftCut ||
+            previousRightCut != rightCut) {
+
+            UpdatePhaseUI();
+        }
     }
 }

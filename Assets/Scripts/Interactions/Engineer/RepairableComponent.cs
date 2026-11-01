@@ -1,3 +1,4 @@
+using Fusion;
 using UnityEngine;
 
 public class RepairableComponent : DiagnosableBase, IInteractable {
@@ -8,8 +9,44 @@ public class RepairableComponent : DiagnosableBase, IInteractable {
 
     [SerializeField] private MonoBehaviour repairMinigameBehaviour;
 
+    [Networked] public NetworkBool cableInstalled { get; private set; }
+
+    [Networked] public int repairPhaseIndex { get; private set; }
+
+    [Networked] public NetworkBool leftCut { get; private set; }
+    [Networked] public NetworkBool rightCut { get; private set; }
+
+    public void RegisterCableCut(bool isLeft) {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (!IsDiagnosed() || isRepaired)
+            return;
+
+        if (cableInstalled)
+            return;
+
+        if (isLeft) {
+            leftCut = true;
+        } else {
+            rightCut = true;
+        }
+    }
+
+    [Networked] public NetworkBool brokenCableRemoved { get; private set; }
+
+    [Networked] public NetworkBool cableTwistedLeft { get; private set; }
+    [Networked] public NetworkBool cableTwistedRight { get; private set; }
+
+    [Networked] public NetworkBool leftWrapped { get; private set; }
+    [Networked] public NetworkBool rightWrapped { get; private set; }
+
     private IRepairMinigame repairMinigame;
     private bool isRepaired;
+
+    public void Interact() { 
+        
+    }
 
     private void Awake() {
         repairMinigame = repairMinigameBehaviour as IRepairMinigame;
@@ -37,6 +74,7 @@ public class RepairableComponent : DiagnosableBase, IInteractable {
     }
 
     public void OpenRepairMinigame(PlayerInventory inventory) {
+        Debug.Log("INTENTANDO ABRIR MINIJUEGO");
         if (!IsDiagnosed()) {
             Debug.Log("Este componente todavia no fue diagnosticado");
             return;
@@ -53,7 +91,26 @@ public class RepairableComponent : DiagnosableBase, IInteractable {
         repairMinigame.Open(this, inventory);
     }
 
-    public void Interact() { 
-        
+    public bool TryInstallCable(NetworkInventoryState inventory) {
+        if (!Object.HasStateAuthority)
+            return false;
+
+        if (!IsDiagnosed() || isRepaired || cableInstalled)
+            return false;
+
+        if (inventory == null || !inventory.Object.HasStateAuthority)
+            return false;
+
+        if (!inventory.TryConsumeItem(ItemType.Cable, out NetworkObject cable))
+            return false;
+
+        cableInstalled = true;
+
+        // El material ya fue consumido: lo retiramos de la partida.
+        Runner.Despawn(cable);
+
+        Debug.Log("Cable nuevo instalado");
+
+        return true;
     }
 }

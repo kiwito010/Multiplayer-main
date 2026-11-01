@@ -1,0 +1,73 @@
+using Fusion;
+using UnityEngine;
+
+public class PlayerNetworkRepairActions : NetworkBehaviour {
+    // VARIABLES:
+
+    private NetworkInventoryState networkInventory;
+
+    // MÉTODOS:
+
+    public override void Spawned() {
+        networkInventory = GetComponent<NetworkInventoryState>();
+    }
+
+    public void RequestInstallCable(RepairableComponent component) {
+        if (!Object.HasInputAuthority || component == null)
+            return;
+
+        RPC_RequestInstallCable(component.Object);
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    private void RPC_RequestInstallCable(NetworkObject target) {
+        if (target == null || !target.IsValid)
+            return;
+
+        RepairableComponent component =
+            target.GetComponent<RepairableComponent>();
+
+        if (component == null || networkInventory == null)
+            return;
+
+        // Solo permitimos modificar componentes cercanos.
+        float distance = Vector3.Distance(
+            transform.position,
+            target.transform.position
+        );
+
+        if (distance > 3f)
+            return;
+
+        component.TryInstallCable(networkInventory);
+    }
+
+    public void RequestCableCut(RepairableComponent component, bool isLeft) {
+        if (!Object.HasInputAuthority || component == null)
+            return;
+
+        RPC_RequestCableCut(component.Object, isLeft);
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    private void RPC_RequestCableCut(NetworkObject target, bool isLeft) {
+        if (target == null || !target.IsValid)
+            return;
+
+        RepairableComponent component =
+            target.GetComponent<RepairableComponent>();
+
+        if (component == null)
+            return;
+
+        float distance = Vector3.Distance(
+            transform.position,
+            target.transform.position
+        );
+
+        if (distance > 3f)
+            return;
+
+        component.RegisterCableCut(isLeft);
+    }
+}

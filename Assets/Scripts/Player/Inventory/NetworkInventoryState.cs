@@ -143,4 +143,68 @@ public class NetworkInventoryState : NetworkBehaviour {
 
         return "";
     }
+
+    public bool HasItem(ItemType itemType) {
+        if (Runner == null)
+            return false;
+
+        for (int i = 0; i < 3; i++) {
+            NetworkId itemId = GetItemIdInSlot(i);
+
+            if (itemId == default(NetworkId))
+                continue;
+
+            if (!Runner.TryFindObject(itemId, out NetworkObject itemObject))
+                continue;
+
+            NetworkPickableItem item =
+                itemObject.GetComponent<NetworkPickableItem>();
+
+            if (item != null && item.GetItemType() == itemType)
+                return true;
+        }
+
+        return false;
+    }
+
+    public bool TryConsumeItem(ItemType itemType, out NetworkObject consumedItem) {
+        consumedItem = null;
+
+        // Solo la autoridad puede modificar el inventario.
+        if (!Object.HasStateAuthority)
+            return false;
+
+        if (itemType == ItemType.None)
+            return false;
+
+        for (int i = 0; i < 3; i++) {
+            NetworkId itemId = GetItemIdInSlot(i);
+
+            if (itemId == default(NetworkId))
+                continue;
+
+            if (!Runner.TryFindObject(itemId, out NetworkObject itemObject))
+                continue;
+
+            NetworkPickableItem item =
+                itemObject.GetComponent<NetworkPickableItem>();
+
+            if (item == null || item.GetItemType() != itemType)
+                continue;
+
+            if (!TryRemoveItem(i, out NetworkId removedId))
+                return false;
+
+            // Si estaba equipado, lo desequipamos.
+            if (EquippedSlot == i)
+                SetEquippedSlot(-1);
+
+            consumedItem = itemObject;
+
+            return true;
+        }
+
+        return false;
+    }
+
 }

@@ -54,11 +54,21 @@ public class PlayerHUDSpawner : NetworkBehaviour {
 
         PlayerDiagnostic playerDiagnostic = GetComponent<PlayerDiagnostic>();
 
+        PlayerManager playerManager = GetComponent<PlayerManager>();
+
+        GameInput gameInput = GetComponent<GameInput>();
+
         // Conectamos las interfaces.
         PlayerHUD playerHUD = hudInstance.GetComponent<PlayerHUD>();
 
         if (playerHUD != null) {
-            playerHUD.Initialize(playerInventory, networkInventory, playerDiagnostic);
+            playerHUD.Initialize(
+                playerInventory, 
+                networkInventory, 
+                playerDiagnostic, 
+                playerManager, 
+                gameInput
+                );
         }
     }
 
@@ -69,5 +79,12 @@ public class PlayerHUDSpawner : NetworkBehaviour {
         scaler.referenceResolution = new Vector2(1920f, 1080f);
         scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
         scaler.matchWidthOrHeight = 0.5f;
+    }
+
+    public PlayerHUD GetHUD() {
+        if (hudInstance == null)
+            return null;
+
+        return hudInstance.GetComponent<PlayerHUD>();
     }
 }
