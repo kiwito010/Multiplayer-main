@@ -13,7 +13,7 @@ using UnityEngine.SceneManagement;
 // (aunque estén vacías) porque la interfaz las exige.
 public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
 {
-    [Header("Personajes (el orden importa: 0=Ingeniero, 1=Hacker, 2=Científico, 3=Explorador)")]
+    [Header("Personajes (el orden importa: 0=Ingeniero, 1=Hacker, 2=Explorador)")]
     // Un prefab por personaje. NetworkPrefabRef es como un "GameObject", pero
     // apuntando a un prefab registrado en el sistema de red de Fusion (cada
     // uno tiene que tener el componente Network Object). El número de cada
@@ -24,6 +24,7 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
     // Nombre exacto de la escena de juego (tiene que estar en Build Settings).
     // La buscamos por nombre y no por número, así agregar o reordenar
     // escenas no rompe nada.
+    [SerializeField] private string ChooseCharacterSceneName = "ChooseCharacter";
     [SerializeField] private string gameplaySceneName = "GameTest1";
     [SerializeField] private string mainMenuSceneName = "Main Menu";
 
@@ -98,7 +99,7 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
     //  LÓGICA PRINCIPAL DE CONEXIÓN
     // ---------------------------------------------------------
 
-    // Se llama desde CharacterSelect (escena ChooseCharacter) apenas el
+    // Se llama desde ChooseCharacter (escena ChooseCharacter) apenas el
     // jugador elige su personaje. El modo (Host/Client) y el código de sala
     // los dejó guardados el MainMenu en GameSession.
     public void StartConnection()
@@ -339,6 +340,7 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
 
     // La sesión terminó sin que nosotros lo pidiéramos: volvemos al menú
     // principal y le dejamos un mensaje para mostrar en un popup.
+    // La sesión terminó sin que nosotros lo pidiéramos: volvemos a la escena correspondiente
     private void HandleSessionEnded(NetworkRunner runner, bool shutdownRunner)
     {
         // Si somos cliente y nos desconectaron SIN que nuestro jugador haya
@@ -347,10 +349,13 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
         bool rejectedBeforeSpawn = !_hadLocalPlayer && GameSession.Mode == GameMode.Client;
 
         string message = rejectedBeforeSpawn
-            ? "No pudiste entrar a la sala: ese personaje ya está ocupado."
+            ? "Ese personaje ya está ocupado. Elegí otro."
             : "Se cerró la sala o se perdió la conexión.";
 
-        ExitToScene(mainMenuSceneName, message, shutdownRunner);
+        // Si fue rechazado por el personaje, vuelve a la selección. Si fue otro error, vuelve al menú principal.
+        string targetScene = rejectedBeforeSpawn ? ChooseCharacterSceneName : mainMenuSceneName;
+
+        ExitToScene(targetScene, message, shutdownRunner);
     }
 
     // El Host espera un instante antes de expulsar, para que el cliente

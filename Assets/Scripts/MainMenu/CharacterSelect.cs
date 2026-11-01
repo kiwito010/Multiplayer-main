@@ -5,68 +5,58 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 // Va en la escena ChooseCharacter.
-//  - Los botones de personaje SELECCIONAN (no conectan).
-//  - Tocar el personaje elegido lo deselecciona; tocar otro cambia la elección.
-//  - El botón "Seleccionar" es el que inicia la conexión. Si no hay nadie
-//    elegido, muestra un aviso que sube desde abajo y vuelve a caer.
 public class CharacterSelect : MonoBehaviour
 {
     [Header("Conexión")]
-    // El NetworkManagerFusion que vive en ESTA escena.
     [SerializeField] private NetworkManagerFusion networkManager;
-    [SerializeField] private string mainMenuScene = "MainMenu";
+    [SerializeField] private string mainMenuScene = "Main Menu";
 
-    [Header("Botones de personaje (el orden importa: 0=Ingeniero, 1=Hacker, 3=Exploradora)")]
+    [Header("Botones de personaje (0=Ingeniero, 1=Hacker, 2=Científico, 3=Exploradora)")]
     [SerializeField] private Button[] characterButtons;
     [SerializeField] private Color selectedButtonColor = new Color(1f, 0.6f, 0.6f, 1f);
-
-    // Opcional: un objeto por botón (por ejemplo un borde o una marca) que se
-    // prende solo en el personaje elegido. Sirve si el cambio de color no se nota.
     [SerializeField] private GameObject[] selectedMarkers;
 
     [Header("Botón Seleccionar")]
-    // IMPORTANTE: dejalo con "Interactable" TILDADO. Un botón desactivado no
-    // recibe clicks, y necesitamos el click para mostrar el aviso. Cuando no
-    // hay personaje elegido solo lo pintamos de apagado.
     [SerializeField] private Button confirmButton;
     [SerializeField] private Color confirmDisabledColor = new Color(0.5f, 0.5f, 0.5f, 1f);
 
     [Header("Imagen de la derecha")]
     [SerializeField] private Image portraitImage;
-    [SerializeField] private Sprite defaultPortrait;      // cuando no hay nada elegido
-    [SerializeField] private Sprite[] characterPortraits; // una por personaje, en el mismo orden
+    [SerializeField] private Sprite defaultPortrait;
+    [SerializeField] private Sprite[] characterPortraits;
 
-    [Header("Paneles de descripción por personaje (0=Ingeniero, 1=Hacker, 3=Exploradora)")]
+    [Header("Paneles de descripción por personaje")]
     [SerializeField] private GameObject[] characterDescriptionPanels;
 
-    [Header("Aviso animado (sube desde abajo, se queda un momento y vuelve a caer)")]
-    // Un texto TMP puesto donde querés que quede al subir.
+    [Header("Popup de Estado / Barra de Carga (Al confirmar personaje)")]
+    [SerializeField] private GameObject statusPanel;  // El panel completo de carga
+    [SerializeField] private Slider loadingSlider;    // La barra de carga (opcional)
+    [SerializeField] private TMP_Text statusText;     // El texto que dice "Conectando..." con puntos
+
+    [Header("Popup de Avisos (ej. personaje ocupado)")]
+    [SerializeField] private GameObject messagePanel; 
+    [SerializeField] private TMP_Text messageText;    
+
+    [Header("Aviso animado (sube desde abajo)")]
     [SerializeField] private TMP_Text warningText;
     [SerializeField] private string warningMessage = "Elegí un personaje primero";
-    [SerializeField] private float slideDistance = 120f; // cuántos píxeles sube/baja
-    [SerializeField] private float riseTime = 0.35f;     // tiempo que tarda en subir
-    [SerializeField] private float holdTime = 1.2f;      // tiempo que se queda quieto
-    [SerializeField] private float fallTime = 0.5f;      // tiempo que tarda en caer
+    [SerializeField] private float slideDistance = 120f;
+    [SerializeField] private float riseTime = 0.35f;
+    [SerializeField] private float holdTime = 1.2f;
+    [SerializeField] private float fallTime = 0.5f;
 
-    [Header("Avisos que vienen de otras escenas")]
-    [SerializeField] private TMP_Text messageText;
-
-    // Personaje elegido en pantalla (-1 = ninguno). Todavía NO se conectó nada.
     private int _selectedIndex = -1;
-
-    // Colores originales de los botones, para no pisarlos.
     private Color[] _characterNormalColors;
     private Color _confirmNormalColor = Color.white;
 
-    // Para animar el aviso.
     private RectTransform _warningRect;
     private Vector2 _warningRest;
     private Color _warningBaseColor = Color.white;
     private Coroutine _warningRoutine;
+    private bool _isConnecting;
 
     private void Awake()
     {
-        // Guardamos cómo se ven los botones ahora, para volver a ese color.
         if (characterButtons != null)
         {
             _characterNormalColors = new Color[characterButtons.Length];
@@ -82,7 +72,6 @@ public class CharacterSelect : MonoBehaviour
             _confirmNormalColor = confirmButton.image.color;
         }
 
-        // El lugar donde pusiste el texto del aviso es donde queda al subir.
         if (warningText != null)
         {
             _warningRect = warningText.rectTransform;
@@ -94,30 +83,35 @@ public class CharacterSelect : MonoBehaviour
 
     private void Start()
     {
-        if (messageText != null)
-        {
-            messageText.text = GameSession.Message;
-        }
+        if (statusPanel != null) statusPanel.SetActive(false);
+        if (messagePanel != null) messagePanel.SetActive(false);
 
-        // El mensaje se muestra una sola vez.
-        GameSession.Message = "";
+        bool hasMessage = !string.IsNullOrEmpty(GameSession.Message);
+        if (messagePanel != null) messagePanel.SetActive(hasMessage);
+
+        if (hasMessage)
+        {
+            if (messageText != null) messageText.text = GameSession.Message;
+            GameSession.Message = ""; 
+        }
 
         _selectedIndex = -1;
         RefreshUI();
     }
 
-    // Conectado al OnClick() de cada botón de personaje, con su número (0 a 3).
     public void OnCharacterSelected(int characterIndex)
     {
-        // Si tocás el que ya estaba elegido, se deselecciona; si no, se elige este.
-        _selectedIndex = (_selectedIndex == characterIndex) ? -1 : characterIndex;
+        if (_isConnecting) return; // Evita cambiar si ya está conectando
 
+        _selectedIndex = (_selectedIndex == characterIndex) ? -1 : characterIndex;
         RefreshUI();
     }
 
-    // Conectar al OnClick() del botón "Seleccionar".
-    public void OnConfirmPressed()
+    // --- BOTÓN SELECCIONAR ---
+    public async void OnConfirmPressed()
     {
+        if (_isConnecting) return;
+
         if (_selectedIndex < 0)
         {
             ShowWarning();
@@ -125,28 +119,78 @@ public class CharacterSelect : MonoBehaviour
         }
 
         GameSession.CharacterIndex = _selectedIndex;
+
+        // Activamos el estado de carga y mostramos el panel
+        _isConnecting = true;
+        if (statusPanel != null) statusPanel.SetActive(true);
+
+        // Animamos la barra y los puntos suspensivos con el mensaje "Conectando"
+        Coroutine loadRoutine = StartCoroutine(AnimateLoadingAndDots("Conectando"));
+
+        // Iniciamos la conexión real de Photon Fusion
         networkManager.StartConnection();
+
+        // Pequeña espera por seguridad mientras transiciona de escena
+        await System.Threading.Tasks.Task.Delay(1000);
+
+        if (loadRoutine != null) StopCoroutine(loadRoutine);
     }
 
-    // Opcional: botón "Volver" para cambiar el código de sala.
     public void OnBackPressed()
     {
+        if (_isConnecting) return;
         SceneManager.LoadScene(mainMenuScene);
     }
 
-    // ---------------------------------------------------------
-    //  AVISO ANIMADO
-    // ---------------------------------------------------------
-    private void ShowWarning()
+    public void OnMessageAcceptPressed()
     {
-        // Si no armaste el texto del aviso, usamos el texto simple de siempre.
-        if (warningText == null)
+        if (messagePanel != null)
         {
-            if (messageText != null) messageText.text = warningMessage;
-            return;
+            messagePanel.SetActive(false);
+        }
+    }
+
+    // Coroutine que anima la barra y los puntos suspensivos
+    private IEnumerator AnimateLoadingAndDots(string baseMessage)
+    {
+        if (loadingSlider != null) loadingSlider.value = 0f;
+
+        float progress = 0f;
+        int dotCount = 0;
+        float dotTimer = 0f;
+
+        while (_isConnecting)
+        {
+            if (loadingSlider != null)
+            {
+                progress += Time.deltaTime * 1.5f;
+                if (progress > 0.9f) progress = 0.9f;
+                loadingSlider.value = progress;
+            }
+
+            dotTimer += Time.deltaTime;
+            if (dotTimer >= 0.4f)
+            {
+                dotTimer = 0f;
+                dotCount = (dotCount + 1) % 4;
+
+                if (statusText != null)
+                {
+                    string dots = new string('.', dotCount);
+                    statusText.text = baseMessage + dots;
+                }
+            }
+
+            yield return null;
         }
 
-        // Si se aprieta de nuevo mientras anima, arranca otra vez desde abajo.
+        if (loadingSlider != null) loadingSlider.value = 1f;
+    }
+
+    private void ShowWarning()
+    {
+        if (warningText == null) return;
+
         if (_warningRoutine != null) StopCoroutine(_warningRoutine);
         _warningRoutine = StartCoroutine(PlayWarning());
     }
@@ -158,7 +202,6 @@ public class CharacterSelect : MonoBehaviour
 
         Vector2 below = _warningRest + Vector2.down * slideDistance;
 
-        // 1) SUBE desde abajo, apareciendo (arranca rápido y frena al llegar).
         for (float t = 0f; t < riseTime; t += Time.unscaledDeltaTime)
         {
             float progress = Mathf.Clamp01(t / riseTime);
@@ -172,10 +215,8 @@ public class CharacterSelect : MonoBehaviour
         _warningRect.anchoredPosition = _warningRest;
         SetWarningAlpha(1f);
 
-        // 2) SE QUEDA un momento.
         yield return new WaitForSecondsRealtime(holdTime);
 
-        // 3) CAE de nuevo hacia abajo (cada vez más rápido) hasta desaparecer.
         for (float t = 0f; t < fallTime; t += Time.unscaledDeltaTime)
         {
             float progress = Mathf.Clamp01(t / fallTime);
@@ -186,7 +227,6 @@ public class CharacterSelect : MonoBehaviour
             yield return null;
         }
 
-        // Al terminar se apaga y queda listo para la próxima vez.
         _warningRect.anchoredPosition = _warningRest;
         warningText.gameObject.SetActive(false);
         _warningRoutine = null;
@@ -199,21 +239,15 @@ public class CharacterSelect : MonoBehaviour
         warningText.color = color;
     }
 
-    // ---------------------------------------------------------
-    //  PANTALLA
-    // ---------------------------------------------------------
-    // Deja la pantalla de acuerdo a lo que está elegido ahora.
     private void RefreshUI()
     {
         bool hasSelection = _selectedIndex >= 0;
 
-        // Botones de personaje: el elegido se marca.
         if (characterButtons != null)
         {
             for (int i = 0; i < characterButtons.Length; i++)
             {
                 if (characterButtons[i] == null || characterButtons[i].image == null) continue;
-
                 characterButtons[i].image.color = (i == _selectedIndex) ? selectedButtonColor : _characterNormalColors[i];
             }
         }
@@ -226,14 +260,11 @@ public class CharacterSelect : MonoBehaviour
             }
         }
 
-        // "Seleccionar": se ve apagado si no hay nadie elegido, pero sigue
-        // recibiendo el click para poder mostrar el aviso.
         if (confirmButton != null && confirmButton.image != null)
         {
             confirmButton.image.color = hasSelection ? _confirmNormalColor : confirmDisabledColor;
         }
 
-        // Imagen de la derecha: la del personaje, o la de "nada elegido".
         if (portraitImage != null)
         {
             Sprite sprite = defaultPortrait;
@@ -247,14 +278,12 @@ public class CharacterSelect : MonoBehaviour
             portraitImage.sprite = sprite;
         }
 
-        // Paneles de descripción: Se activa únicamente el panel correspondiente al personaje seleccionado.
         if (characterDescriptionPanels != null)
         {
             for (int i = 0; i < characterDescriptionPanels.Length; i++)
             {
                 if (characterDescriptionPanels[i] != null)
                 {
-                    // Se prende solo si coincide con el índice seleccionado
                     characterDescriptionPanels[i].SetActive(i == _selectedIndex);
                 }
             }
