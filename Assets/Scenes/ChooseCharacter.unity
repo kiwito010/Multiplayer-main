@@ -4085,7 +4085,8 @@ MonoBehaviour:
   - {fileID: 1693633965}
   - {fileID: 406299743}
   selectedButtonColor: {r: 1, g: 0.6, b: 0.6, a: 1}
-  selectedMarkers: []
+  selectedMarkers:
+  - {fileID: 0}
   confirmButton: {fileID: 57887352}
   confirmDisabledColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   portraitImage: {fileID: 694882996}
