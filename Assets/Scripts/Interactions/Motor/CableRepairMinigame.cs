@@ -155,6 +155,12 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         waitingForLeftWrap = false;
         waitingForRightWrap = false;
 
+        leftWrapRotation = 0f;
+        rightWrapRotation = 0f;
+
+        currentWrapCenter = null;
+        isWrapping = false;
+
         waitingForCableInstallation = false;
 
         networkInventory = inventory.GetComponent<NetworkInventoryState>();
@@ -208,11 +214,9 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     private void UpdatePhaseUI() {
         //componentes
         brokenCable.SetActive(!(currentPhase == RepairPhase.CutBrokenCable));
-        newCable.SetActive(
-            (currentPhase == RepairPhase.PlaceNewCable && HasRequiredCable()) ||
-            (newCablePlaced && currentPhase >= RepairPhase.TwistEnds)
-        );
         //newCable
+        newCable.SetActive(!(leftTwisted && rightTwisted));
+
         leftCable.SetActive(!leftTwisted);
         rightCable.SetActive(!rightTwisted);
         leftTwistedCable.SetActive(leftTwisted);
@@ -435,6 +439,9 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         if (!HasRequiredTape())
             return;
 
+        if (leftWrapped && rightWrapped)
+            return;
+
         isWrapping = true;
 
         UpdateCurrentWrapTarget(tapePosition);
@@ -490,19 +497,42 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     }
 
 
+
     private void UpdateCurrentWrapTarget(Vector2 tapePosition) {
-        float distanceToLeft = Vector2.Distance(tapePosition, leftWrapCenter.position);
+        if (leftWrapped && rightWrapped)
+            return;
 
-        float distanceToRight = Vector2.Distance(tapePosition, rightWrapCenter.position);
+        if (leftWrapped) {
+            currentWrapCenter = rightWrapCenter;
+            wrappingLeft = false;
+            return;
+        }
 
-        if (!leftWrapped && distanceToLeft < distanceToRight) {
+        if (rightWrapped) {
             currentWrapCenter = leftWrapCenter;
             wrappingLeft = true;
-        } else if (!rightWrapped) {
+            return;
+        }
+
+        float distanceToLeft = Vector2.Distance(
+            tapePosition,
+            leftWrapCenter.position
+        );
+
+        float distanceToRight = Vector2.Distance(
+            tapePosition,
+            rightWrapCenter.position
+        );
+
+        if (distanceToLeft < distanceToRight) {
+            currentWrapCenter = leftWrapCenter;
+            wrappingLeft = true;
+        } else {
             currentWrapCenter = rightWrapCenter;
             wrappingLeft = false;
         }
     }
+
 
     public void StopWrapping() {
         isWrapping = false;
