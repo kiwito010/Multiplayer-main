@@ -3,6 +3,7 @@ using UnityEngine.EventSystems;
 
 public class DraggableBrokenCable : DraggableCableBase {
     [SerializeField] private CableRepairMinigame cableRepairMinigame;
+    [SerializeField] private Vector2 removedPosition;
 
     private Vector2 startPosition;
 
@@ -11,20 +12,27 @@ public class DraggableBrokenCable : DraggableCableBase {
     }
 
     public override void OnDrag(PointerEventData eventData) {
-        if (!cableRepairMinigame.CanRemoveBrokenCable())
+        if (!cableRepairMinigame.CanDragBrokenCable())
             return;
 
         base.OnDrag(eventData);
     }
 
     public override void OnEndDrag(PointerEventData eventData) {
-        if (!cableRepairMinigame.CanRemoveBrokenCable())
+        if (!cableRepairMinigame.CanDragBrokenCable())
             return;
 
-        if (!IsInsideConnectionZone()) {
-            cableRepairMinigame.BrokenCableRemoved();
-        } else {
-            cableRect.anchoredPosition = startPosition;
+        if (cableRepairMinigame.CanRemoveBrokenCable()) {
+            if (!IsInsideConnectionZone()) {
+                cableRepairMinigame.BrokenCableRemoved();
+            } else {
+                cableRect.anchoredPosition = startPosition;
+            }
         }
+    }
+
+    public void RestorePosition(bool removed) {
+        cableRect.anchoredPosition =
+            removed ? removedPosition : startPosition;
     }
 }

@@ -315,6 +315,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3916558913816471589, guid: 69279fea21fcade4aa93dd5a9741e7c9, type: 3}
+      propertyPath: removedPosition.x
+      value: 518
+      objectReference: {fileID: 0}
+    - target: {fileID: 3916558913816471589, guid: 69279fea21fcade4aa93dd5a9741e7c9, type: 3}
+      propertyPath: removedPosition.y
+      value: -265
+      objectReference: {fileID: 0}
+    - target: {fileID: 4998628741591276523, guid: 69279fea21fcade4aa93dd5a9741e7c9, type: 3}
+      propertyPath: draggableBrokenCable
+      value: 
+      objectReference: {fileID: 6948425286238293847}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -329,6 +341,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9296a31fea332ca44974dd060ae49353, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &6948425286238293847 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3916558913816471589, guid: 69279fea21fcade4aa93dd5a9741e7c9, type: 3}
+  m_PrefabInstance: {fileID: 6212621604857898866}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 42a5c33f405c5e340a54ef29fd1d4c39, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!224 &7302381215463733680 stripped

@@ -7,6 +7,8 @@ public class PlayerRepairInteraction : NetworkBehaviour {
     private PlayerNetworkInteraction networkInteraction;
     private PlayerHUDSpawner hudSpawner;
     private PlayerInventory playerInventory;
+    private RepairableComponent pendingRepair;
+    private PlayerNetworkRepairActions repairActions;
 
     // MÉTODOS:
 
@@ -17,6 +19,7 @@ public class PlayerRepairInteraction : NetworkBehaviour {
         networkInteraction = GetComponent<PlayerNetworkInteraction>();
         hudSpawner = GetComponent<PlayerHUDSpawner>();
         playerInventory = GetComponent<PlayerInventory>();
+        repairActions = GetComponent<PlayerNetworkRepairActions>();
 
         if (networkInteraction != null) {
             networkInteraction.OnLocalUsedOnTarget += OnLocalUsedOnTarget;
@@ -27,6 +30,22 @@ public class PlayerRepairInteraction : NetworkBehaviour {
         if (networkInteraction != null) {
             networkInteraction.OnLocalUsedOnTarget -= OnLocalUsedOnTarget;
         }
+    }
+
+    private void Update() {
+        if (!Object.HasInputAuthority || pendingRepair == null)
+            return;
+
+        if (pendingRepair.repairingPlayer != Object.InputAuthority)
+            return;
+
+        PlayerHUD hud = hudSpawner.GetHUD();
+
+        if (hud != null) {
+            hud.OpenCableRepair(pendingRepair, playerInventory);
+        }
+
+        pendingRepair = null;
     }
 
     private void OnLocalUsedOnTarget(NetworkObject target) {
@@ -49,11 +68,13 @@ public class PlayerRepairInteraction : NetworkBehaviour {
         if (hudSpawner == null || playerInventory == null)
             return;
 
-        PlayerHUD hud = hudSpawner.GetHUD();
-
-        if (hud == null)
+        if (pendingRepair != null || repairActions == null)
             return;
 
-        hud.OpenCableRepair(component, playerInventory);
+        if (component.repairingPlayer != PlayerRef.None)
+            return;
+
+        pendingRepair = component;
+        repairActions.RequestBeginRepair(component);
     }
 }

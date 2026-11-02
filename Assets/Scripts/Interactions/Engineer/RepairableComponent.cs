@@ -11,6 +11,7 @@ public class RepairableComponent : DiagnosableBase, IInteractable {
 
     [Networked] public NetworkBool cableInstalled { get; private set; }
 
+
     [Networked] public int repairPhaseIndex { get; private set; }
 
     [Networked] public NetworkBool leftCut { get; private set; }
@@ -31,9 +32,29 @@ public class RepairableComponent : DiagnosableBase, IInteractable {
         } else {
             rightCut = true;
         }
-    }
 
+        if (leftCut && rightCut) {
+            repairPhaseIndex = 1;
+        }
+    }
     [Networked] public NetworkBool brokenCableRemoved { get; private set; }
+
+    public void RegisterBrokenCableRemoved() {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (!IsDiagnosed() || isRepaired)
+            return;
+
+        if (!leftCut || !rightCut)
+            return;
+
+        if (brokenCableRemoved)
+            return;
+
+        brokenCableRemoved = true;
+        repairPhaseIndex = 2;
+    }
 
     [Networked] public NetworkBool cableTwistedLeft { get; private set; }
     [Networked] public NetworkBool cableTwistedRight { get; private set; }
@@ -112,5 +133,33 @@ public class RepairableComponent : DiagnosableBase, IInteractable {
         Debug.Log("Cable nuevo instalado");
 
         return true;
+    }
+
+    //Cual es el jugador esta reparando el cable
+    [Networked] public PlayerRef repairingPlayer { get; private set; }
+
+    public bool TryBeginRepair(PlayerRef player) {
+        if (!Object.HasStateAuthority)
+            return false;
+
+        if (player == PlayerRef.None || isRepaired)
+            return false;
+
+        if (repairingPlayer != PlayerRef.None)
+            return false;
+
+        repairingPlayer = player;
+        return true;
+    }
+
+    //Desvincular el jugador que esta arreglando el motor del estado repairingPlayer
+    public void EndRepair(PlayerRef player) {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (repairingPlayer != player)
+            return;
+
+        repairingPlayer = PlayerRef.None;
     }
 }

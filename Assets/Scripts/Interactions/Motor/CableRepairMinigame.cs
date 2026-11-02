@@ -20,6 +20,7 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     private GameInput gameInput;
     private PlayerNetworkRepairActions networkRepairActions;
     //[SerializeField] private TextMeshProUGUI instructionText;
+    [SerializeField] private DraggableBrokenCable draggableBrokenCable;
     //
 
     private bool waitingForCableInstallation;
@@ -48,11 +49,6 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
         private bool newCablePlaced;
         //
-
-
-    //
-
-
 
     //CablePanels
     [SerializeField] private GameObject cutPanel;
@@ -144,6 +140,10 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
             SyncCableCuts();
         }
+
+        if (content.activeSelf && currentComponent != null) {
+            SyncRepairPhase();
+        }
     }
 
     public void Open(RepairableComponent component, PlayerInventory inventory) {
@@ -176,6 +176,9 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         playerManager.EnterUIMode();
 
         SyncCableCuts();
+        SyncRepairPhase();
+
+        draggableBrokenCable.RestorePosition(currentComponent.brokenCableRemoved);
 
         UpdatePhaseUI();
     }
@@ -185,8 +188,11 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     }
 
     public void ExitRepair() {
-        playerManager.ExitUIMode();
+        if (networkRepairActions != null && currentComponent != null) {
+            networkRepairActions.RequestEndRepair(currentComponent);
+        }
 
+        playerManager.ExitUIMode();
         content.SetActive(false);
     }
 
@@ -325,9 +331,10 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         if (currentPhase != RepairPhase.RemoveBrokenCable)
             return;
 
-        brokenCableRemoved = true;
+        if (networkRepairActions == null || currentComponent == null)
+            return;
 
-        CompleteCurrentPhase();
+        networkRepairActions.RequestRemoveBrokenCable(currentComponent);
     }
 
     public bool CanPlaceNewCable() {
@@ -617,5 +624,29 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
             UpdatePhaseUI();
         }
+    }
+
+    private void SyncRepairPhase() {
+        if (currentComponent == null)
+            return;
+
+        RepairPhase networkPhase = (RepairPhase)currentComponent.repairPhaseIndex;
+
+        if (networkPhase == currentPhase)
+            return;
+
+        currentPhase = networkPhase;
+
+        leftCut = currentComponent.leftCut;
+        rightCut = currentComponent.rightCut;
+        brokenCableRemoved = currentComponent.brokenCableRemoved;
+        newCablePlaced = currentComponent.cableInstalled;
+
+        UpdatePhaseUI();
+    }
+
+    public bool CanDragBrokenCable() {
+        return currentPhase >= RepairPhase.RemoveBrokenCable &&
+               currentPhase != RepairPhase.Complete;
     }
 }
