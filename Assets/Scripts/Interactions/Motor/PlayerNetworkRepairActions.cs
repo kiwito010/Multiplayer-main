@@ -30,6 +30,9 @@ public class PlayerNetworkRepairActions : NetworkBehaviour {
         if (component == null || networkInventory == null)
             return;
 
+        if (component.repairingPlayer != Object.InputAuthority)
+            return;
+
         // Solo permitimos modificar componentes cercanos.
         float distance = Vector3.Distance(
             transform.position,
@@ -54,10 +57,12 @@ public class PlayerNetworkRepairActions : NetworkBehaviour {
         if (target == null || !target.IsValid)
             return;
 
-        RepairableComponent component =
-            target.GetComponent<RepairableComponent>();
+        RepairableComponent component = target.GetComponent<RepairableComponent>();
 
         if (component == null)
+            return;
+
+        if (component.repairingPlayer != Object.InputAuthority)
             return;
 
         float distance = Vector3.Distance(
@@ -86,6 +91,9 @@ public class PlayerNetworkRepairActions : NetworkBehaviour {
         RepairableComponent component = target.GetComponent<RepairableComponent>();
 
         if (component == null)
+            return;
+
+        if (component.repairingPlayer != Object.InputAuthority)
             return;
 
         float distance = Vector3.Distance(transform.position, target.transform.position);
@@ -164,5 +172,35 @@ public class PlayerNetworkRepairActions : NetworkBehaviour {
             return;
 
         component.RegisterCableTwist(isLeft);
+    }
+
+    public void RequestCableWrapped(RepairableComponent component, bool isLeft) {
+        if (!Object.HasInputAuthority || component == null)
+            return;
+
+        RPC_RequestCableWrapped(component.Object, isLeft);
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    private void RPC_RequestCableWrapped(NetworkObject target, bool isLeft) {
+        if (target == null || !target.IsValid)
+            return;
+
+        RepairableComponent component =
+            target.GetComponent<RepairableComponent>();
+
+        if (component == null)
+            return;
+
+        if (component.repairingPlayer != Object.InputAuthority)
+            return;
+
+        if (Vector3.Distance(transform.position, target.transform.position) > 3f)
+            return;
+
+        if (networkInventory == null)
+            return;
+
+        component.RegisterCableWrapped(isLeft, networkInventory);
     }
 }

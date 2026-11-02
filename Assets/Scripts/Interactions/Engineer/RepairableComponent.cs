@@ -83,6 +83,62 @@ public class RepairableComponent : DiagnosableBase, IInteractable {
     [Networked] public NetworkBool leftWrapped { get; private set; }
     [Networked] public NetworkBool rightWrapped { get; private set; }
 
+
+    public void RegisterCableWrapped(bool isLeft, NetworkInventoryState inventory) {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (!IsDiagnosed() || isRepaired || cableRepairCompleted)
+            return;
+
+        if (repairPhaseIndex != 4)
+            return;
+
+        if (!cableTwistedLeft || !cableTwistedRight)
+            return;
+
+        if (inventory == null || !inventory.HasItem(ItemType.Tape))
+            return;
+
+        if (isLeft) {
+            if (leftWrapped)
+                return;
+        } else {
+            if (rightWrapped)
+                return;
+        }
+
+        // Si el otro extremo ya está listo, esta acción
+        // finalizará el encintado y consumirá la cinta.
+        bool completingCableRepair =
+            isLeft ? rightWrapped : leftWrapped;
+
+        if (completingCableRepair) {
+            if (!inventory.TryConsumeItem(ItemType.Tape, out NetworkObject consumedTape))
+                return;
+
+            if (consumedTape != null) {
+                Runner.Despawn(consumedTape);
+            }
+        }
+
+        if (isLeft) {
+            leftWrapped = true;
+        } else {
+            rightWrapped = true;
+        }
+
+        if (leftWrapped && rightWrapped) {
+            cableRepairCompleted = true;
+            repairPhaseIndex = 5;
+
+            Debug.Log("Reparación del cable completada");
+        }
+    }
+
+
+    [Networked] public NetworkBool cableRepairCompleted { get; private set; }
+
     private IRepairMinigame repairMinigame;
     private bool isRepaired;
 

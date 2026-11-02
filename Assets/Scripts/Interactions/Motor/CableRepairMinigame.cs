@@ -94,6 +94,9 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     private bool leftWrapped;
     private bool rightWrapped;
 
+    private bool waitingForLeftWrap;
+    private bool waitingForRightWrap;
+
     [SerializeField] private float requiredWrapRotation = 720f;
 
     private float leftWrapRotation;
@@ -149,6 +152,8 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         currentInventory = inventory;
 
         networkRepairActions = inventory.GetComponent<PlayerNetworkRepairActions>();
+        waitingForLeftWrap = false;
+        waitingForRightWrap = false;
 
         waitingForCableInstallation = false;
 
@@ -190,6 +195,8 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     }
 
     public void ExitRepair() {
+        StopWrapping();
+
         if (networkRepairActions != null && currentComponent != null) {
             networkRepairActions.RequestEndRepair(currentComponent);
         }
@@ -201,8 +208,10 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     private void UpdatePhaseUI() {
         //componentes
         brokenCable.SetActive(!(currentPhase == RepairPhase.CutBrokenCable));
-        newCable.SetActive((currentPhase == RepairPhase.PlaceNewCable && HasRequiredCable()) || (currentPhase == RepairPhase.TwistEnds && newCablePlaced));
-
+        newCable.SetActive(
+            (currentPhase == RepairPhase.PlaceNewCable && HasRequiredCable()) ||
+            (newCablePlaced && currentPhase >= RepairPhase.TwistEnds)
+        );
         //newCable
         leftCable.SetActive(!leftTwisted);
         rightCable.SetActive(!rightTwisted);
@@ -430,15 +439,13 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
         UpdateCurrentWrapTarget(tapePosition);
 
-        previousTapeAngle = GetTapeAngle(
-            tapePosition,
-            currentWrapCenter
-        );
+        previousTapeAngle = GetTapeAngle(tapePosition, currentWrapCenter);
 
         wrapProgressRect.gameObject.SetActive(true);
 
         UpdateWrapProgressUI(tapePosition);
     }
+
 
 
     public void UpdateWrapping(Vector2 tapePosition) {
@@ -447,15 +454,9 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
         UpdateCurrentWrapTarget(tapePosition);
 
-        float currentTapeAngle = GetTapeAngle(
-            tapePosition,
-            currentWrapCenter
-        );
+        float currentTapeAngle = GetTapeAngle(tapePosition, currentWrapCenter);
 
-        float angleDifference = Mathf.DeltaAngle(
-            previousTapeAngle,
-            currentTapeAngle
-        );
+        float angleDifference = Mathf.DeltaAngle(previousTapeAngle, currentTapeAngle);
 
         previousTapeAngle = currentTapeAngle;
 
@@ -463,38 +464,31 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
             float rotationAmount = Mathf.Abs(angleDifference);
 
             if (wrappingLeft) {
-                leftWrapRotation += rotationAmount;
+                if (!leftWrapped && !waitingForLeftWrap) {
+                    leftWrapRotation += rotationAmount;
 
-                if (leftWrapRotation >= requiredWrapRotation) {
-                    leftWrapped = true;
+                    if (leftWrapRotation >= requiredWrapRotation) {
+                        waitingForLeftWrap = true;
 
-                    UpdatePhaseUI();
-
-                    ShowMessage("Punta izquierda encintada");
+                        networkRepairActions.RequestCableWrapped(currentComponent, true);
+                    }
                 }
             } else {
-                rightWrapRotation += rotationAmount;
+                if (!rightWrapped && !waitingForRightWrap) {
+                    rightWrapRotation += rotationAmount;
 
-                if (rightWrapRotation >= requiredWrapRotation) {
-                    rightWrapped = true;
+                    if (rightWrapRotation >= requiredWrapRotation) {
+                        waitingForRightWrap = true;
 
-                    UpdatePhaseUI();
-
-                    ShowMessage("Punta derecha encintada");
+                        networkRepairActions.RequestCableWrapped(currentComponent, false);
+                    }
                 }
             }
         }
 
-        if (leftWrapped && rightWrapped) {
-            isWrapping = false;
-
-            //currentInventory.RemoveItem(requiredTapeName);
-
-            CompleteCurrentPhase();
-        }
-
         UpdateWrapProgressUI(tapePosition);
     }
+
 
     private void UpdateCurrentWrapTarget(Vector2 tapePosition) {
         float distanceToLeft = Vector2.Distance(tapePosition, leftWrapCenter.position);
@@ -522,8 +516,6 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     }
 
     private void CompleteRepair() {
-        currentComponent.Repair();
-
         UpdatePhaseUI();
     }
 
@@ -637,7 +629,9 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
             brokenCableRemoved != currentComponent.brokenCableRemoved ||
             newCablePlaced != currentComponent.cableInstalled ||
             leftTwisted != currentComponent.cableTwistedLeft ||
-            rightTwisted != currentComponent.cableTwistedRight;
+            rightTwisted != currentComponent.cableTwistedRight ||
+            leftWrapped != currentComponent.leftWrapped ||
+            rightWrapped != currentComponent.rightWrapped;
 
         currentPhase = networkPhase;
 
@@ -647,6 +641,28 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         newCablePlaced = currentComponent.cableInstalled;
         leftTwisted = currentComponent.cableTwistedLeft;
         rightTwisted = currentComponent.cableTwistedRight;
+        leftWrapped = currentComponent.leftWrapped;
+        rightWrapped = currentComponent.rightWrapped;
+
+        if (leftWrapped) {
+            leftWrapRotation = requiredWrapRotation;
+        }
+
+        if (rightWrapped) {
+            rightWrapRotation = requiredWrapRotation;
+        }
+
+        if (leftWrapped) {
+            waitingForLeftWrap = false;
+        }
+
+        if (rightWrapped) {
+            waitingForRightWrap = false;
+        }
+
+        if (leftWrapped && rightWrapped && isWrapping) {
+            StopWrapping();
+        }
 
         if (changed) {
             UpdatePhaseUI();
