@@ -21,6 +21,7 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
     private PlayerNetworkRepairActions networkRepairActions;
     //[SerializeField] private TextMeshProUGUI instructionText;
     [SerializeField] private DraggableBrokenCable draggableBrokenCable;
+    [SerializeField] private DraggableNewCable draggableNewCable;
     //
 
     private bool waitingForCableInstallation;
@@ -129,11 +130,8 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         }
 
         if (waitingForCableInstallation && currentComponent != null && currentComponent.cableInstalled) {
-
             waitingForCableInstallation = false;
-            newCablePlaced = true;
-
-            CompleteCurrentPhase();
+            SyncRepairPhase();
         }
 
         if (content.activeSelf && currentComponent != null && currentPhase == RepairPhase.CutBrokenCable) {
@@ -179,6 +177,10 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         SyncRepairPhase();
 
         draggableBrokenCable.RestorePosition(currentComponent.brokenCableRemoved);
+        
+        if (currentComponent.cableInstalled) {
+            draggableNewCable.RestoreInstalledPosition();
+        }
 
         UpdatePhaseUI();
     }
@@ -392,29 +394,23 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
 
 
     public void TwistLeftSide() {
-        if (currentPhase != RepairPhase.TwistEnds)
+        if (currentPhase != RepairPhase.TwistEnds || leftTwisted)
             return;
 
-        if (leftTwisted)
+        if (networkRepairActions == null || currentComponent == null)
             return;
 
-        leftTwisted = true;
-
-        UpdatePhaseUI();
-        CheckTwistsComplete();
+        networkRepairActions.RequestCableTwist(currentComponent, true);
     }
 
     public void TwistRightSide() {
-        if (currentPhase != RepairPhase.TwistEnds)
+        if (currentPhase != RepairPhase.TwistEnds || rightTwisted)
             return;
 
-        if (rightTwisted)
+        if (networkRepairActions == null || currentComponent == null)
             return;
 
-        rightTwisted = true;
-
-        UpdatePhaseUI();
-        CheckTwistsComplete();
+        networkRepairActions.RequestCableTwist(currentComponent, false);
     }
 
     private void CheckTwistsComplete() {
@@ -626,14 +622,22 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         }
     }
 
+
     private void SyncRepairPhase() {
         if (currentComponent == null)
             return;
 
-        RepairPhase networkPhase = (RepairPhase)currentComponent.repairPhaseIndex;
+        RepairPhase networkPhase =
+            (RepairPhase)currentComponent.repairPhaseIndex;
 
-        if (networkPhase == currentPhase)
-            return;
+        bool changed =
+            currentPhase != networkPhase ||
+            leftCut != currentComponent.leftCut ||
+            rightCut != currentComponent.rightCut ||
+            brokenCableRemoved != currentComponent.brokenCableRemoved ||
+            newCablePlaced != currentComponent.cableInstalled ||
+            leftTwisted != currentComponent.cableTwistedLeft ||
+            rightTwisted != currentComponent.cableTwistedRight;
 
         currentPhase = networkPhase;
 
@@ -641,9 +645,18 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         rightCut = currentComponent.rightCut;
         brokenCableRemoved = currentComponent.brokenCableRemoved;
         newCablePlaced = currentComponent.cableInstalled;
+        leftTwisted = currentComponent.cableTwistedLeft;
+        rightTwisted = currentComponent.cableTwistedRight;
 
-        UpdatePhaseUI();
+        if (changed) {
+            UpdatePhaseUI();
+
+            if (currentComponent.cableInstalled) {
+                draggableNewCable.RestoreInstalledPosition();
+            }
+        }
     }
+
 
     public bool CanDragBrokenCable() {
         return currentPhase >= RepairPhase.RemoveBrokenCable &&

@@ -138,4 +138,31 @@ public class PlayerNetworkRepairActions : NetworkBehaviour {
 
         component.EndRepair(Object.InputAuthority);
     }
+
+    public void RequestCableTwist(RepairableComponent component, bool isLeft) {
+        if (!Object.HasInputAuthority || component == null)
+            return;
+
+        RPC_RequestCableTwist(component.Object, isLeft);
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    private void RPC_RequestCableTwist(NetworkObject target, bool isLeft) {
+        if (target == null || !target.IsValid)
+            return;
+
+        RepairableComponent component =
+            target.GetComponent<RepairableComponent>();
+
+        if (component == null)
+            return;
+
+        if (component.repairingPlayer != Object.InputAuthority)
+            return;
+
+        if (Vector3.Distance(transform.position, target.transform.position) > 3f)
+            return;
+
+        component.RegisterCableTwist(isLeft);
+    }
 }

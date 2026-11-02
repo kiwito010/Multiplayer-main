@@ -231,9 +231,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5504568959232198027}
     m_Modifications:
+    - target: {fileID: 343223737124284844, guid: 69279fea21fcade4aa93dd5a9741e7c9, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 750857648111479664, guid: 69279fea21fcade4aa93dd5a9741e7c9, type: 3}
       propertyPath: m_Name
       value: CableRepairUI
+      objectReference: {fileID: 0}
+    - target: {fileID: 843012051443679180, guid: 69279fea21fcade4aa93dd5a9741e7c9, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3702222130420358850, guid: 69279fea21fcade4aa93dd5a9741e7c9, type: 3}
       propertyPath: m_Pivot.x
@@ -324,9 +332,17 @@ PrefabInstance:
       value: -265
       objectReference: {fileID: 0}
     - target: {fileID: 4998628741591276523, guid: 69279fea21fcade4aa93dd5a9741e7c9, type: 3}
+      propertyPath: draggableNewCable
+      value: 
+      objectReference: {fileID: 6066072248905410165}
+    - target: {fileID: 4998628741591276523, guid: 69279fea21fcade4aa93dd5a9741e7c9, type: 3}
       propertyPath: draggableBrokenCable
       value: 
       objectReference: {fileID: 6948425286238293847}
+    - target: {fileID: 9130114169398792940, guid: 69279fea21fcade4aa93dd5a9741e7c9, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -341,6 +357,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9296a31fea332ca44974dd060ae49353, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &6066072248905410165 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 151062989714505991, guid: 69279fea21fcade4aa93dd5a9741e7c9, type: 3}
+  m_PrefabInstance: {fileID: 6212621604857898866}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72ec847faea90654d8131bff0b3caab6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!114 &6948425286238293847 stripped

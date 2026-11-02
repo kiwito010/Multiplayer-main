@@ -59,6 +59,27 @@ public class RepairableComponent : DiagnosableBase, IInteractable {
     [Networked] public NetworkBool cableTwistedLeft { get; private set; }
     [Networked] public NetworkBool cableTwistedRight { get; private set; }
 
+    public void RegisterCableTwist(bool isLeft) {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (!IsDiagnosed() || isRepaired)
+            return;
+
+        if (!cableInstalled || repairPhaseIndex != 3)
+            return;
+
+        if (isLeft) {
+            cableTwistedLeft = true;
+        } else {
+            cableTwistedRight = true;
+        }
+
+        if (cableTwistedLeft && cableTwistedRight) {
+            repairPhaseIndex = 4;
+        }
+    }
+
     [Networked] public NetworkBool leftWrapped { get; private set; }
     [Networked] public NetworkBool rightWrapped { get; private set; }
 
@@ -126,6 +147,7 @@ public class RepairableComponent : DiagnosableBase, IInteractable {
             return false;
 
         cableInstalled = true;
+        repairPhaseIndex = 3;
 
         // El material ya fue consumido: lo retiramos de la partida.
         Runner.Despawn(cable);

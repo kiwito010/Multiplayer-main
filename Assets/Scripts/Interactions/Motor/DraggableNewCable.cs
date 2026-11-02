@@ -15,4 +15,8 @@ public class DraggableNewCable : DraggableCableBase {
 
         cableRepairMinigame.NewCablePlaced();
     }
+
+    public void RestoreInstalledPosition() {
+        cableRect.position = connectionZone.position;
+    }
 }
