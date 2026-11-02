@@ -17,7 +17,6 @@ public class PlayerDiagnostic : MonoBehaviour
         //
 
     [SerializeField] private Camera playerCamera;
-    [SerializeField] private Transform cameraTransform;
 
     private ScanUI scanUI;
     
@@ -54,7 +53,7 @@ public class PlayerDiagnostic : MonoBehaviour
         if (networkObject == null || !networkObject.IsValid || !networkObject.HasInputAuthority)
             return;
 
-        if (scanUI == null || playerCamera == null || cameraTransform == null)
+        if (scanUI == null || playerCamera == null)
             return;
 
         if (!HasMagnifyingGlassEquipped() || !gameInput.GetDiagnosticPressed()) {
@@ -67,10 +66,16 @@ public class PlayerDiagnostic : MonoBehaviour
         playerCamera.fieldOfView = diagnosticFov;
         scanUI.ShowCrosshair();
 
-        if (Physics.Raycast(cameraTransform.position, cameraTransform.forward, out RaycastHit raycastHit, diagnosticDistance, diagnosticLayerMask)) {
-            if (raycastHit.transform.TryGetComponent<IDiagnosable>(out IDiagnosable diagnosable)) { 
-                Scan(diagnosable);
-                return;
+        if (Physics.Raycast(
+        playerCamera.transform.position,
+        playerCamera.transform.forward,
+        out RaycastHit raycastHit,
+        diagnosticDistance,
+        diagnosticLayerMask
+        )) {
+            if (raycastHit.transform.TryGetComponent<IDiagnosable>(out IDiagnosable diagnosable)) {
+            Scan(diagnosable);
+            return;
             }
         }
         StopCurrentScan();
