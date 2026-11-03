@@ -92,7 +92,7 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
             // Si somos el Host, cargamos la escena del Lobby para todos de forma sincronizada
             if (_runner.IsServer)
             {
-                _runner.LoadScene(lobbySceneName);
+                _runner.LoadScene(gameplaySceneName);
             }
         }
         else
@@ -288,6 +288,15 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
         data.useButtonPressed = Input.GetKey(KeyCode.E);
         data.sprintPressed = Input.GetKey(KeyCode.LeftShift);
         data.jumpPressed = Input.GetKey(KeyCode.Space);
+
+        if (PlayerMovement.Local != null) {
+            GameInput gameInput =
+                PlayerMovement.Local.GetComponent<GameInput>();
+
+            if (gameInput != null) {
+                data.crouchPressed = gameInput.GetCrouchHeld();
+            }
+        }
 
         input.Set(data);
     }

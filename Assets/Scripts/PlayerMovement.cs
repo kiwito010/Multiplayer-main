@@ -24,6 +24,17 @@ public class PlayerMovement : NetworkBehaviour
     [SerializeField] private float jumpForce = 5f;          // CONFIRMAR: fuerza de salto
     [SerializeField] private float jumpStaminaCost = 1f;    // CONFIRMAR: stamina que cuesta cada salto
 
+    [Header("Crouch")]
+    [SerializeField] private float crouchHeight = 1f;
+    [SerializeField] private float crouchSpeed = 2.5f;
+
+    private float standingHeight;
+    private Vector3 standingCenter;
+    private Vector3 standingCameraPosition;
+
+    [Networked] private NetworkBool isCrouching { get; set; }
+    [Networked] private NetworkBool crouchWasPressed { get; set; }
+
     [Header("Stamina")]
     [SerializeField] private float maxStamina = 5f;              // CONFIRMAR: stamina máxima de PlayerMovementSingle
     [SerializeField] private float staminaRechargeSpeed = 1f;    // CONFIRMAR: velocidad de recarga de PlayerMovementSingle

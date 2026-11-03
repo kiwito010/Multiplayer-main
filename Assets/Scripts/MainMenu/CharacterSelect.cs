@@ -109,7 +109,7 @@ public class CharacterSelect : MonoBehaviour
 
     // --- BOTÓN SELECCIONAR ---
     [Header("Escena del Lobby")]
-    [SerializeField] private string lobbySceneName = "LobbyUI";
+    [SerializeField] private string lobbySceneName = "GameTest1";
 
     public void OnConfirmPressed()
 {

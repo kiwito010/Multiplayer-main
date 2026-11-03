@@ -16,10 +16,6 @@ public class PlayerNetworkInteraction : NetworkBehaviour
     public Transform interactPoint;           // Desde dónde sale el rayo (normalmente la cámara)
     public LayerMask interactableLayers;      // Qué capas puede detectar
 
-    [Header("Cooldown de red (evita spamear el botón)")]
-    public float useRate = 0.2f;
-    [Networked] private TickTimer UseCooldown { get; set; }
-
     // Evento de C# (no de Fusion) al que se puede suscribir cualquier otro
     // script tuyo, en cualquier parte del proyecto, sin que este script
     // necesite saber nada de ellos. Parámetros: quién usó, y sobre qué
@@ -27,9 +23,12 @@ public class PlayerNetworkInteraction : NetworkBehaviour
     public static event System.Action<PlayerRef, NetworkObject> OnUsedOnTarget;
     public event System.Action<NetworkObject> OnLocalUsedOnTarget;
 
+    private GameInput gameInput;
 
     public override void Spawned()
     {
+        gameInput = GetComponent<GameInput>();
+
         // Si interactPoint esta vacio o apunta a algo que no es hijo de ESTE
         // jugador (ej: el prefab del Project, compartido), usamos la camara propia.
         if (interactPoint == null || !interactPoint.IsChildOf(transform))
@@ -39,39 +38,21 @@ public class PlayerNetworkInteraction : NetworkBehaviour
         }
     }
 
-
-
-
-    public override void FixedUpdateNetwork() {
-        if (!Object.HasInputAuthority)
+    private void Update() {
+        if (!Object.HasInputAuthority || gameInput == null)
             return;
 
-        if (GetInput(out NetworkInputData input)) {
-            if (input.useButtonPressed) {
-                Debug.Log("BOTON DE INTERACCION DETECTADO");
-
-                TryDetectAndNotify();
-            }
+        if (gameInput.GetInteractPressed()) {
+            TryDetectAndNotify();
         }
     }
 
-
-
-
-
-  private void TryDetectAndNotify() 
+    private void TryDetectAndNotify() 
     {
-        // Solución: Agregar (Runner) porque es un método de Photon Fusion
-        if (!UseCooldown.ExpiredOrNotRunning(Runner)) 
-            return;
-
         if (interactPoint == null) {
             Debug.Log("ERROR: InteractPoint es null");
             return;
         }
-
-        // Seteamos el cooldown
-        UseCooldown = TickTimer.CreateFromSeconds(Runner, useRate);
 
         if (interactPoint == null) {
             Debug.Log("ERROR: InteractPoint es null");
@@ -101,9 +82,8 @@ public class PlayerNetworkInteraction : NetworkBehaviour
         }
     }
 
-    [Rpc(RpcSources.InputAuthority, RpcTargets.All)]
-    private void RPC_NotifyUse(NetworkObject target, PlayerRef fromPlayer)
-    {
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    private void RPC_NotifyUse(NetworkObject target, PlayerRef fromPlayer) {
         Debug.Log("Jugador " + fromPlayer + " interactuó con " + target.name);
         OnUsedOnTarget?.Invoke(fromPlayer, target);
     }

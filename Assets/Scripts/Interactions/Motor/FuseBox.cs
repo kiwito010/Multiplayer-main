@@ -36,16 +36,24 @@ public class FuseBox : NetworkBehaviour {
         if (target != Object)
             return;
 
+        Debug.Log("FuseBox: interacción de " + player);
+
         NetworkObject playerObject = Runner.GetPlayerObject(player);
 
         if (playerObject == null)
             return;
 
-        if (Vector3.Distance(
-            playerObject.transform.position,
-            transform.position
-        ) > interactionDistance)
+        float distance = Vector3.Distance(
+    playerObject.transform.position,
+    transform.position
+);
+
+        Debug.Log("FuseBox: distancia del jugador = " + distance);
+
+        if (distance > interactionDistance) {
+            Debug.LogWarning("FuseBox: jugador demasiado lejos");
             return;
+        }
 
         if (!isOpened) {
             isOpened = true;
