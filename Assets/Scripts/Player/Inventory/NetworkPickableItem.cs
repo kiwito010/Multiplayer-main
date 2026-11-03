@@ -43,8 +43,14 @@ public class NetworkPickableItem : NetworkBehaviour {
         PlayerNetworkInteraction.OnUsedOnTarget -= PlayerNetworkInteraction_OnUsedOnTarget;
     }
 
+    private void OnDestroy() {
+        PlayerNetworkInteraction.OnUsedOnTarget -= PlayerNetworkInteraction_OnUsedOnTarget;
+    }
 
     private void PlayerNetworkInteraction_OnUsedOnTarget(PlayerRef player, NetworkObject target) {
+        if (Object == null || !Object.IsValid)
+            return;
+
         // Solo la autoridad puede modificar el objeto.
         if (!Object.HasStateAuthority)
             return;

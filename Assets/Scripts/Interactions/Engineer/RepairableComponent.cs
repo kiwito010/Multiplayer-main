@@ -140,7 +140,7 @@ public class RepairableComponent : DiagnosableBase, IInteractable {
     [Networked] public NetworkBool cableRepairCompleted { get; private set; }
 
     private IRepairMinigame repairMinigame;
-    private bool isRepaired;
+    [Networked] private NetworkBool isRepaired { get; set; }
 
     public void Interact() { 
         
@@ -157,6 +157,9 @@ public class RepairableComponent : DiagnosableBase, IInteractable {
     }
 
     public void Repair() {
+        if (!Object.HasStateAuthority)
+            return;
+
         if (isRepaired)
             return;
 
@@ -194,6 +197,9 @@ public class RepairableComponent : DiagnosableBase, IInteractable {
             return false;
 
         if (!IsDiagnosed() || isRepaired || cableInstalled)
+            return false;
+
+        if (!brokenCableRemoved || repairPhaseIndex != 2)
             return false;
 
         if (inventory == null || !inventory.Object.HasStateAuthority)
