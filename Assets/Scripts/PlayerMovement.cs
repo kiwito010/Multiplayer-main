@@ -80,6 +80,12 @@ public class PlayerMovement : NetworkBehaviour
             if (ownCamera != null) cameraPivot = ownCamera.transform;
         }
 
+        standingHeight = _characterController.height;
+        standingCenter = _characterController.center;
+
+        if (cameraPivot != null) {
+            standingCameraPosition = cameraPivot.localPosition;
+        }
         // El CharacterController guarda internamente su propia posición; apagarlo
         // y prenderlo lo obliga a releer la posición REAL actual del transform
         // (la del SpawnPoint).
@@ -119,6 +125,13 @@ public class PlayerMovement : NetworkBehaviour
     public override void FixedUpdateNetwork()
     {
         if (GetInput(out NetworkInputData input))
+
+        bool crouchDown = input.crouchPressed && !crouchWasPressed;
+        crouchWasPressed = input.crouchPressed;
+
+        if (crouchDown) {
+            isCrouching = !isCrouching;
+        }
         {
             // --- ROTACIÓN HORIZONTAL (girar el cuerpo) ---
             float yaw = input.lookYaw * lookSensitivity;
@@ -141,8 +154,8 @@ public class PlayerMovement : NetworkBehaviour
             HandleSprint(input, Runner.DeltaTime);
 
             // Igual que en el script viejo: si está en sprint usa sprintSpeed.
-            float currentSpeed = IsSprinting ? sprintSpeed : moveSpeed;
-
+            float currentSpeed = isCrouching ? crouchSpeed : (IsSprinting ? sprintSpeed : moveSpeed);
+            
             // --- GRAVEDAD ---
             if (IsGrounded)
             {
@@ -204,8 +217,7 @@ public class PlayerMovement : NetworkBehaviour
         // NOTA: el original también pedía "&& !isCrouching && !isProne".
         // Esas variables están en la parte del script que no me pasaste;
         // cuando agreguemos agacharse/boca abajo se suman acá.
-        if (input.sprintPressed && isMovingForward && CurrentStamina > 0f)
-        {
+        if (input.sprintPressed && !isCrouching && isMovingForward && CurrentStamina > 0f)        {
             IsSprinting = true;
 
             if (IsGrounded)
@@ -253,4 +265,28 @@ public class PlayerMovement : NetworkBehaviour
         if (Object == null || !Object.IsValid) return false;
         return IsSprinting || CurrentStamina < maxStamina;
     }
+
+    private void ApplyCrouch() {
+    if (_characterController == null)
+        return;
+
+    float targetHeight = isCrouching ? crouchHeight : standingHeight;
+
+    targetHeight = Mathf.Max(
+        targetHeight,
+        _characterController.radius * 2f
+    );
+
+    float heightDifference = standingHeight - targetHeight;
+
+    _characterController.height = targetHeight;
+
+    _characterController.center =
+        standingCenter + Vector3.down * (heightDifference / 2f);
+
+    if (cameraPivot != null) {
+        cameraPivot.localPosition =
+            standingCameraPosition + Vector3.down * (heightDifference / 2f);
+    }
+}
 }
