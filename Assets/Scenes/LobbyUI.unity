@@ -1779,9 +1779,9 @@ MonoBehaviour:
   chatLogText: {fileID: 1298542513}
   messageDuration: 4
   characterPortraits:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 21300000, guid: d3f6783210ee57a4783321a132f55168, type: 3}
+  - {fileID: 21300000, guid: 379565733974b7b4bbed7b402d17a7d5, type: 3}
+  - {fileID: 21300000, guid: ccf094e28de20e54eb3cbcc119b95a91, type: 3}
 --- !u!4 &933610045
 Transform:
   m_ObjectHideFlags: 0

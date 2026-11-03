@@ -42,12 +42,15 @@ public class LobbyManager : NetworkBehaviour
             startGameButton.onClick.AddListener(OnStartGameClicked);
         }
 
-        // Se conectan por código, no hace falta configurar el OnClick en el Inspector
         if (changeColorButton != null) changeColorButton.onClick.AddListener(OnChangeColorClicked);
         if (leaveButton != null) leaveButton.onClick.AddListener(OnLeavePressed);
 
         if (leaveConfirmPopup != null) leaveConfirmPopup.SetActive(false);
-        if (chatInputField != null) chatInputField.gameObject.SetActive(false);
+
+        if (chatInputField != null)
+        {
+            chatInputField.onEndEdit.AddListener(OnChatSubmit);
+        }
 
         UpdatePlayerUI();
     }
@@ -61,27 +64,13 @@ public class LobbyManager : NetworkBehaviour
             pingText.text = $"{rtt} ms";
         }
 
-        // Manejo del Chat con la tecla Enter
+        // Activar el input de chat al presionar Enter
         if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
         {
-            if (chatInputField != null && chatInputField.gameObject.activeSelf)
+            if (chatInputField != null && !chatInputField.isFocused)
             {
-                // Si el chat está abierto, enviar mensaje
-                if (!string.IsNullOrEmpty(chatInputField.text))
-                {
-                    SendChatMessage(chatInputField.text);
-                    chatInputField.text = "";
-                }
-                chatInputField.gameObject.SetActive(false);
-            }
-            else
-            {
-                // Abrir el input de chat al presionar Enter
-                if (chatInputField != null)
-                {
-                    chatInputField.gameObject.SetActive(true);
-                    chatInputField.ActivateInputField();
-                }
+                chatInputField.ActivateInputField();
+                chatInputField.Select();
             }
         }
 
@@ -96,7 +85,7 @@ public class LobbyManager : NetworkBehaviour
         }
     }
 
-    // --- CAMBIAR DE PERSONAJE (Ahora cicla entre 0, 1 y 2 por los 3 personajes) ---
+    // --- CAMBIAR DE PERSONAJE (Cicla entre 0, 1 y 2) ---
     private void OnChangeColorClicked()
     {
         GameSession.CharacterIndex = (GameSession.CharacterIndex + 1) % 3;
@@ -106,6 +95,8 @@ public class LobbyManager : NetworkBehaviour
     // --- LISTA DE JUGADORES Y AVATARES ---
     private void UpdatePlayerUI()
     {
+        if (playerListContent == null || playerEntryPrefab == null) return;
+
         foreach (Transform child in playerListContent)
         {
             Destroy(child.gameObject);
@@ -131,7 +122,17 @@ public class LobbyManager : NetworkBehaviour
         }
     }
 
-    // --- CHAT EFÍMERO ---
+    // --- CHAT NATIVO ---
+    private void OnChatSubmit(string text)
+    {
+        if ((Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)) && !string.IsNullOrEmpty(text))
+        {
+            SendChatMessage(text);
+            chatInputField.text = "";
+            chatInputField.ActivateInputField();
+        }
+    }
+
     private void SendChatMessage(string msg)
     {
         if (chatLogText != null && chatDisplayPanel != null)
