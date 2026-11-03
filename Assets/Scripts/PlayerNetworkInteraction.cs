@@ -59,7 +59,20 @@ public class PlayerNetworkInteraction : NetworkBehaviour
 
 
 
-    private void TryDetectAndNotify() {
+  private void TryDetectAndNotify() 
+    {
+        // Solución: Agregar (Runner) porque es un método de Photon Fusion
+        if (!UseCooldown.ExpiredOrNotRunning(Runner)) 
+            return;
+
+        if (interactPoint == null) {
+            Debug.Log("ERROR: InteractPoint es null");
+            return;
+        }
+
+        // Seteamos el cooldown
+        UseCooldown = TickTimer.CreateFromSeconds(Runner, useRate);
+
         if (interactPoint == null) {
             Debug.Log("ERROR: InteractPoint es null");
             return;
@@ -88,17 +101,10 @@ public class PlayerNetworkInteraction : NetworkBehaviour
         }
     }
 
-    // RpcSources.InputAuthority: solo el dueño de este jugador puede
-    // disparar este RPC (nadie puede simular que otro jugador usó algo).
-    // RpcTargets.All: el evento se replica en todas las máquinas, así
-    // cualquier script de gameplay puede reaccionar en cualquier cliente.
-    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    [Rpc(RpcSources.InputAuthority, RpcTargets.All)]
     private void RPC_NotifyUse(NetworkObject target, PlayerRef fromPlayer)
     {
-        // Acá NO decidimos qué pasa. Solo avisamos "esto ocurrió" para que
-        // tus propios scripts de gameplay decidan qué hacer.
         Debug.Log("Jugador " + fromPlayer + " interactuó con " + target.name);
-
         OnUsedOnTarget?.Invoke(fromPlayer, target);
     }
 }

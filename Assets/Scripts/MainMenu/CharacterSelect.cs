@@ -108,33 +108,29 @@ public class CharacterSelect : MonoBehaviour
     }
 
     // --- BOTÓN SELECCIONAR ---
-    public async void OnConfirmPressed()
+    [Header("Escena del Lobby")]
+    [SerializeField] private string lobbySceneName = "LobbyUI";
+
+    public void OnConfirmPressed()
+{
+    if (_isConnecting) return;
+
+    if (_selectedIndex < 0)
     {
-        if (_isConnecting) return;
-
-        if (_selectedIndex < 0)
-        {
-            ShowWarning();
-            return;
-        }
-
-        GameSession.CharacterIndex = _selectedIndex;
-
-        // Activamos el estado de carga y mostramos el panel
-        _isConnecting = true;
-        if (statusPanel != null) statusPanel.SetActive(true);
-
-        // Animamos la barra y los puntos suspensivos con el mensaje "Conectando"
-        Coroutine loadRoutine = StartCoroutine(AnimateLoadingAndDots("Conectando"));
-
-        // Iniciamos la conexión real de Photon Fusion
-        networkManager.StartConnection();
-
-        // Pequeña espera por seguridad mientras transiciona de escena
-        await System.Threading.Tasks.Task.Delay(1000);
-
-        if (loadRoutine != null) StopCoroutine(loadRoutine);
+        ShowWarning();
+        return;
     }
+
+    GameSession.CharacterIndex = _selectedIndex;
+
+    _isConnecting = true;
+    if (statusPanel != null) statusPanel.SetActive(true);
+
+    StartCoroutine(AnimateLoadingAndDots("Conectando"));
+
+    // Llamamos a la conexión. El NetworkManager se encargará de pasar a la LobbyUI cuando esté listo.
+    networkManager.StartConnection();
+}
 
     public void OnBackPressed()
     {

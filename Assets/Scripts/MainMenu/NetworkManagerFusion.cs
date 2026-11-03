@@ -102,20 +102,44 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
     // Se llama desde ChooseCharacter (escena ChooseCharacter) apenas el
     // jugador elige su personaje. El modo (Host/Client) y el código de sala
     // los dejó guardados el MainMenu en GameSession.
-    public void StartConnection()
+    public async void StartConnection()
+{
+    // Asegurarnos de tener un NetworkRunner activo
+    if (_runner == null)
     {
-        // Si ya hay un runner conectándose, ignoramos clics repetidos.
-        if (_runner != null) return;
-
-        if (string.IsNullOrEmpty(GameSession.RoomCode))
-        {
-            Debug.LogWarning("No hay un código de sala guardado. Volvé al menú principal y escribilo.");
-            UnityEngine.SceneManagement.SceneManager.LoadScene(mainMenuSceneName);
-            return;
-        }
-
-        StartGame(GameSession.Mode, GameSession.RoomCode);
+        _runner = gameObject.AddComponent<NetworkRunner>();
     }
+
+    _runner.ProvideInput = true;
+
+    // Configuramos los argumentos según seamos Host o Client
+    var startGameArgs = new StartGameArgs()
+    {
+        GameMode = GameSession.Mode,
+        SessionName = GameSession.RoomCode,
+        SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>()
+    };
+
+    // Iniciamos el juego en Photon Fusion
+    var result = await _runner.StartGame(startGameArgs);
+
+    if (result.Ok)
+    {
+        Debug.Log("¡Conexión exitosa a la sala!");
+        
+        // Si todo salió bien, cargamos la escena del Lobby usando Fusion
+        // (Esto evita que se rompa por cambiar de escena a la fuerza con Unity).
+        if (_runner.IsServer)
+        {
+            _runner.LoadScene("LobbyUI");
+        }
+    }
+    else
+    {
+        Debug.LogError($"Error al iniciar la conexión: {result.ShutdownReason}");
+        // Si falla, mostramos el error o devolvemos al menú
+    }
+}
 
     // async void: esta función corre en paralelo sin trabar el juego mientras
     // espera la respuesta del servidor de Photon.
