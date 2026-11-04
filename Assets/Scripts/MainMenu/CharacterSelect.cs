@@ -11,7 +11,7 @@ public class CharacterSelect : MonoBehaviour
     [SerializeField] private NetworkManagerFusion networkManager;
     [SerializeField] private string mainMenuScene = "Main Menu";
 
-    [Header("Botones de personaje (0=Ingeniero, 1=Hacker, 2=Científico, 3=Exploradora)")]
+    [Header("Botones de personaje (0=Ingeniero, 1=Hacker, 2=Exploradora)")]
     [SerializeField] private Button[] characterButtons;
     [SerializeField] private Color selectedButtonColor = new Color(1f, 0.6f, 0.6f, 1f);
     [SerializeField] private GameObject[] selectedMarkers;
@@ -108,29 +108,36 @@ public class CharacterSelect : MonoBehaviour
     }
 
     // --- BOTÓN SELECCIONAR ---
-    [Header("Escena del Lobby")]
-    [SerializeField] private string lobbySceneName = "GameTest1";
-
     public void OnConfirmPressed()
-{
-    if (_isConnecting) return;
-
-    if (_selectedIndex < 0)
     {
-        ShowWarning();
-        return;
+        if (_isConnecting) return;
+
+        if (_selectedIndex < 0)
+        {
+            ShowWarning();
+            return;
+        }
+
+        // Si la referencia del Inspector se perdió, usamos el manager que ya existe en la escena.
+        NetworkManagerFusion manager = networkManager != null ? networkManager : NetworkManagerFusion.Instance;
+        if (manager == null) manager = FindObjectOfType<NetworkManagerFusion>();
+
+        if (manager == null)
+        {
+            Debug.LogError("[CharacterSelect] No hay ningún NetworkManagerFusion en la escena ChooseCharacter.");
+            return;
+        }
+
+        GameSession.CharacterIndex = _selectedIndex;
+
+        _isConnecting = true;
+        if (statusPanel != null) statusPanel.SetActive(true);
+
+        StartCoroutine(AnimateLoadingAndDots("Conectando"));
+
+        // El manager se conecta. El Host lleva a todos al LobbyUI cuando la conexión sale bien.
+        manager.StartConnection();
     }
-
-    GameSession.CharacterIndex = _selectedIndex;
-
-    _isConnecting = true;
-    if (statusPanel != null) statusPanel.SetActive(true);
-
-    StartCoroutine(AnimateLoadingAndDots("Conectando"));
-
-    // Llamamos a la conexión. El NetworkManager se encargará de pasar a la LobbyUI cuando esté listo.
-    networkManager.StartConnection();
-}
 
     public void OnBackPressed()
     {
