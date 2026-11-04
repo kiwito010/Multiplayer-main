@@ -84,6 +84,15 @@ public class NetworkComputer : NetworkBehaviour {
     }
 
     public void RequestExit() {
+        if (Object.HasStateAuthority) {
+            if (ActiveHacker == Runner.LocalPlayer) {
+                ActiveHacker = PlayerRef.None;
+                Debug.Log("Computadora liberada por el Host");
+            }
+
+            return;
+        }
+
         RPC_RequestExit();
     }
 
@@ -92,11 +101,18 @@ public class NetworkComputer : NetworkBehaviour {
         if (!Object.HasStateAuthority)
             return;
 
-        if (ActiveHacker != info.Source)
+        Debug.Log(
+            "Solicitud de salida. ActiveHacker: " + ActiveHacker +
+            " | Solicitante: " + info.Source
+        );
+
+        if (ActiveHacker != info.Source) {
+            Debug.LogWarning("Salida rechazada: jugador no autorizado");
             return;
+        }
 
         ActiveHacker = PlayerRef.None;
 
-        Debug.Log("Computadora liberada");
+        Debug.Log("Computadora liberada por el Client");
     }
 }

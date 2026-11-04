@@ -56,11 +56,6 @@ public class ComputerUI : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    public void ShowNetwork() {
-        gameObject.SetActive(true);
-        ShowContent();
-    }
-
     public void ShowContent() {
 
         content.SetActive(true);
