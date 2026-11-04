@@ -90,6 +90,9 @@ public class PlayerMovement : NetworkBehaviour
         // y prenderlo lo obliga a releer la posición REAL actual del transform
         // (la del SpawnPoint).
         _characterController.enabled = false;
+
+        ApplyCrouch();
+
         _characterController.enabled = true;
         Physics.SyncTransforms();
 
@@ -122,17 +125,16 @@ public class PlayerMovement : NetworkBehaviour
     // FixedUpdateNetwork() es el corazón de la simulación en Fusion: corre a
     // un ritmo FIJO (los "ticks" de red), así todas las máquinas calculan lo
     // mismo con el mismo input.
-    public override void FixedUpdateNetwork()
-    {
-        if (GetInput(out NetworkInputData input))
+    public override void FixedUpdateNetwork(){
+        if (GetInput(out NetworkInputData input)){
 
-        bool crouchDown = input.crouchPressed && !crouchWasPressed;
-        crouchWasPressed = input.crouchPressed;
+            bool crouchDown = input.crouchPressed && !crouchWasPressed;
+            crouchWasPressed = input.crouchPressed;
 
-        if (crouchDown) {
-            isCrouching = !isCrouching;
-        }
-        {
+            if (crouchDown) {
+                isCrouching = !isCrouching;
+            }
+        
             // --- ROTACIÓN HORIZONTAL (girar el cuerpo) ---
             float yaw = input.lookYaw * lookSensitivity;
             transform.Rotate(0, yaw, 0);
@@ -183,6 +185,9 @@ public class PlayerMovement : NetworkBehaviour
             // Apagar y prender el CharacterController lo obliga a releer la
             // posición del transform después de una corrección de Fusion.
             _characterController.enabled = false;
+
+            ApplyCrouch();
+
             _characterController.enabled = true;
             Physics.SyncTransforms();
 
@@ -270,23 +275,30 @@ public class PlayerMovement : NetworkBehaviour
     if (_characterController == null)
         return;
 
-    float targetHeight = isCrouching ? crouchHeight : standingHeight;
+        float targetHeight = isCrouching ? crouchHeight : standingHeight;
 
-    targetHeight = Mathf.Max(
-        targetHeight,
-        _characterController.radius * 2f
-    );
+        targetHeight = Mathf.Max(
+            targetHeight,
+            _characterController.radius * 2f
+        );
 
-    float heightDifference = standingHeight - targetHeight;
+        float heightDifference = standingHeight - targetHeight;
 
-    _characterController.height = targetHeight;
+        _characterController.height = targetHeight;
 
-    _characterController.center =
+        _characterController.center =
         standingCenter + Vector3.down * (heightDifference / 2f);
 
-    if (cameraPivot != null) {
-        cameraPivot.localPosition =
+        if (cameraPivot != null) {
+            cameraPivot.localPosition =
             standingCameraPosition + Vector3.down * (heightDifference / 2f);
+        }
     }
-}
+
+    public override void Render() {
+        if (Object.HasInputAuthority || Object.HasStateAuthority)
+            return;
+
+        ApplyCrouch();
+    }
 }
