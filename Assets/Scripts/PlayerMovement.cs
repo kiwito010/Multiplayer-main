@@ -26,7 +26,8 @@ public class PlayerMovement : NetworkBehaviour
 
     [Header("Crouch")]
     [SerializeField] private float crouchHeight = 1f;
-    [SerializeField] private float crouchSpeed = 2.5f;
+    [SerializeField] private float crouchSpeed = 3f;
+    [SerializeField] private float crouchTransitionSpeed = 8f;
 
     private float standingHeight;
     private Vector3 standingCenter;
@@ -132,9 +133,15 @@ public class PlayerMovement : NetworkBehaviour
             crouchWasPressed = input.crouchPressed;
 
             if (crouchDown) {
-                isCrouching = !isCrouching;
+                if (isCrouching) {
+                    if (CanStandUp()) {
+                        isCrouching = false;
+                    }
+                } else {
+                    isCrouching = true;
+                }
             }
-        
+
             // --- ROTACIÓN HORIZONTAL (girar el cuerpo) ---
             float yaw = input.lookYaw * lookSensitivity;
             transform.Rotate(0, yaw, 0);
@@ -288,17 +295,77 @@ public class PlayerMovement : NetworkBehaviour
 
         _characterController.center =
         standingCenter + Vector3.down * (heightDifference / 2f);
-
-        if (cameraPivot != null) {
-            cameraPivot.localPosition =
-            standingCameraPosition + Vector3.down * (heightDifference / 2f);
-        }
     }
 
     public override void Render() {
-        if (Object.HasInputAuthority || Object.HasStateAuthority)
+        if (Object.HasInputAuthority) {
+            UpdateCrouchCamera();
+        }
+
+        if (!Object.HasInputAuthority && !Object.HasStateAuthority) {
+            ApplyCrouch();
+        }
+    }
+
+    private void UpdateCrouchCamera() {
+        if (cameraPivot == null)
             return;
 
-        ApplyCrouch();
+        float heightDifference =
+            standingHeight - Mathf.Max(crouchHeight, _characterController.radius * 2f);
+
+        Vector3 targetPosition = isCrouching
+            ? standingCameraPosition + Vector3.down * (heightDifference / 2f)
+            : standingCameraPosition;
+
+        float smoothFactor = 1f -
+            Mathf.Exp(-crouchTransitionSpeed * Time.deltaTime);
+
+        cameraPivot.localPosition = Vector3.Lerp(
+            cameraPivot.localPosition,
+            targetPosition,
+            smoothFactor
+        );
     }
+
+
+    private bool CanStandUp() {
+        if (_characterController == null)
+            return false;
+
+        float radius = Mathf.Max(0.01f, _characterController.radius - 0.02f);
+
+        float halfSegment = Mathf.Max(
+            0f,
+            standingHeight / 2f - radius
+        );
+
+        Vector3 center = transform.TransformPoint(standingCenter);
+        Vector3 up = transform.up;
+
+        Vector3 bottom = center - up * halfSegment;
+        Vector3 top = center + up * halfSegment;
+
+        Collider[] hits = Physics.OverlapCapsule(
+            bottom,
+            top,
+            radius,
+            ~0,
+            QueryTriggerInteraction.Ignore
+        );
+
+        foreach (Collider hit in hits) {
+            if (hit.transform.IsChildOf(transform))
+                continue;
+
+            // Ignoramos el suelo que ya está debajo del personaje.
+            if (hit.bounds.max.y <= _characterController.bounds.min.y + 0.05f)
+                continue;
+
+            return false;
+        }
+
+        return true;
+    }
+
 }
