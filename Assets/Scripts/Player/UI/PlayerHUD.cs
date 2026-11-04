@@ -7,6 +7,7 @@ public class PlayerHUD : MonoBehaviour {
     [SerializeField] private InventoryUI inventoryUI;
     [SerializeField] private ScanUI scanUI;
     [SerializeField] private CableRepairMinigame cableRepairMinigame;
+    [SerializeField] private ComputerUI computerUI;
 
     // MÉTODOS:
 
@@ -28,6 +29,10 @@ public class PlayerHUD : MonoBehaviour {
         if (cableRepairMinigame != null) {
             cableRepairMinigame.Initialize(playerManager, gameInput);
         }
+
+        if (computerUI != null) {
+            computerUI.InitializeNetwork(playerManager, gameInput);
+        }
     }
 
     public void OpenCableRepair(RepairableComponent component, PlayerInventory inventory) {
@@ -38,5 +43,9 @@ public class PlayerHUD : MonoBehaviour {
             return;
 
         cableRepairMinigame.Open(component, inventory);
+    }
+
+    public ComputerUI GetComputerUI() {
+        return computerUI;
     }
 }

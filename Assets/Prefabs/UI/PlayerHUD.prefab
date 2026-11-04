@@ -122,6 +122,7 @@ MonoBehaviour:
   inventoryUI: {fileID: 26993992789573881}
   scanUI: {fileID: 2822483422504508433}
   cableRepairMinigame: {fileID: 1398675772031630489}
+  computerUI: {fileID: 2941742538557906287}
 --- !u!1001 &4324402005118756027
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -236,6 +237,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: ComputerUI
       objectReference: {fileID: 0}
+    - target: {fileID: 200119828842036578, guid: a85b7fce7ccf1a140b3a32b125728103, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1554346999456012726, guid: a85b7fce7ccf1a140b3a32b125728103, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -321,6 +326,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a85b7fce7ccf1a140b3a32b125728103, type: 3}
+--- !u!114 &2941742538557906287 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1511232542588944514, guid: a85b7fce7ccf1a140b3a32b125728103, type: 3}
+  m_PrefabInstance: {fileID: 4335790776226160109}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fbcd18e0813bb35479aaecfd7f2eae3c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!224 &3006703475416695899 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 1554346999456012726, guid: a85b7fce7ccf1a140b3a32b125728103, type: 3}

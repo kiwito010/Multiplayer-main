@@ -4,13 +4,16 @@ using UnityEngine;
 
 public class ComputerUI : MonoBehaviour
 {
+    [SerializeField] private HackerTypingText hackerTypingText;
+    [SerializeField] private Computer computer;
+    private NetworkComputer networkComputer;
+    private PlayerManager networkPlayerManager;
+    private GameInput networkGameInput;
 
     [SerializeField] private GameObject content;
     [SerializeField] private GameObject hackerMinigame;
     [SerializeField] private GameObject successPanel;
     [SerializeField] private GameObject failurePanel;
-    [SerializeField] private HackerTypingText hackerTypingText;
-    [SerializeField] private Computer computer;
 
     private void OnEnable() {
         hackerTypingText.OnSuccess += HackerSuccess;
@@ -20,7 +23,24 @@ public class ComputerUI : MonoBehaviour
     private void OnDisable() {
         hackerTypingText.OnSuccess -= HackerSuccess;
         hackerTypingText.OnFailure -= HackerFailure;
+    }
 
+    public void InitializeNetwork(PlayerManager playerManager, GameInput gameInput) {
+        networkPlayerManager = playerManager;
+        networkGameInput = gameInput;
+    }
+
+    public void SetComputer(Computer newComputer) {
+        computer = newComputer;
+    }
+
+    private void Update() {
+        if (networkComputer == null || networkGameInput == null)
+            return;
+
+        if (networkGameInput.GetExitPressed()) {
+            ExitNetworkComputer();
+        }
     }
 
     public void Show() { 
@@ -34,6 +54,11 @@ public class ComputerUI : MonoBehaviour
     }
     public void Hide() {
         gameObject.SetActive(false);
+    }
+
+    public void ShowNetwork() {
+        gameObject.SetActive(true);
+        ShowContent();
     }
 
     public void ShowContent() {
@@ -66,6 +91,16 @@ public class ComputerUI : MonoBehaviour
         failurePanel.SetActive(true);
     }
 
+    public void ShowNetwork(NetworkComputer computerToUse) {
+        networkComputer = computerToUse;
+
+        if (networkPlayerManager != null)
+            networkPlayerManager.EnterUIMode();
+
+        gameObject.SetActive(true);
+        ShowContent();
+    }
+
     private void HackerSuccess() { 
         computer.CompleteComputer();
         ShowSuccessPanel();
@@ -88,7 +123,25 @@ public class ComputerUI : MonoBehaviour
     }
 
     public void ExitComputer() {
-        computer.ExitComputer();
+        if (networkComputer != null) {
+            ExitNetworkComputer();
+            return;
+        }
+
+        if (computer != null)
+            computer.ExitComputer();
     }
 
+    private void ExitNetworkComputer() {
+        if (networkComputer == null)
+            return;
+
+        networkComputer.RequestExit();
+        networkComputer = null;
+
+        if (networkPlayerManager != null)
+            networkPlayerManager.ExitUIMode();
+
+        Hide();
+    }
 }

@@ -8,8 +8,6 @@ public class HackerTypingText : MonoBehaviour {
 
     //Referencia a otros scripts
 
-    [SerializeField] private Computer computer;
-
     //Variable Phase
     private int currentPhase;
 
@@ -219,6 +217,7 @@ public class HackerTypingText : MonoBehaviour {
         if (currentFails >= maxFails) {
             Debug.Log("Demasiados fallos");
 
+            StopAllCoroutines();
             OnFailure?.Invoke();
         }
     }
