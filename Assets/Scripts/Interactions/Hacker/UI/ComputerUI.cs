@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ComputerUI : MonoBehaviour
 {
@@ -15,14 +17,24 @@ public class ComputerUI : MonoBehaviour
     [SerializeField] private GameObject successPanel;
     [SerializeField] private GameObject failurePanel;
 
+    [SerializeField] private Slider temperatureSlider;
+    [SerializeField] private TextMeshProUGUI temperatureText;
+
+    public event System.Action OnHackStarted;
+    public event System.Action OnHackError;
+
     private void OnEnable() {
         hackerTypingText.OnSuccess += HackerSuccess;
         hackerTypingText.OnFailure += HackerFailure;
+
+        hackerTypingText.OnQTEFailed += HandleQTEFailed;
     }
 
     private void OnDisable() {
         hackerTypingText.OnSuccess -= HackerSuccess;
         hackerTypingText.OnFailure -= HackerFailure;
+
+        hackerTypingText.OnQTEFailed -= HandleQTEFailed;
     }
 
     public void InitializeNetwork(PlayerManager playerManager, GameInput gameInput) {
@@ -41,6 +53,8 @@ public class ComputerUI : MonoBehaviour
         if (networkGameInput.GetExitPressed()) {
             ExitNetworkComputer();
         }
+
+        UpdateTemperatureBar();
     }
 
     public void Show() { 
@@ -69,7 +83,23 @@ public class ComputerUI : MonoBehaviour
         hackerMinigame.SetActive(true);
         successPanel.SetActive(false);
         failurePanel.SetActive(false);    
+        
+        OnHackStarted?.Invoke();
+
         hackerTypingText.StartMinigame();
+    }
+
+    private void UpdateTemperatureBar() {
+        if (networkComputer == null)
+            return;
+
+        float temperature = Mathf.Clamp(networkComputer.Temperature, 0f, 100f);
+
+        if (temperatureSlider != null)
+            temperatureSlider.SetValueWithoutNotify(temperature);
+
+        if (temperatureText != null)
+            temperatureText.text = "TEMPERATURA " + Mathf.RoundToInt(temperature) + "%";
     }
 
     public void ShowSuccessPanel() {
@@ -96,9 +126,17 @@ public class ComputerUI : MonoBehaviour
         ShowContent();
     }
 
-    private void HackerSuccess() { 
-        computer.CompleteComputer();
-        ShowSuccessPanel();
+    private void HackerSuccess() {
+        if (networkComputer != null) {
+            networkComputer.RequestCompleteHack();
+            ShowSuccessPanel();
+            return;
+        }
+
+        if (computer != null) {
+            computer.CompleteComputer();
+            ShowSuccessPanel();
+        }
     }
 
     private void HackerFailure() { 
@@ -107,8 +145,18 @@ public class ComputerUI : MonoBehaviour
         Invoke(nameof(ShutdownComputer), 2f);
     }
 
+    private void HandleQTEFailed() {
+        OnHackError?.Invoke();
+    }
+
     private void ShutdownComputer() {
-        computer.PowerOff();
+        if (networkComputer != null) {
+            ExitNetworkComputer();
+            return;
+        }
+
+        if (computer != null)
+            computer.PowerOff();
     }
 
     public void ReturnToContent() {
@@ -130,6 +178,12 @@ public class ComputerUI : MonoBehaviour
     private void ExitNetworkComputer() {
         if (networkComputer == null)
             return;
+
+        CancelInvoke(nameof(ShutdownComputer));
+
+        hackerTypingText.ResetMinigame();
+
+        networkComputer.DetachLocalComputerUI(this);
 
         networkComputer.RequestExit();
         networkComputer = null;

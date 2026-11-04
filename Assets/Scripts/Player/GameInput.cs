@@ -87,4 +87,8 @@ public class GameInput : MonoBehaviour
         }
     }
 
+    public bool IsMovementEnabled() {
+        return inputActions != null && inputActions.Player.Move.enabled;
+    }
+
 }

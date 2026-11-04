@@ -44,11 +44,6 @@ public class HackerTypingText : MonoBehaviour {
 
     private float keyTimer;
 
-        //fails
-    [SerializeField] private int maxFails = 3;
-
-    private int currentFails;
-
     private string textBeforeQTE;
     private char currentQTECharacter;
 
@@ -56,9 +51,10 @@ public class HackerTypingText : MonoBehaviour {
     public event System.Action OnSuccess;
     public event System.Action OnFailure;
 
+    public event System.Action OnQTEFailed;
+
     //progress and errors
     [SerializeField] private TextMeshProUGUI progressText;
-    [SerializeField] private TextMeshProUGUI errorsText;
 
     private int typedCharacters;
     private int totalCharacters;
@@ -202,33 +198,21 @@ public class HackerTypingText : MonoBehaviour {
     }
 
     private void FailQTE() {
-
         CodeText.text = textBeforeQTE + "<color=red>" + currentQTECharacter + "</color>";
-        
+
         waitingForKey = false;
 
         qteContainer.gameObject.SetActive(false);
 
-        currentFails++;
-        UpdateErrorsText();
+        Debug.Log("QTE fallido");
 
-        Debug.Log("Fallo " + currentFails + "/" + maxFails);
-
-        if (currentFails >= maxFails) {
-            Debug.Log("Demasiados fallos");
-
-            StopAllCoroutines();
-            OnFailure?.Invoke();
-        }
+        OnQTEFailed?.Invoke();
     }
 
-    public void ResetMinigame() { 
+    public void ResetMinigame() {
         StopAllCoroutines();
 
         waitingForKey = false;
-
-        currentFails = 0;
-        UpdateErrorsText();
 
         charactersSinceLastQTE = 0;
 
@@ -292,9 +276,5 @@ public class HackerTypingText : MonoBehaviour {
         int percentage = Mathf.RoundToInt(progress * 100f);
 
         progressText.text = "PROGRESS " + percentage + "%";
-    }
-
-    private void UpdateErrorsText() {
-        errorsText.text = "ERRORS " + currentFails + "/" + maxFails;
     }
 }
