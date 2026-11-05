@@ -43,6 +43,15 @@ public class LobbyManager : NetworkBehaviour
     [Header("Personajes (0=Ingeniero, 1=Hacker, 2=Exploradora)")]
     [SerializeField] private Sprite[] characterPortraits;
     [SerializeField] private string[] characterNames = { "Ingeniero", "Hacker", "Exploradora" };
+        [Header("Filas de jugadores")]
+    [SerializeField] private float rowSpacing = 10f;   // separación entre una fila y la de abajo
+    // Color del cuadrado del avatar mientras no tengas la imagen del rol (uno por rol).
+    [SerializeField] private Color[] roleColors =
+    {
+        new Color(1f, 0.7f, 0.2f),   // Ingeniero
+        new Color(0.3f, 1f, 0.4f),   // Hacker
+        new Color(0.3f, 0.7f, 1f)    // Exploradora
+    };
 
     // ---------------------------------------------------------
     //  ESTADO
@@ -251,7 +260,7 @@ public class LobbyManager : NetworkBehaviour
         }
     }
 
-    private void RefreshPlayerList()
+        private void RefreshPlayerList()
     {
         if (playerListContent == null || playerEntryPrefab == null || !IsReady) return;
 
@@ -273,53 +282,102 @@ public class LobbyManager : NetworkBehaviour
         {
             FillEntry(_entries[i], players[i]);
         }
+
+        ArrangeRows();
     }
 
+    // Pone cada fila debajo de la anterior. Si el contenedor ya tiene un Layout Group
+    // (Vertical Layout Group), él las ordena solo y esto no hace nada.
+    private void ArrangeRows()
+    {
+        if (playerListContent.GetComponent<LayoutGroup>() != null) return;
+
+        RectTransform template = playerEntryPrefab.GetComponent<RectTransform>();
+        if (template == null) return;
+
+        float step = template.rect.height + rowSpacing;
+
+        for (int i = 0; i < _entries.Count; i++)
+        {
+            RectTransform rect = _entries[i].GetComponent<RectTransform>();
+            if (rect != null) rect.anchoredPosition = template.anchoredPosition + Vector2.down * step * i;
+        }
+    }
+
+    // Completa una fila: ping, nombre del rol y avatar del rol.
     private void FillEntry(GameObject entry, PlayerRef player)
     {
         entry.SetActive(true);
 
-        string playerName = GetPlainName(player) + (player == Runner.LocalPlayer ? " (vos)" : "");
-        string ping = $"{PingFor(player)} ms";
+        int roleIndex = GetCharacterOf(player);
+        string roleName = roleIndex >= 0 ? CharacterLabel(roleIndex) : "Eligiendo...";
+        string ping = $"{PingFor(player)}ms";
 
-        // Buscamos los textos por nombre ("Ping...", "Name...") y, si no hay, por orden.
+        // --- Textos: uno es el ping ("Xms") y el otro el nombre del rol ---
         TMP_Text[] texts = entry.GetComponentsInChildren<TMP_Text>(true);
-        TMP_Text nameTxt = null;
         TMP_Text pingTxt = null;
+        TMP_Text roleTxt = null;
 
         foreach (TMP_Text t in texts)
         {
-            string n = t.name.ToLowerInvariant();
-            if (n.Contains("ping")) pingTxt = t;
-            else if (nameTxt == null) nameTxt = t;
+            if (pingTxt == null && (t.name.ToLowerInvariant().Contains("ping") || t.text.TrimEnd().EndsWith("ms")))
+            {
+                pingTxt = t;
+            }
         }
 
-        if (nameTxt != null && pingTxt == null && texts.Length == 1)
+        foreach (TMP_Text t in texts)
         {
-            nameTxt.text = $"{ping}   {playerName}"; // un solo texto: va todo junto
-        }
-        else
-        {
-            if (nameTxt != null) nameTxt.text = playerName;
-            if (pingTxt != null) pingTxt.text = ping;
+            if (t != pingTxt) { roleTxt = t; break; }
         }
 
-        // Retrato del personaje elegido.
+        if (pingTxt != null) pingTxt.text = ping;
+        if (roleTxt != null) roleTxt.text = (pingTxt == null) ? $"{ping}   {roleName}" : roleName;
+
+        // --- Avatar: la imagen chica de la fila (el fondo de la fila no cuenta) ---
         Image avatar = null;
+        float smallestArea = float.MaxValue;
+
         foreach (Image img in entry.GetComponentsInChildren<Image>(true))
         {
-            if (img.name.ToLowerInvariant().Contains("avatar")) { avatar = img; break; }
+            if (img.gameObject == entry) continue;
+
+            if (img.name.ToLowerInvariant().Contains("avatar"))
+            {
+                avatar = img;
+                break;
+            }
+
+            float area = img.rectTransform.rect.width * img.rectTransform.rect.height;
+            if (area < smallestArea)
+            {
+                smallestArea = area;
+                avatar = img;
+            }
         }
 
         if (avatar != null)
         {
-            int characterIndex = GetCharacterOf(player);
-            bool hasSprite = characterPortraits != null && characterIndex >= 0 && characterIndex < characterPortraits.Length
-                             && characterPortraits[characterIndex] != null;
+            bool hasSprite = characterPortraits != null && roleIndex >= 0 && roleIndex < characterPortraits.Length
+                             && characterPortraits[roleIndex] != null;
 
-            avatar.enabled = hasSprite;
-            if (hasSprite) avatar.sprite = characterPortraits[characterIndex];
+            if (hasSprite)
+            {
+                avatar.sprite = characterPortraits[roleIndex];
+                avatar.color = Color.white;
+            }
+            else
+            {
+                // Todavía no hay imagen para este rol: el cuadrado toma el color del rol.
+                avatar.color = RoleColor(roleIndex);
+            }
         }
+    }
+
+    private Color RoleColor(int index)
+    {
+        if (roleColors != null && index >= 0 && index < roleColors.Length) return roleColors[index];
+        return Color.white;
     }
 
     // -1 si todavía no se sabe.
@@ -448,9 +506,25 @@ public class LobbyManager : NetworkBehaviour
         _chatOpen = true;
         chatInputField.gameObject.SetActive(true);
         chatInputField.text = "";
-        chatInputField.ActivateInputField();
-        chatInputField.Select();
         UpdateChatPanelVisibility();
+
+        // Enfocamos el campo un frame DESPUÉS de activarlo. Justo al activarlo, Unity
+        // todavía no lo tiene listo y el foco no "pega" (había que hacer click).
+        StartCoroutine(FocusChatNextFrame());
+    }
+
+    private System.Collections.IEnumerator FocusChatNextFrame()
+    {
+        yield return null;
+
+        if (!_chatOpen || chatInputField == null) yield break;
+
+        if (EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(chatInputField.gameObject);
+        }
+
+        chatInputField.ActivateInputField();
     }
 
     private void CloseChat()
