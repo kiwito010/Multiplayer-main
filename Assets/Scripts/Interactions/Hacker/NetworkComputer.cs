@@ -29,6 +29,9 @@ public class NetworkComputer : NetworkBehaviour {
 
     [Networked] public TickTimer CooldownTimer { get; private set; }
 
+    [Header("Refrigerantes")]
+    [SerializeField] private NetworkCoolantSpawner coolantSpawner;
+
     // MÉTODOS:
 
     public override void Spawned() {
@@ -245,6 +248,9 @@ public class NetworkComputer : NetworkBehaviour {
                 !IsCompleted && !CooldownTimer.IsRunning) {
                 IsHackRunning = true;
                 CurrentHackPhase = 1;
+
+                if (coolantSpawner != null)
+                    coolantSpawner.StartSpawning(Runner);
             }
 
             return;
@@ -263,6 +269,9 @@ public class NetworkComputer : NetworkBehaviour {
 
         IsHackRunning = true;
         CurrentHackPhase = 1;
+
+        if (coolantSpawner != null)
+            coolantSpawner.StartSpawning(Runner);
     }
 
     private void HandleHackStarted() {

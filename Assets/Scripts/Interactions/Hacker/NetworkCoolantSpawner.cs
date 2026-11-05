@@ -22,10 +22,15 @@ public class NetworkCoolantSpawner : MonoBehaviour {
 
     private NetworkRunner runner;
 
+    private bool spawningActive;
+
     // MÉTODOS:
 
     public void StartSpawning(NetworkRunner networkRunner) {
         if (networkRunner == null || !networkRunner.IsServer)
+            return;
+        
+        if (spawningActive)
             return;
 
         if (coolantPrefab == null || spawnPoints.Length == 0) {
@@ -34,6 +39,8 @@ public class NetworkCoolantSpawner : MonoBehaviour {
         }
 
         runner = networkRunner;
+
+        spawningActive = true;
 
         for (int i = 0; i < maxCoolants; i++) {
             SpawnCoolant();
@@ -83,6 +90,9 @@ public class NetworkCoolantSpawner : MonoBehaviour {
         if (runner == null || !runner.IsServer)
             return;
 
+        if (!spawningActive)
+            return;
+
         int index = activeCoolants.IndexOf(coolant);
 
         if (index < 0)
@@ -94,8 +104,38 @@ public class NetworkCoolantSpawner : MonoBehaviour {
         SpawnCoolant();
     }
 
+
     public void StopSpawning() {
-        // La limpieza de los inventarios se agregará
-        // antes de conectar este método al hackeo.
+        if (runner == null || !runner.IsServer)
+            return;
+
+        spawningActive = false;
+
+        foreach (NetworkObject coolant in activeCoolants) {
+            if (coolant == null || !coolant.IsValid)
+                continue;
+
+            NetworkId coolantId = coolant.Id;
+
+            // Quitamos el refrigerante de cualquier inventario.
+            foreach (PlayerRef player in runner.ActivePlayers) {
+                if (!runner.TryGetPlayerObject(player, out NetworkObject playerObject))
+                    continue;
+
+                NetworkInventoryState inventory = playerObject.GetComponent<NetworkInventoryState>();
+
+                if (inventory != null) {
+                    inventory.TryRemoveItemById(coolantId);
+                }
+            }
+
+            // Eliminamos el objeto de red del intento.
+            runner.Despawn(coolant);
+        }
+
+        activeCoolants.Clear();
+        occupiedSpawnPoints.Clear();
+
+        Debug.Log("Refrigerantes del intento eliminados");
     }
 }

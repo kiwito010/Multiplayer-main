@@ -206,4 +206,23 @@ public class NetworkInventoryState : NetworkBehaviour {
         return false;
     }
 
+    public bool TryRemoveItemById(NetworkId itemId) {
+        if (!Object.HasStateAuthority)
+            return false;
+
+        if (itemId == default(NetworkId))
+            return false;
+
+        for (int i = 0; i < 3; i++) {
+            if (GetItemIdInSlot(i) != itemId)
+                continue;
+
+            if (EquippedSlot == i)
+                SetEquippedSlot(-1);
+
+            return TryRemoveItem(i, out NetworkId removedId);
+        }
+
+        return false;
+    }
 }
