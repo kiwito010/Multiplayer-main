@@ -254,6 +254,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1511232542588944514, guid: a85b7fce7ccf1a140b3a32b125728103, type: 3}
+      propertyPath: temperatureFill
+      value: 
+      objectReference: {fileID: 759215598017204222}
+    - target: {fileID: 1511232542588944514, guid: a85b7fce7ccf1a140b3a32b125728103, type: 3}
       propertyPath: temperatureText
       value: 
       objectReference: {fileID: 680117500884751947}
@@ -411,6 +415,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &759215598017204222 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3936871947259892243, guid: a85b7fce7ccf1a140b3a32b125728103, type: 3}
+  m_PrefabInstance: {fileID: 4335790776226160109}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!114 &2941742538557906287 stripped

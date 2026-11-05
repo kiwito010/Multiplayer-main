@@ -12,6 +12,10 @@ public class NetworkComputer : NetworkBehaviour {
 
     [Header("Temperatura")]
     [SerializeField] private float phase1HeatPerSecond = 1f;
+    [SerializeField] private float phase2HeatPerSecond = 1.5f;
+    [SerializeField] private float phase3HeatPerSecond = 2f;
+
+    [Networked] public int CurrentHackPhase { get; private set; }
 
     [SerializeField] private float qteErrorHeat = 15f;
 
@@ -51,8 +55,16 @@ public class NetworkComputer : NetworkBehaviour {
         if (!IsHackRunning || IsCompleted)
             return;
 
-        Temperature = Mathf.Min(100f, Temperature + phase1HeatPerSecond * Runner.DeltaTime);
+        float heatPerSecond = phase1HeatPerSecond;
 
+        if (CurrentHackPhase == 2) {
+            heatPerSecond = phase2HeatPerSecond;
+        } else if (CurrentHackPhase == 3) {
+            heatPerSecond = phase3HeatPerSecond;
+        }
+
+        Temperature = Mathf.Min(100f, Temperature + heatPerSecond * Runner.DeltaTime);
+       
         // Comprobar sobrecalentamiento.
         if (Temperature >= 100f) {
             PlayerRef hacker = ActiveHacker;
@@ -112,8 +124,7 @@ public class NetworkComputer : NetworkBehaviour {
             return;
         }
 
-        PlayerHUDSpawner hudSpawner =
-            playerObject.GetComponent<PlayerHUDSpawner>();
+        PlayerHUDSpawner hudSpawner = playerObject.GetComponent<PlayerHUDSpawner>();
 
         if (hudSpawner == null) {
             Debug.LogWarning("PlayerHUDSpawner no encontrado.");
@@ -137,11 +148,15 @@ public class NetworkComputer : NetworkBehaviour {
         if (localComputerUI != null) {
             localComputerUI.OnHackStarted -= HandleHackStarted;
             localComputerUI.OnHackError -= HandleHackError;
+
+            localComputerUI.OnHackPhaseChanged -= HandleHackPhaseChanged;
         }
 
         localComputerUI = computerUI;
         localComputerUI.OnHackStarted += HandleHackStarted;
         localComputerUI.OnHackError += HandleHackError;
+
+        localComputerUI.OnHackPhaseChanged += HandleHackPhaseChanged;
 
         computerUI.ShowNetwork(this);
 
@@ -229,6 +244,7 @@ public class NetworkComputer : NetworkBehaviour {
             if (ActiveHacker == Runner.LocalPlayer &&
                 !IsCompleted && !CooldownTimer.IsRunning) {
                 IsHackRunning = true;
+                CurrentHackPhase = 1;
             }
 
             return;
@@ -246,6 +262,7 @@ public class NetworkComputer : NetworkBehaviour {
             return;
 
         IsHackRunning = true;
+        CurrentHackPhase = 1;
     }
 
     private void HandleHackStarted() {
@@ -258,6 +275,8 @@ public class NetworkComputer : NetworkBehaviour {
 
         localComputerUI.OnHackStarted -= HandleHackStarted;
         localComputerUI.OnHackError -= HandleHackError;
+
+        localComputerUI.OnHackPhaseChanged -= HandleHackPhaseChanged;
         localComputerUI = null;
     }
 
@@ -325,5 +344,39 @@ public class NetworkComputer : NetworkBehaviour {
 
     private void HandleHackError() {
         RequestQTEError();
+    }
+
+    private void HandleHackPhaseChanged(int phase) {
+        RequestHackPhaseChange(phase);
+    }
+
+    private void RequestHackPhaseChange(int phase) {
+        if (Object.HasStateAuthority) {
+            ApplyHackPhaseChange(Runner.LocalPlayer, phase);
+            return;
+        }
+
+        RPC_RequestHackPhaseChange(phase);
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_RequestHackPhaseChange(int phase, RpcInfo info = default) {
+        ApplyHackPhaseChange(info.Source, phase);
+    }
+
+    private void ApplyHackPhaseChange(PlayerRef player, int phase) {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (ActiveHacker != player || !IsHackRunning ||
+            IsCompleted || CooldownTimer.IsRunning)
+            return;
+
+        if (phase < 1 || phase > 3)
+            return;
+
+        CurrentHackPhase = phase;
+
+        Debug.Log("Fase actual del hackeo: " + CurrentHackPhase);
     }
 }

@@ -4,5 +4,6 @@ public enum ItemType {
     Pliers,
     Cable,
     Tape,
-    Fuse
+    Fuse,
+    Coolant
 }

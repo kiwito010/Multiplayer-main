@@ -418,6 +418,18 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
         var data = new NetworkInputData();
+        
+        NetworkObject localPlayer = runner.GetPlayerObject(runner.LocalPlayer);
+
+        if (localPlayer != null) {
+            GameInput gameInput =
+                localPlayer.GetComponent<GameInput>();
+
+            if (gameInput != null && !gameInput.IsMovementEnabled()) {
+                input.Set(data);
+                return;
+            }
+        }
 
         data.moveDirection = new Vector2(
             Input.GetAxisRaw("Horizontal"),

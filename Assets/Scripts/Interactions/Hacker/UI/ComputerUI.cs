@@ -20,14 +20,21 @@ public class ComputerUI : MonoBehaviour
     [SerializeField] private Slider temperatureSlider;
     [SerializeField] private TextMeshProUGUI temperatureText;
 
+    [SerializeField] private Image temperatureFill;
+    
+    //Events
     public event System.Action OnHackStarted;
     public event System.Action OnHackError;
+
+    public event System.Action<int> OnHackPhaseChanged;
 
     private void OnEnable() {
         hackerTypingText.OnSuccess += HackerSuccess;
         hackerTypingText.OnFailure += HackerFailure;
 
         hackerTypingText.OnQTEFailed += HandleQTEFailed;
+
+        hackerTypingText.OnPhaseChanged += HandlePhaseChanged;
     }
 
     private void OnDisable() {
@@ -35,6 +42,8 @@ public class ComputerUI : MonoBehaviour
         hackerTypingText.OnFailure -= HackerFailure;
 
         hackerTypingText.OnQTEFailed -= HandleQTEFailed;
+
+        hackerTypingText.OnPhaseChanged -= HandlePhaseChanged;
     }
 
     public void InitializeNetwork(PlayerManager playerManager, GameInput gameInput) {
@@ -100,6 +109,26 @@ public class ComputerUI : MonoBehaviour
 
         if (temperatureText != null)
             temperatureText.text = "TEMPERATURA " + Mathf.RoundToInt(temperature) + "%";
+
+        Color temperatureColor;
+
+        if (temperature >= 80f) {
+            temperatureColor = Color.red;
+        } else if (temperature >= 50f) {
+            temperatureColor = Color.yellow;
+        } else {
+            temperatureColor = Color.green;
+        }
+
+        if (temperatureFill != null) {
+            temperatureFill.color = temperatureColor;
+        }
+
+        if (temperatureText != null) {
+            temperatureText.color = temperatureColor;
+            temperatureText.text =
+                "TEMPERATURA " + Mathf.RoundToInt(temperature) + "%";
+        }
     }
 
     public void ShowSuccessPanel() {
@@ -192,5 +221,9 @@ public class ComputerUI : MonoBehaviour
             networkPlayerManager.ExitUIMode();
 
         Hide();
+    }
+
+    private void HandlePhaseChanged(int phase) {
+        OnHackPhaseChanged?.Invoke(phase);
     }
 }

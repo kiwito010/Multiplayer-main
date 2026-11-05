@@ -47,17 +47,19 @@ public class HackerTypingText : MonoBehaviour {
     private string textBeforeQTE;
     private char currentQTECharacter;
 
+    //progress and errors
+    [SerializeField] private TextMeshProUGUI progressText;
+
+    private int typedCharacters;
+    private int totalCharacters;
+    
     //EVENTOS:
     public event System.Action OnSuccess;
     public event System.Action OnFailure;
 
     public event System.Action OnQTEFailed;
 
-    //progress and errors
-    [SerializeField] private TextMeshProUGUI progressText;
-
-    private int typedCharacters;
-    private int totalCharacters;
+    public event System.Action<int> OnPhaseChanged;
 
     private void Update() {
         if (!waitingForKey)
@@ -240,15 +242,21 @@ public class HackerTypingText : MonoBehaviour {
     private IEnumerator RunMinigame() { 
         currentPhase = 1;
         SetDifficulty(currentPhase);
+        OnPhaseChanged?.Invoke(currentPhase);
+
+
         yield return StartCoroutine(TypeText(phase1Text));
 
         currentPhase = 2;
         SetDifficulty(currentPhase);
+        OnPhaseChanged?.Invoke(currentPhase);
 
         yield return StartCoroutine(TypeText(phase2Text));
 
         currentPhase = 3;
         SetDifficulty(currentPhase);
+        OnPhaseChanged?.Invoke(currentPhase);
+
         yield return StartCoroutine(TypeText(phase3Text));
 
         OnSuccess?.Invoke();
