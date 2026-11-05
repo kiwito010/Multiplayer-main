@@ -158,7 +158,6 @@ public class ComputerUI : MonoBehaviour
     private void HackerSuccess() {
         if (networkComputer != null) {
             networkComputer.RequestCompleteHack();
-            ShowSuccessPanel();
             return;
         }
 
@@ -225,5 +224,12 @@ public class ComputerUI : MonoBehaviour
 
     private void HandlePhaseChanged(int phase) {
         OnHackPhaseChanged?.Invoke(phase);
+    }
+
+    public void ConfirmNetworkHackSuccess(NetworkComputer source) {
+        if (networkComputer != source)
+            return;
+
+        ShowSuccessPanel();
     }
 }

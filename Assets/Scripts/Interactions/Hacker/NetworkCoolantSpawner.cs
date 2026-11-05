@@ -138,4 +138,11 @@ public class NetworkCoolantSpawner : MonoBehaviour {
 
         Debug.Log("Refrigerantes del intento eliminados");
     }
+
+    public bool IsActiveCoolant(NetworkObject coolant) {
+        return coolant != null &&
+               coolant.IsValid &&
+               spawningActive &&
+               activeCoolants.Contains(coolant);
+    }
 }

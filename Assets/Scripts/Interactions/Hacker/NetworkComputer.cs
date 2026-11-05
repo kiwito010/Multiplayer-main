@@ -19,6 +19,8 @@ public class NetworkComputer : NetworkBehaviour {
 
     [SerializeField] private float qteErrorHeat = 15f;
 
+    [SerializeField] private float coolantFreeze = 30f;
+
     [Networked] public float Temperature { get; private set; }
 
     [Networked] public NetworkBool IsHackRunning { get; private set; }
@@ -216,6 +218,11 @@ public class NetworkComputer : NetworkBehaviour {
             IsCompleted = true;
             IsHackRunning = false;
 
+            if (coolantSpawner != null)
+                coolantSpawner.StopSpawning();
+
+            RPC_ConfirmHackSuccess(ActiveHacker);
+
             Debug.Log("Hackeo completado por el Host");
             return;
         }
@@ -238,6 +245,11 @@ public class NetworkComputer : NetworkBehaviour {
 
         IsCompleted = true;
         IsHackRunning = false;
+
+        if (coolantSpawner != null)
+            coolantSpawner.StopSpawning();
+
+        RPC_ConfirmHackSuccess(ActiveHacker);
 
         Debug.Log("Hackeo completado en multiplayer por " + info.Source);
     }
@@ -292,6 +304,9 @@ public class NetworkComputer : NetworkBehaviour {
     private void StartCooldown(float duration) {
         if (!Object.HasStateAuthority)
             return;
+
+        if (coolantSpawner != null)
+            coolantSpawner.StopSpawning();
 
         IsHackRunning = false;
         ActiveHacker = PlayerRef.None;
@@ -387,5 +402,31 @@ public class NetworkComputer : NetworkBehaviour {
         CurrentHackPhase = phase;
 
         Debug.Log("Fase actual del hackeo: " + CurrentHackPhase);
+    }
+
+    public bool TryApplyCoolant() {
+        if (!Object.HasStateAuthority)
+            return false;
+
+        if (!IsHackRunning || IsCompleted || CooldownTimer.IsRunning)
+            return false;
+
+        Temperature = Mathf.Max(0f, Temperature - coolantFreeze);
+
+        Debug.Log("Refrigerante depositado. Temperatura: " +
+                  Temperature.ToString("F1") + "%");
+
+        return true;
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_ConfirmHackSuccess(PlayerRef hacker) {
+        if (Runner.LocalPlayer != hacker)
+            return;
+
+        if (localComputerUI == null)
+            return;
+
+        localComputerUI.ConfirmNetworkHackSuccess(this);
     }
 }
