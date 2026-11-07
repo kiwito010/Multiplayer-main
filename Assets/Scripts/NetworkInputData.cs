@@ -30,4 +30,7 @@ public struct NetworkInputData : INetworkInput
 
     // True mientras el jugador mantiene apretada la tecla de crouch.
     public NetworkBool crouchPressed;
+    
+    // True mientras el jugador mantiene apretada la tecla de prone.
+    public NetworkBool pronePressed;
 }

@@ -415,36 +415,49 @@ public class NetworkManagerFusion : MonoBehaviour, INetworkRunnerCallbacks
     //  RECOLECCIÓN DE INPUT
     // ---------------------------------------------------------
 
-    public void OnInput(NetworkRunner runner, NetworkInput input)
-    {
+
+    public void OnInput(NetworkRunner runner, NetworkInput input) {
         var data = new NetworkInputData();
-        
-        NetworkObject localPlayer = runner.GetPlayerObject(runner.LocalPlayer);
 
-        if (localPlayer != null) {
-            GameInput gameInput =
-                localPlayer.GetComponent<GameInput>();
+        NetworkObject localPlayer =
+            runner.GetPlayerObject(runner.LocalPlayer);
 
-            if (gameInput != null && !gameInput.IsMovementEnabled()) {
-                input.Set(data);
-                return;
-            }
+        if (localPlayer == null) {
+            input.Set(data);
+            return;
         }
 
-        data.moveDirection = new Vector2(
-            Input.GetAxisRaw("Horizontal"),
-            Input.GetAxisRaw("Vertical")
-        );
+        GameInput gameInput = localPlayer.GetComponent<GameInput>();
 
-        data.lookYaw = Input.GetAxis("Mouse X");
-        data.lookPitch = Input.GetAxis("Mouse Y");
+        if (gameInput == null) {
+            input.Set(data);
+            return;
+        }
 
-        data.useButtonPressed = Input.GetKey(KeyCode.E);
-        data.sprintPressed = Input.GetKey(KeyCode.LeftShift);
-        data.jumpPressed = Input.GetKey(KeyCode.Space);
+        // Respetar el bloqueo de movimiento al abrir una UI.
+        if (!gameInput.IsMovementEnabled()) {
+            input.Set(data);
+            return;
+        }
+
+        // Movimiento y cámara.
+        data.moveDirection = gameInput.GetMovementVector();
+
+        Vector2 lookInput = gameInput.GetLookVector();
+
+        data.lookYaw = lookInput.x;
+        data.lookPitch = lookInput.y;
+
+        // Acciones del jugador.
+        data.useButtonPressed = gameInput.GetInteractHeld();
+        data.sprintPressed = gameInput.GetSprintPressed();
+        data.jumpPressed = gameInput.GetJumpHeld();
+        data.crouchPressed = gameInput.GetCrouchHeld();
+        data.pronePressed = gameInput.GetProneHeld();
 
         input.Set(data);
     }
+
 
     // Callbacks vacíos obligatorios de la interfaz INetworkRunnerCallbacks
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }

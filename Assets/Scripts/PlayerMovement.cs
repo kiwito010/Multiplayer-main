@@ -10,6 +10,8 @@ using UnityEngine;
 //  - El sprint y la stamina de PlayerMovementSingle, adaptados a la red.
 public class PlayerMovement : NetworkBehaviour
 {
+    private PlayerClimb playerClimb;
+
     // Acceso rápido al jugador LOCAL (el tuyo). Sirve para que la UI de
     // stamina encuentre al jugador, que aparece en runtime y no se puede
     // arrastrar en el Inspector. Es null hasta que tu jugador aparece.
@@ -18,7 +20,8 @@ public class PlayerMovement : NetworkBehaviour
     [Header("Configuración de movimiento")]
     public float moveSpeed = 5f;                       // CONFIRMAR: velocidad de caminata de PlayerMovementSingle
     [SerializeField] private float sprintSpeed = 8.5f; // CONFIRMAR: velocidad de sprint de PlayerMovementSingle
-    public float lookSensitivity = 2f;                 // Qué tan rápido gira la cámara con el mouse
+    public float lookSensitivity = 1f;                 // Qué tan rápido gira la cámara con el mouse
+    [SerializeField] private float mouseInputScale = 0.05f;
 
     [Header("Salto")]
     [SerializeField] private float jumpForce = 5f;          // CONFIRMAR: fuerza de salto
@@ -30,8 +33,10 @@ public class PlayerMovement : NetworkBehaviour
     [SerializeField] private float crouchTransitionSpeed = 8f;
 
     private float standingHeight;
+    private float standingRadius;
     private Vector3 standingCenter;
     private Vector3 standingCameraPosition;
+
 
     [Networked] private NetworkBool isCrouching { get; set; }
     [Networked] private NetworkBool crouchWasPressed { get; set; }
@@ -68,10 +73,26 @@ public class PlayerMovement : NetworkBehaviour
     // saltar UNA vez por pulsación y no seguir saltando mientras la mantenés.
     [Networked] private NetworkBool JumpWasPressed { get; set; }
 
+    [Header("Prone")]
+    [SerializeField] private float proneHeight = 0.5f;
+    [SerializeField] private float proneSpeed = 1.5f;
+    [SerializeField] private float proneRadius = 0.2f;
+
+    [Header("Colisión horizontal de Prone")]
+    [SerializeField] private float proneBodyLength = 1.6f;
+    [SerializeField] private float proneBodyRadius = 0.22f;
+    [SerializeField] private float proneGroundClearance = 0.05f;
+    [SerializeField] private LayerMask proneCollisionLayers = ~0;
+
+    [Networked] private NetworkBool isProne { get; set; }
+    [Networked] private NetworkBool proneWasPressed { get; set; }
+
     // Spawned() se llama UNA sola vez, apenas este objeto aparece en la red.
     public override void Spawned()
     {
         _characterController = GetComponent<CharacterController>();
+
+        playerClimb = GetComponent<PlayerClimb>();
 
         // Si cameraPivot esta vacio o apunta a algo que no es hijo de ESTE
         // jugador (ej: el prefab del Project), usamos la camara propia.
@@ -82,6 +103,7 @@ public class PlayerMovement : NetworkBehaviour
         }
 
         standingHeight = _characterController.height;
+        standingRadius = _characterController.radius;
         standingCenter = _characterController.center;
 
         if (cameraPivot != null) {
@@ -132,27 +154,54 @@ public class PlayerMovement : NetworkBehaviour
             bool crouchDown = input.crouchPressed && !crouchWasPressed;
             crouchWasPressed = input.crouchPressed;
 
-            if (crouchDown) {
-                if (isCrouching) {
-                    if (CanStandUp()) {
-                        isCrouching = false;
+            bool proneDown = input.pronePressed && !proneWasPressed;
+            proneWasPressed = input.pronePressed;
+            
+            if (playerClimb == null || !playerClimb.IsClimbing) {
+            
+                if (proneDown) {
+                    if (!isProne) {
+                        if (CanFitProneAt(transform.position)) {
+                            isProne = true;
+                            isCrouching = false;
+                        }
+                    } else if (CanStandUp()) {
+                        isProne = false;
                     }
-                } else {
-                    isCrouching = true;
+                }
+
+                if (crouchDown) {
+                    if (isProne) {
+                        if (CanUseHeight(crouchHeight)) {
+                            isProne = false;
+                            isCrouching = true;
+                        }
+                    } else if (isCrouching) {
+                        if (CanStandUp())
+                            isCrouching = false;
+                    } else {
+                        isCrouching = true;
+                    }
                 }
             }
 
             // --- ROTACIÓN HORIZONTAL (girar el cuerpo) ---
-            float yaw = input.lookYaw * lookSensitivity;
-            transform.Rotate(0, yaw, 0);
+            float yaw = input.lookYaw * lookSensitivity * mouseInputScale;
+            transform.Rotate(0f, yaw, 0f);
+
 
             // --- ROTACIÓN VERTICAL (mirar arriba/abajo, solo la cámara) ---
-            NetworkedPitch -= input.lookPitch * lookSensitivity;
+            NetworkedPitch -= input.lookPitch * lookSensitivity * mouseInputScale;
             NetworkedPitch = Mathf.Clamp(NetworkedPitch, -80f, 80f);
 
             if (cameraPivot != null)
             {
                 cameraPivot.localRotation = Quaternion.Euler(NetworkedPitch, 0, 0);
+            }
+
+            if (playerClimb != null && playerClimb.IsClimbing) {
+                HandleClimbing(input);
+                return;
             }
 
             // --- MOVIMIENTO HORIZONTAL ---
@@ -163,8 +212,11 @@ public class PlayerMovement : NetworkBehaviour
             HandleSprint(input, Runner.DeltaTime);
 
             // Igual que en el script viejo: si está en sprint usa sprintSpeed.
-            float currentSpeed = isCrouching ? crouchSpeed : (IsSprinting ? sprintSpeed : moveSpeed);
-            
+            float currentSpeed = isProne
+                ? proneSpeed
+                : isCrouching
+                    ? crouchSpeed
+                    : IsSprinting ? sprintSpeed : moveSpeed;
             // --- GRAVEDAD ---
             if (IsGrounded)
             {
@@ -182,8 +234,8 @@ public class PlayerMovement : NetworkBehaviour
             bool jumpDown = input.jumpPressed && !JumpWasPressed;
             JumpWasPressed = input.jumpPressed;
 
-            if (jumpDown && IsGrounded && !EmptyStamina)
-            {
+            if (jumpDown && IsGrounded && !EmptyStamina &&
+                !isProne && !isCrouching) {
                 CurrentStamina = Mathf.Max(0f, CurrentStamina - jumpStaminaCost);
                 VerticalVelocity = jumpForce;
             }
@@ -199,8 +251,33 @@ public class PlayerMovement : NetworkBehaviour
             Physics.SyncTransforms();
 
             // Movimiento horizontal + caída vertical en un solo Move().
-            Vector3 finalMove = (moveDirection * currentSpeed) + (Vector3.up * VerticalVelocity);
-            _characterController.Move(finalMove * Runner.DeltaTime);
+            Vector3 horizontalMove = moveDirection * currentSpeed * Runner.DeltaTime;
+
+            if (isProne && horizontalMove.sqrMagnitude > 0.000001f) {
+                // Comprobar el volumen del cuerpo en el destino.
+                // Dividir el avance evita saltarse obstáculos delgados.
+                float distance = horizontalMove.magnitude;
+                int steps = Mathf.CeilToInt(distance / 0.05f);
+
+                Vector3 step = horizontalMove / steps;
+                Vector3 allowedMove = Vector3.zero;
+
+                for (int i = 0; i < steps; i++) {
+                    Vector3 candidate = transform.position + allowedMove + step;
+
+                    if (!CanFitProneAt(candidate))
+                        break;
+
+                    allowedMove += step;
+                }
+
+                horizontalMove = allowedMove;
+            }
+
+            Vector3 verticalMove =
+                Vector3.up * VerticalVelocity * Runner.DeltaTime;
+
+            _characterController.Move(horizontalMove + verticalMove);
 
             // Guardamos si quedamos en el piso para el próximo tick.
             IsGrounded = _characterController.isGrounded;
@@ -229,15 +306,14 @@ public class PlayerMovement : NetworkBehaviour
         // NOTA: el original también pedía "&& !isCrouching && !isProne".
         // Esas variables están en la parte del script que no me pasaste;
         // cuando agreguemos agacharse/boca abajo se suman acá.
-        if (input.sprintPressed && !isCrouching && isMovingForward && CurrentStamina > 0f)        {
+        if (input.sprintPressed && !isCrouching && !isProne && isMovingForward && CurrentStamina > 0f) { 
             IsSprinting = true;
 
-            if (IsGrounded)
-            {
+            if (IsGrounded) {
                 CurrentStamina -= dt;
             }
-            if (CurrentStamina <= 0f)
-            {
+
+            if (CurrentStamina <= 0f) {
                 CurrentStamina = 0f;
                 IsSprinting = false;
                 EmptyStamina = true;
@@ -279,22 +355,29 @@ public class PlayerMovement : NetworkBehaviour
     }
 
     private void ApplyCrouch() {
-    if (_characterController == null)
-        return;
+        if (_characterController == null)
+            return;
 
-        float targetHeight = isCrouching ? crouchHeight : standingHeight;
+        float targetHeight = standingHeight;
 
-        targetHeight = Mathf.Max(
-            targetHeight,
-            _characterController.radius * 2f
-        );
+        if (isProne) {
+            targetHeight = proneHeight;
+        } else if (isCrouching) {
+            targetHeight = crouchHeight;
+        }
+
+        float targetRadius = isProne ? proneRadius : standingRadius;
+
+        _characterController.radius = targetRadius;
+
+        targetHeight = Mathf.Max(targetHeight, targetRadius * 2f);
 
         float heightDifference = standingHeight - targetHeight;
 
         _characterController.height = targetHeight;
 
         _characterController.center =
-        standingCenter + Vector3.down * (heightDifference / 2f);
+            standingCenter + Vector3.down * (heightDifference / 2f);
     }
 
     public override void Render() {
@@ -308,15 +391,29 @@ public class PlayerMovement : NetworkBehaviour
     }
 
     private void UpdateCrouchCamera() {
-        if (cameraPivot == null)
+        if (cameraPivot == null || _characterController == null)
             return;
 
-        float heightDifference =
-            standingHeight - Mathf.Max(crouchHeight, _characterController.radius * 2f);
+        float targetHeight = standingHeight;
 
-        Vector3 targetPosition = isCrouching
-            ? standingCameraPosition + Vector3.down * (heightDifference / 2f)
-            : standingCameraPosition;
+        if (isProne) {
+            targetHeight = proneHeight;
+        } else if (isCrouching) {
+            targetHeight = crouchHeight;
+        }
+
+        targetHeight = Mathf.Max(
+            targetHeight,
+            _characterController.radius * 2f
+        );
+
+        Vector3 targetPosition = standingCameraPosition;
+
+        if (isProne) {
+            targetPosition += Vector3.down * 0.95f;
+        } else if (isCrouching) {
+            targetPosition += Vector3.down * 0.5f;
+        }
 
         float smoothFactor = 1f -
             Mathf.Exp(-crouchTransitionSpeed * Time.deltaTime);
@@ -328,20 +425,27 @@ public class PlayerMovement : NetworkBehaviour
         );
     }
 
-
     private bool CanStandUp() {
+        return CanUseHeight(standingHeight);
+    }
+
+    private bool CanUseHeight(float desiredHeight) {
         if (_characterController == null)
             return false;
 
-        float radius = Mathf.Max(0.01f, _characterController.radius - 0.02f);
+        float radius = Mathf.Max(0.01f, standingRadius - 0.02f);
 
-        float halfSegment = Mathf.Max(
-            0f,
-            standingHeight / 2f - radius
-        );
+        float height = Mathf.Max(desiredHeight, standingRadius * 2f);
 
-        Vector3 center = transform.TransformPoint(standingCenter);
+        float heightDifference = standingHeight - height;
+
+        Vector3 targetCenter =
+            standingCenter + Vector3.down * (heightDifference / 2f);
+
+        Vector3 center = transform.TransformPoint(targetCenter);
         Vector3 up = transform.up;
+
+        float halfSegment = Mathf.Max(0f, height / 2f - radius);
 
         Vector3 bottom = center - up * halfSegment;
         Vector3 top = center + up * halfSegment;
@@ -358,14 +462,199 @@ public class PlayerMovement : NetworkBehaviour
             if (hit.transform.IsChildOf(transform))
                 continue;
 
-            // Ignoramos el suelo que ya está debajo del personaje.
-            if (hit.bounds.max.y <= _characterController.bounds.min.y + 0.05f)
+            if (hit.bounds.max.y <=
+                _characterController.bounds.min.y + 0.05f)
                 continue;
 
             return false;
         }
 
         return true;
+    }
+
+    private bool CanFitProneAt(Vector3 rootPosition) {
+        float radius = proneBodyRadius;
+
+        float halfSegment =
+            Mathf.Max(0f, proneBodyLength * 0.5f - radius);
+
+        Vector3 feetPosition = rootPosition +
+            transform.rotation * (
+                standingCenter - Vector3.up * (standingHeight * 0.5f)
+            );
+
+        Vector3 center = feetPosition +
+            Vector3.up * (radius + proneGroundClearance);
+
+        Vector3 forward = transform.forward;
+
+        Vector3 front = center + forward * halfSegment;
+        Vector3 back = center - forward * halfSegment;
+
+        Collider[] hits = Physics.OverlapCapsule(
+            front,
+            back,
+            radius,
+            proneCollisionLayers,
+            QueryTriggerInteraction.Ignore
+        );
+
+        foreach (Collider hit in hits) {
+            if (hit.transform.IsChildOf(transform))
+                continue;
+
+            // Ignorar el suelo debajo del cuerpo.
+            if (hit.bounds.max.y <=
+                center.y - radius + 0.02f)
+                continue;
+
+            return false;
+        }
+
+        return true;
+    }
+
+    public bool CanStartClimb() {
+        return !isProne && !isCrouching;
+    }
+
+    public void SnapToClimbPoint(Vector3 position) {
+        if (!Object.HasStateAuthority)
+            return;
+
+        _characterController.enabled = false;
+        transform.position = position;
+        VerticalVelocity = 0f;
+        IsGrounded = false;
+        _characterController.enabled = true;
+
+        Physics.SyncTransforms();
+    }
+
+
+    private void HandleClimbing(NetworkInputData input) {
+        ClimbableWall wall = playerClimb.GetCurrentWall();
+
+        if (wall == null) {
+            playerClimb.StopClimbing();
+            return;
+        }
+
+        // Cancelar escalada con Jump.
+        bool jumpDown = input.jumpPressed && !JumpWasPressed;
+        JumpWasPressed = input.jumpPressed;
+
+        if (jumpDown) {
+            playerClimb.StopClimbing();
+            VerticalVelocity = 0f;
+            return;
+        }
+
+        // Obtener el collider principal de la pared.
+        Collider wallCollider = wall.GetClimbCollider();
+
+        if (wallCollider == null) {
+            playerClimb.StopClimbing();
+            return;
+        }
+
+        // Detectar de qué lado de la pared está el jugador.
+        Vector3 wallNormal = wall.GetWallNormal();
+
+        if (Vector3.Dot(
+            transform.position - wallCollider.bounds.center,
+            wallNormal
+        ) < 0f) {
+            wallNormal = -wallNormal;
+        }
+
+        // Calcular el eje lateral de la pared.
+        Vector3 wallRight =
+            Vector3.Cross(wallNormal, Vector3.up).normalized;
+
+        // Movimiento vertical y lateral.
+        Vector2 movement = input.moveDirection;
+
+        Vector3 climbDirection =
+            Vector3.up * movement.y +
+            wallRight * movement.x;
+
+        climbDirection = Vector3.ClampMagnitude(climbDirection, 1f);
+
+        Vector3 displacement =
+            climbDirection *
+            playerClimb.ClimbSpeed *
+            Runner.DeltaTime;
+
+        // Mantener una distancia constante de la pared.
+        Vector3 closestPoint =
+            wallCollider.ClosestPoint(transform.position);
+
+        float desiredDistance =
+            _characterController.radius + 0.08f;
+
+        float currentDistance = Vector3.Dot(
+            transform.position - closestPoint,
+            wallNormal
+        );
+
+        float correction = desiredDistance - currentDistance;
+
+        displacement += wallNormal * Mathf.Clamp(
+            correction,
+            -0.1f,
+            0.1f
+        );
+
+        // Comprobar límites de la pared.
+        Bounds bounds = wallCollider.bounds;
+        Vector3 nextPosition = transform.position + displacement;
+
+        Vector3 min = bounds.min;
+        Vector3 max = bounds.max;
+
+        float minSide = float.PositiveInfinity;
+        float maxSide = float.NegativeInfinity;
+
+        for (int x = 0; x <= 1; x++) {
+            for (int y = 0; y <= 1; y++) {
+                for (int z = 0; z <= 1; z++) {
+                    Vector3 corner = new Vector3(
+                        x == 0 ? min.x : max.x,
+                        y == 0 ? min.y : max.y,
+                        z == 0 ? min.z : max.z
+                    );
+
+                    float side = Vector3.Dot(corner, wallRight);
+
+                    minSide = Mathf.Min(minSide, side);
+                    maxSide = Mathf.Max(maxSide, side);
+                }
+            }
+        }
+
+        // Limitar movimiento lateral.
+        float nextSide = Vector3.Dot(nextPosition, wallRight);
+
+        if (nextSide < minSide || nextSide > maxSide) {
+            displacement -= wallRight *
+                Vector3.Dot(displacement, wallRight);
+        }
+
+        // Limitar movimiento vertical.
+        float nextHeight = transform.position.y + displacement.y;
+
+        if (nextHeight < bounds.min.y ||
+            nextHeight > bounds.max.y) {
+            displacement.y = 0f;
+        }
+
+        // Suspender el movimiento normal durante Climb.
+        VerticalVelocity = 0f;
+        IsGrounded = false;
+        IsSprinting = false;
+
+        _characterController.Move(displacement);
     }
 
 }

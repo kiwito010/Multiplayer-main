@@ -30,6 +30,7 @@ GameObject:
   - component: {fileID: 5929863179036005411}
   - component: {fileID: 5399584914498722756}
   - component: {fileID: 6557912639633232266}
+  - component: {fileID: 2084861613334231569}
   m_Layer: 0
   m_Name: PlayerFPS
   m_TagString: Untagged
@@ -157,6 +158,7 @@ MonoBehaviour:
   - {fileID: 2091209199481128925}
   - {fileID: 5929863179036005411}
   - {fileID: 6557912639633232266}
+  - {fileID: 2084861613334231569}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &5397311817566387592
 MonoBehaviour:
@@ -228,12 +230,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 5
   sprintSpeed: 8.5
-  lookSensitivity: 2
+  lookSensitivity: 1
+  mouseInputScale: 0.05
   jumpForce: 5
   jumpStaminaCost: 1
+  crouchHeight: 1
+  crouchSpeed: 3
+  crouchTransitionSpeed: 8
   maxStamina: 5
   staminaRechargeSpeed: 1
   cameraPivot: {fileID: 4916090557827576219}
+  proneHeight: 0.5
+  proneSpeed: 1.5
+  proneRadius: 0.2
+  proneBodyLength: 1.6
+  proneBodyRadius: 0.22
+  proneGroundClearance: 0.05
+  proneCollisionLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
 --- !u!114 &4516032627377954848
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -252,6 +267,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1600
   useRate: 0.2
+  debugLogs: 1
 --- !u!114 &-6935682901151754486
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -380,7 +396,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerCamera: {fileID: 3018098544571956420}
-  cameraTransform: {fileID: 4916090557827576219}
   normalFov: 60
   diagnosticFov: 35
   diagnosticLayerMask:
@@ -436,6 +451,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 47c6bf632560a9a4083aab920e930b12, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &2084861613334231569
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 378695112004466499}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05d84378d93477b4a85180094c8793e2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  climbSpeed: 3
+  topExitOffset: 0.2
 --- !u!1001 &4264906278637596370
 PrefabInstance:
   m_ObjectHideFlags: 0

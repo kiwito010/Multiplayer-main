@@ -33,6 +33,8 @@ public class PlayerNetworkInteraction : NetworkBehaviour
     // Frame de Unity en el que se mandó el último aviso (ver FixedUpdateNetwork).
     private int _lastNotifyFrame = -1;
 
+    [Networked] private NetworkBool useWasPressed { get; set; }
+
     private void Log(string message)
     {
         if (debugLogs) Debug.Log("[PlayerNetworkInteraction] " + message);
@@ -50,29 +52,22 @@ public class PlayerNetworkInteraction : NetworkBehaviour
         }
     }
 
-
-
-
     public override void FixedUpdateNetwork() {
         if (!Object.HasInputAuthority)
             return;
 
-        if (GetInput(out NetworkInputData input)) {
-            if (input.useButtonPressed) {
-                // Cuando Fusion corrige la predicción vuelve a simular ticks que ya
-                // pasaron, dentro del mismo frame. Sin esta guarda, un solo apretado
-                // mandaría el aviso varias veces.
-                if (Time.frameCount == _lastNotifyFrame) return;
-                _lastNotifyFrame = Time.frameCount;
+        if (!GetInput(out NetworkInputData input))
+            return;
 
-                TryDetectAndNotify();
-            }
+        bool pressed = input.useButtonPressed;
+        bool justPressed = pressed && !useWasPressed;
+
+        useWasPressed = pressed;
+
+        if (justPressed) {
+            TryDetectAndNotify();
         }
     }
-
-
-
-
 
     private void TryDetectAndNotify()
     {

@@ -215,7 +215,11 @@ public class CableRepairMinigame : MonoBehaviour, IRepairMinigame {
         //componentes
         brokenCable.SetActive(!(currentPhase == RepairPhase.CutBrokenCable));
         //newCable
-        newCable.SetActive(!(leftTwisted && rightTwisted));
+        bool cableInstalled = currentComponent != null && currentComponent.cableInstalled;
+
+        bool showNewCable = !(leftTwisted && rightTwisted) && (HasRequiredCable() || cableInstalled);
+
+        newCable.SetActive(showNewCable);
 
         leftCable.SetActive(!leftTwisted);
         rightCable.SetActive(!rightTwisted);

@@ -31,6 +31,10 @@ public class GameInput : MonoBehaviour
         return inputActions.Player.Interact.WasPressedThisFrame();
     }
 
+    public bool GetInteractHeld() {
+        return inputActions.Player.Interact.IsPressed();
+    }
+
     public bool GetExitPressed() { 
         return inputActions.Player.ExitComputer.WasPressedThisFrame();
     }
@@ -43,6 +47,10 @@ public class GameInput : MonoBehaviour
         return inputActions.Player.Jump.WasPressedThisFrame();
     }
 
+    public bool GetJumpHeld() {
+        return inputActions.Player.Jump.IsPressed();
+    }
+
     public bool GetCrouchPressed() {
         return inputActions.Player.Crouch.WasPressedThisFrame();
     }
@@ -53,6 +61,10 @@ public class GameInput : MonoBehaviour
 
     public bool GetPronePressed() {
         return inputActions.Player.Prone.WasPressedThisFrame();
+    }
+
+    public bool GetProneHeld() {
+        return inputActions.Player.Prone.IsPressed();
     }
 
     public bool GetSprintPressed() {

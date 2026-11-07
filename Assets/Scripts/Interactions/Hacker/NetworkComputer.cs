@@ -34,6 +34,14 @@ public class NetworkComputer : NetworkBehaviour {
     [Header("Refrigerantes")]
     [SerializeField] private NetworkCoolantSpawner coolantSpawner;
 
+    [Header("Misión 2")]
+    [SerializeField] private TaskManager taskManager;
+    [SerializeField] private TaskData hackTask;
+
+    [SerializeField] private RepairableComponent generator;
+
+    [Networked] public NetworkBool IsUnlocked { get; private set; }
+
     // MÉTODOS:
 
     public override void Spawned() {
@@ -48,6 +56,18 @@ public class NetworkComputer : NetworkBehaviour {
         if (!Object.HasStateAuthority)
             return;
 
+        if (!IsUnlocked &&
+            generator != null &&
+            generator.Object != null &&
+            generator.Object.IsValid &&
+            generator.IsRepaired()) {
+
+            IsUnlocked = true;
+
+            RegisterHackTask();
+
+            Debug.Log("Misión 2 desbloqueada");
+        }
         // Comprobar si terminó el enfriamiento.
         if (CooldownTimer.Expired(Runner)) {
             FinishCooldown();
@@ -91,6 +111,9 @@ public class NetworkComputer : NetworkBehaviour {
 
     private void HandleInteraction(PlayerRef player, NetworkObject target) {
         if (!Object.HasStateAuthority)
+            return;
+
+        if (!IsUnlocked)
             return;
 
         if (target != Object)
@@ -218,6 +241,8 @@ public class NetworkComputer : NetworkBehaviour {
             IsCompleted = true;
             IsHackRunning = false;
 
+            CompleteHackTask();
+
             if (coolantSpawner != null)
                 coolantSpawner.StopSpawning();
 
@@ -246,6 +271,8 @@ public class NetworkComputer : NetworkBehaviour {
         IsCompleted = true;
         IsHackRunning = false;
 
+        CompleteHackTask();
+
         if (coolantSpawner != null)
             coolantSpawner.StopSpawning();
 
@@ -256,8 +283,11 @@ public class NetworkComputer : NetworkBehaviour {
 
     public void RequestStartHack() {
         if (Object.HasStateAuthority) {
-            if (ActiveHacker == Runner.LocalPlayer &&
-                !IsCompleted && !CooldownTimer.IsRunning) {
+            if (IsUnlocked &&
+                ActiveHacker == Runner.LocalPlayer &&
+                !IsCompleted &&
+                !CooldownTimer.IsRunning) {
+
                 IsHackRunning = true;
                 CurrentHackPhase = 1;
 
@@ -276,7 +306,10 @@ public class NetworkComputer : NetworkBehaviour {
         if (!Object.HasStateAuthority)
             return;
 
-        if (IsCompleted || CooldownTimer.IsRunning || ActiveHacker != info.Source)
+        if (!IsUnlocked ||
+            IsCompleted ||
+            CooldownTimer.IsRunning ||
+            ActiveHacker != info.Source)
             return;
 
         IsHackRunning = true;
@@ -429,4 +462,31 @@ public class NetworkComputer : NetworkBehaviour {
 
         localComputerUI.ConfirmNetworkHackSuccess(this);
     }
+
+    private void RegisterHackTask() {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (taskManager == null || hackTask == null)
+            return;
+
+        if (taskManager.GetActiveTasks().Contains(hackTask))
+            return;
+
+        taskManager.AddTask(hackTask);
+    }
+
+    private void CompleteHackTask() {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (taskManager == null || hackTask == null)
+            return;
+
+        if (!taskManager.GetActiveTasks().Contains(hackTask))
+            return;
+
+        taskManager.CompleteTask(hackTask);
+    }
+
 }
