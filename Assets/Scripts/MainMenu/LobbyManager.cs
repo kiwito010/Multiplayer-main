@@ -24,8 +24,8 @@ public class LobbyManager : NetworkBehaviour
     [SerializeField] private Button changeColorButton;      // cambiar de personaje
     [SerializeField] private Button leaveButton;
 
-    [Header("Cantidad de jugadores")]
-    [SerializeField] private TMP_Text playersCountText;   // opcional: muestra, por ejemplo, "2/3"
+    [Header("Botón Empezar")]
+    // Color del botón mientras no estén todos los jugadores (sigue recibiendo el click para avisar por qué).
     [SerializeField] private Color startDisabledColor = new Color(0.5f, 0.5f, 0.5f, 1f);
 
     [Header("Popup de confirmación (Salir)")]
@@ -43,15 +43,9 @@ public class LobbyManager : NetworkBehaviour
     [Header("Personajes (0=Ingeniero, 1=Hacker, 2=Exploradora)")]
     [SerializeField] private Sprite[] characterPortraits;
     [SerializeField] private string[] characterNames = { "Ingeniero", "Hacker", "Exploradora" };
-        [Header("Filas de jugadores")]
+
+    [Header("Filas de jugadores")]
     [SerializeField] private float rowSpacing = 10f;   // separación entre una fila y la de abajo
-    // Color del cuadrado del avatar mientras no tengas la imagen del rol (uno por rol).
-    [SerializeField] private Color[] roleColors =
-    {
-        new Color(1f, 0.7f, 0.2f),   // Ingeniero
-        new Color(0.3f, 1f, 0.4f),   // Hacker
-        new Color(0.3f, 0.7f, 1f)    // Exploradora
-    };
 
     // ---------------------------------------------------------
     //  ESTADO
@@ -85,18 +79,12 @@ public class LobbyManager : NetworkBehaviour
     private void Awake()
     {
         EnsureEventSystem();
+        ResolveRowTemplate();
         ReportMissingReferences();
         WireButtons();
         PrepareChatUI();
 
         if (leaveConfirmPopup != null) leaveConfirmPopup.SetActive(false);
-
-        // Si la "fila de la lista" es un objeto de la escena (no un prefab), la usamos
-        // como molde y la ocultamos, para que no quede una fila de ejemplo suelta.
-        if (playerEntryPrefab != null && playerEntryPrefab.scene.IsValid())
-        {
-            playerEntryPrefab.SetActive(false);
-        }
 
         if (startGameButton != null && startGameButton.image != null)
         {
@@ -127,6 +115,49 @@ public class LobbyManager : NetworkBehaviour
             new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
             Debug.LogWarning("[LobbyManager] La escena no tenía EventSystem; se creó uno. Conviene agregarlo en la escena (UI > Event System).");
         }
+    }
+
+    // Encuentra la fila de ejemplo y su contenedor aunque no estén asignados en el Inspector.
+    private void ResolveRowTemplate()
+    {
+        // 1) Hay contenedor pero no fila: la fila de ejemplo es su primer hijo.
+        if (playerEntryPrefab == null && playerListContent != null && playerListContent.childCount > 0)
+        {
+            playerEntryPrefab = playerListContent.GetChild(0).gameObject;
+        }
+
+        // 2) No hay ninguno: buscamos en la escena el texto de ejemplo "Xms" y usamos su fila.
+        if (playerEntryPrefab == null)
+        {
+            foreach (TMP_Text text in FindObjectsOfType<TMP_Text>(true))
+            {
+                if (text.text.Trim().ToLowerInvariant() == "xms" && text.transform.parent != null)
+                {
+                    playerEntryPrefab = text.transform.parent.gameObject;
+                    break;
+                }
+            }
+        }
+
+        // 3) Hay fila (de la escena) pero no contenedor: el contenedor es su padre.
+        if (playerEntryPrefab != null && playerListContent == null && playerEntryPrefab.scene.IsValid())
+        {
+            playerListContent = playerEntryPrefab.transform.parent;
+        }
+
+        if (playerEntryPrefab == null || playerListContent == null)
+        {
+            Debug.LogError("[LobbyManager] No encuentro la fila de ejemplo de la lista. Arrastrá tu fila (la que dice 'Xms') al campo 'Player Entry Prefab'.");
+            return;
+        }
+
+        // Si la fila de ejemplo es un objeto de la escena, se usa como molde y se oculta.
+        if (playerEntryPrefab.scene.IsValid())
+        {
+            playerEntryPrefab.SetActive(false);
+        }
+
+        Debug.Log($"[LobbyManager] Molde de fila: '{playerEntryPrefab.name}' | contenedor: '{playerListContent.name}'");
     }
 
     private void ReportMissingReferences()
@@ -235,11 +266,6 @@ public class LobbyManager : NetworkBehaviour
         NetworkManagerFusion manager = NetworkManagerFusion.Instance;
         int needed = manager != null ? manager.PlayersNeeded : 3;
 
-        if (playersCountText != null)
-        {
-            playersCountText.text = $"{count}/{needed}";
-        }
-
         // El botón sigue recibiendo el click (para poder avisar por qué no empieza),
         // pero se ve apagado hasta que estén todos.
         if (startGameButton != null && startGameButton.image != null)
@@ -260,7 +286,7 @@ public class LobbyManager : NetworkBehaviour
         }
     }
 
-        private void RefreshPlayerList()
+    private void RefreshPlayerList()
     {
         if (playerListContent == null || playerEntryPrefab == null || !IsReady) return;
 
@@ -311,7 +337,10 @@ public class LobbyManager : NetworkBehaviour
 
         int roleIndex = GetCharacterOf(player);
         string roleName = roleIndex >= 0 ? CharacterLabel(roleIndex) : "Eligiendo...";
-        string ping = $"{PingFor(player)}ms";
+        if (IsHostPlayer(player)) roleName += " <color=#FF3B30>[HOST]</color>";
+
+        int pingMs = PingFor(player);
+        string ping = $"{pingMs}ms";
 
         // --- Textos: uno es el ping ("Xms") y el otro el nombre del rol ---
         TMP_Text[] texts = entry.GetComponentsInChildren<TMP_Text>(true);
@@ -331,7 +360,11 @@ public class LobbyManager : NetworkBehaviour
             if (t != pingTxt) { roleTxt = t; break; }
         }
 
-        if (pingTxt != null) pingTxt.text = ping;
+        if (pingTxt != null)
+        {
+            pingTxt.text = ping;
+            pingTxt.color = PingColor(pingMs);
+        }
         if (roleTxt != null) roleTxt.text = (pingTxt == null) ? $"{ping}   {roleName}" : roleName;
 
         // --- Avatar: la imagen chica de la fila (el fondo de la fila no cuenta) ---
@@ -361,23 +394,30 @@ public class LobbyManager : NetworkBehaviour
             bool hasSprite = characterPortraits != null && roleIndex >= 0 && roleIndex < characterPortraits.Length
                              && characterPortraits[roleIndex] != null;
 
+            // Si hay imagen para este rol se pone; si no, el avatar queda como está.
             if (hasSprite)
             {
                 avatar.sprite = characterPortraits[roleIndex];
                 avatar.color = Color.white;
             }
-            else
-            {
-                // Todavía no hay imagen para este rol: el cuadrado toma el color del rol.
-                avatar.color = RoleColor(roleIndex);
-            }
         }
     }
 
-    private Color RoleColor(int index)
+    // true si este jugador es el que creó la sala.
+    private bool IsHostPlayer(PlayerRef player)
     {
-        if (roleColors != null && index >= 0 && index < roleColors.Length) return roleColors[index];
-        return Color.white;
+        if (!IsReady) return false;
+
+        if (Runner.IsServer && player == Runner.LocalPlayer) return true; // vos sos el Host
+        return player == Object.StateAuthority;                            // el Host, visto desde un cliente
+    }
+
+    // Verde = buen ping, naranja = regular, rojo = malo.
+    private Color PingColor(int ms)
+    {
+        if (ms < 80) return new Color(0.55f, 1f, 0.25f);
+        if (ms < 150) return new Color(1f, 0.65f, 0.1f);
+        return new Color(1f, 0.25f, 0.2f);
     }
 
     // -1 si todavía no se sabe.

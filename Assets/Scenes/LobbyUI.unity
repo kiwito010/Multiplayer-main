@@ -647,9 +647,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1346266224}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 51, y: -5}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 296.5, y: -32.7}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &312379302
@@ -766,7 +766,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &353286265
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1881,9 +1881,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1346266224}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 169.1035, y: -0.000092963}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 360.4, y: -23}
   m_SizeDelta: {x: 51.0539, y: 48.275}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &919217977
@@ -1981,7 +1981,6 @@ MonoBehaviour:
   startGameButton: {fileID: 1563564867}
   changeColorButton: {fileID: 1936617593}
   leaveButton: {fileID: 629368242}
-  playersCountText: {fileID: 0}
   startDisabledColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   leaveConfirmPopup: {fileID: 1586394427}
   leaveYesButton: {fileID: 832881282}
@@ -2000,10 +1999,6 @@ MonoBehaviour:
   - Hacker
   - Exploradora
   rowSpacing: 20
-  roleColors:
-  - {r: 1, g: 0.7, b: 0.2, a: 1}
-  - {r: 0.3, g: 1, b: 0.4, a: 1}
-  - {r: 0.3, g: 0.7, b: 1, a: 1}
 --- !u!4 &933610045
 Transform:
   m_ObjectHideFlags: 0
@@ -3265,7 +3260,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 17.078918, y: -1.739685}
+  m_AnchoredPosition: {x: 17.078857, y: -1.739685}
   m_SizeDelta: {x: -323.0129, y: -170.5207}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1586394429
@@ -3340,7 +3335,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 125, y: -37}
+  m_AnchoredPosition: {x: 150.9, y: -36.9}
   m_SizeDelta: {x: 110.489, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1660982358
@@ -3372,8 +3367,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 3439329279
+  m_fontColor: {r: 1, g: 1, b: 1, a: 0.8}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
