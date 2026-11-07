@@ -35,12 +35,22 @@ public class PlayerHUD : MonoBehaviour {
         }
     }
 
-    public void OpenCableRepair(RepairableComponent component, PlayerInventory inventory) {
-        if (cableRepairMinigame == null)
-            return;
+    public void OpenCableRepair(
+     RepairableComponent component,
+     PlayerInventory inventory) {
+        Debug.Log("[REPAIR DEBUG] Solicitud de apertura");
 
-        if (cableRepairMinigame.IsOpen())
+        if (cableRepairMinigame == null) {
+            Debug.LogWarning("[REPAIR DEBUG] Minijuego no asignado");
             return;
+        }
+
+        if (cableRepairMinigame.IsOpen()) {
+            Debug.LogWarning("[REPAIR DEBUG] Minijuego sigue abierto");
+            return;
+        }
+
+        Debug.Log("[REPAIR DEBUG] Abriendo minijuego");
 
         cableRepairMinigame.Open(component, inventory);
     }

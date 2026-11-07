@@ -15,7 +15,7 @@ TagManager:
   - Interactable
   - Ground
   - Obstacle
-  - MotorComponent
+  - ScannableZone
   - Pickable
   - Player
   - Climbable

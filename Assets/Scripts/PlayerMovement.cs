@@ -532,6 +532,7 @@ public class PlayerMovement : NetworkBehaviour
     }
 
 
+
     private void HandleClimbing(NetworkInputData input) {
         ClimbableWall wall = playerClimb.GetCurrentWall();
 
@@ -540,7 +541,7 @@ public class PlayerMovement : NetworkBehaviour
             return;
         }
 
-        // Cancelar escalada con Jump.
+        // Space: soltar la pared.
         bool jumpDown = input.jumpPressed && !JumpWasPressed;
         JumpWasPressed = input.jumpPressed;
 
@@ -550,7 +551,6 @@ public class PlayerMovement : NetworkBehaviour
             return;
         }
 
-        // Obtener el collider principal de la pared.
         Collider wallCollider = wall.GetClimbCollider();
 
         if (wallCollider == null) {
@@ -558,103 +558,108 @@ public class PlayerMovement : NetworkBehaviour
             return;
         }
 
-        // Detectar de qué lado de la pared está el jugador.
         Vector3 wallNormal = wall.GetWallNormal();
 
+        // Determinar de qué lado de la pared estamos.
         if (Vector3.Dot(
             transform.position - wallCollider.bounds.center,
-            wallNormal
-        ) < 0f) {
+            wallNormal) < 0f) {
             wallNormal = -wallNormal;
         }
 
-        // Calcular el eje lateral de la pared.
         Vector3 wallRight =
             Vector3.Cross(wallNormal, Vector3.up).normalized;
 
-        // Movimiento vertical y lateral.
         Vector2 movement = input.moveDirection;
 
-        Vector3 climbDirection =
-            Vector3.up * movement.y +
-            wallRight * movement.x;
+        Vector3 climbDirection = Vector3.up * movement.y + wallRight * movement.x;
 
         climbDirection = Vector3.ClampMagnitude(climbDirection, 1f);
 
-        Vector3 displacement =
+        Vector3 desiredMove =
             climbDirection *
             playerClimb.ClimbSpeed *
             Runner.DeltaTime;
 
-        // Mantener una distancia constante de la pared.
-        Vector3 closestPoint =
-            wallCollider.ClosestPoint(transform.position);
+        Vector3 currentPosition = transform.position;
 
-        float desiredDistance =
-            _characterController.radius + 0.08f;
+        // Movimiento lateral.
+        Vector3 lateralMove = wallRight * Vector3.Dot(desiredMove, wallRight);
 
-        float currentDistance = Vector3.Dot(
-            transform.position - closestPoint,
-            wallNormal
-        );
+        Vector3 candidate = currentPosition + lateralMove;
 
-        float correction = desiredDistance - currentDistance;
-
-        displacement += wallNormal * Mathf.Clamp(
-            correction,
-            -0.1f,
-            0.1f
-        );
-
-        // Comprobar límites de la pared.
-        Bounds bounds = wallCollider.bounds;
-        Vector3 nextPosition = transform.position + displacement;
-
-        Vector3 min = bounds.min;
-        Vector3 max = bounds.max;
-
-        float minSide = float.PositiveInfinity;
-        float maxSide = float.NegativeInfinity;
-
-        for (int x = 0; x <= 1; x++) {
-            for (int y = 0; y <= 1; y++) {
-                for (int z = 0; z <= 1; z++) {
-                    Vector3 corner = new Vector3(
-                        x == 0 ? min.x : max.x,
-                        y == 0 ? min.y : max.y,
-                        z == 0 ? min.z : max.z
-                    );
-
-                    float side = Vector3.Dot(corner, wallRight);
-
-                    minSide = Mathf.Min(minSide, side);
-                    maxSide = Mathf.Max(maxSide, side);
-                }
-            }
+        if (lateralMove.sqrMagnitude > 0.000001f &&
+            TryFindClimbSurface(
+                wallCollider,
+                candidate,
+                wallNormal,
+                out _)) {
+            currentPosition = candidate;
         }
 
-        // Limitar movimiento lateral.
-        float nextSide = Vector3.Dot(nextPosition, wallRight);
+        // Movimiento vertical.
+        Vector3 verticalMove = Vector3.up * desiredMove.y;
 
-        if (nextSide < minSide || nextSide > maxSide) {
-            displacement -= wallRight *
-                Vector3.Dot(displacement, wallRight);
+        candidate = currentPosition + verticalMove;
+
+        if (verticalMove.sqrMagnitude > 0.000001f &&
+            TryFindClimbSurface(
+                wallCollider,
+                candidate,
+                wallNormal,
+                out _)) {
+            currentPosition = candidate;
         }
 
-        // Limitar movimiento vertical.
-        float nextHeight = transform.position.y + displacement.y;
+        // Mantener al jugador cerca de la superficie.
+        if (TryFindClimbSurface(
+            wallCollider,
+            currentPosition,
+            wallNormal,
+            out RaycastHit hit)) {
+            float desiredDistance =
+                _characterController.radius + 0.08f;
 
-        if (nextHeight < bounds.min.y ||
-            nextHeight > bounds.max.y) {
-            displacement.y = 0f;
+            float currentDistance = Vector3.Dot( currentPosition - hit.point, wallNormal);
+
+            float correction = Mathf.Clamp(
+                desiredDistance - currentDistance,
+                -0.1f,
+                0.1f
+            );
+
+            currentPosition += wallNormal * correction;
         }
 
-        // Suspender el movimiento normal durante Climb.
         VerticalVelocity = 0f;
         IsGrounded = false;
         IsSprinting = false;
 
+        Vector3 displacement = currentPosition - transform.position;
+
         _characterController.Move(displacement);
     }
 
+
+    private bool TryFindClimbSurface(
+    Collider wallCollider,
+    Vector3 candidatePosition,
+    Vector3 wallNormal,
+    out RaycastHit surfaceHit) {
+        const float probeDistance = 2f;
+
+        Vector3 rayOrigin = candidatePosition + wallNormal * probeDistance;
+
+        Ray ray = new Ray(rayOrigin, -wallNormal);
+
+        if (wallCollider.Raycast(
+            ray,
+            out surfaceHit,
+            probeDistance * 2f)) {
+            if (Vector3.Dot(surfaceHit.normal, wallNormal) > 0.25f)
+                return true;
+        }
+
+        return false;
+    }
 }

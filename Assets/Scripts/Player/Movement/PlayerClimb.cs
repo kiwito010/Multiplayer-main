@@ -8,7 +8,6 @@ public class PlayerClimb : NetworkBehaviour {
 
     [Header("Climb")]
     [SerializeField] private float climbSpeed = 3f;
-    [SerializeField] private float topExitOffset = 0.2f;
 
     [Networked] public NetworkBool IsClimbing { get; private set; }
     [Networked] private NetworkObject currentWallObject { get; set; }
@@ -28,54 +27,39 @@ public class PlayerClimb : NetworkBehaviour {
     private void HandleClimbInteraction(
     PlayerRef player,
     NetworkObject target) {
-        Debug.Log("[Climb DEBUG] Evento recibido");
-
         if (!Object.HasStateAuthority)
             return;
 
         if (player != Object.InputAuthority)
             return;
 
-        Debug.Log("[Climb DEBUG] Jugador validado");
-
         if (target == null || !target.IsValid)
             return;
 
-        Debug.Log("[Climb DEBUG] Objeto detectado: " + target.name);
-
-        ClimbInteractable climbInteractable =
-            target.GetComponentInChildren<ClimbInteractable>(true);
+        ClimbInteractable climbInteractable =  target.GetComponentInChildren<ClimbInteractable>(true);
 
         if (climbInteractable == null) {
-            Debug.LogWarning("[Climb DEBUG] No encontré ClimbInteractable");
             return;
         }
-
-        Debug.Log("[Climb DEBUG] ClimbInteractable encontrado");
 
         ClimbableWall wall = climbInteractable.GetClimbableWall();
 
         if (wall == null) {
-            Debug.LogWarning("[Climb DEBUG] ClimbableWall es null");
             return;
         }
 
-        if (wall.GetClimbPoint() == null) {
-            Debug.LogWarning("[Climb DEBUG] ClimbPoint es null");
+        Collider wallCollider = wall.GetClimbCollider();
+
+        if (wallCollider == null) {
             return;
         }
 
-        float distance = Vector3.Distance(
-            transform.position,
-            wall.GetClimbPoint().position
-        );
+        Vector3 closestPoint = wallCollider.ClosestPoint(transform.position);
 
-        Debug.Log("[Climb DEBUG] Distancia: " + distance);
+        float distance = Vector3.Distance(transform.position, closestPoint);
 
         if (distance > 3.5f)
             return;
-
-        Debug.Log("[Climb] Jugador " + player + " quiere escalar " + wall.name);
 
         if (IsClimbing)
             return;
@@ -89,8 +73,6 @@ public class PlayerClimb : NetworkBehaviour {
         Vector3 startPosition = GetClimbStartPosition(wall);
 
         playerMovement.SnapToClimbPoint(startPosition);
-
-        Debug.Log("[Climb] Escalada iniciada: " + wall.name);
     }
 
     public ClimbableWall GetCurrentWall() {

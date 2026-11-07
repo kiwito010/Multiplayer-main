@@ -1,3 +1,4 @@
+#if false
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -165,3 +166,4 @@ public class ExplorerAbilities : MonoBehaviour {
         return isClimbing;
     }
 }
+#endif
