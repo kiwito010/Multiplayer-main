@@ -1,55 +1,51 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using Fusion;
+using UnityEngine;
 
-public class PlayerAnimationController : NetworkBehaviour
+public class PlayerAnimatorController : NetworkBehaviour
 {
     private Animator _animator;
-    
-    // Si usas un CharacterController o Rigidbody para mover al jugador
-    private CharacterController _characterController; 
+    private CharacterController _characterController;
 
     public override void Spawned()
     {
-        // Buscamos el componente Animator (suele estar en el modelo hijo del prefab)
+        // Busca el Animator en los hijos (el modelo 3D del personaje)
         _animator = GetComponentInChildren<Animator>();
+        
+        // Busca el CharacterController para medir la velocidad de movimiento
         _characterController = GetComponent<CharacterController>();
     }
 
-    private void Update()
+    public override void FixedUpdateNetwork()
     {
-        // IMPORTANTE: En juegos multijugador con Photon Fusion, 
-        // solo queremos que el cliente local mueva sus propias animaciones visuales 
-        // para evitar conflictos de predicción, o dejamos que el componente NetworkAnimator lo sincronice.
-        if (Object != null && !Object.HasInputAuthority) 
-            return;
+        // En Photon Fusion, aseguramos que solo el jugador local actualice sus propias animaciones
+        if (Object != null && !Object.HasInputAuthority) return;
 
-        if (_animator == null) return;
-
-        UpdateAnimatorParameters();
+        UpdateAnimations();
     }
 
-    private void UpdateAnimatorParameters()
+    private void UpdateAnimations()
     {
-        // 1. ACTUALIZAR SPEED (Blend Tree)
-        // Calculamos la velocidad en el plano horizontal (X y Z), ignorando la altura (Y)
-        Vector3 horizontalVelocity = new Vector3(_characterController.velocity.x, 0f, _characterController.velocity.z);
-        float currentSpeed = horizontalVelocity.magnitude;
-        
-        // Enviamos el valor al parámetro "Speed" del Animator
+        if (_animator == null) return;
+
+        // 1. Velocidad horizontal para los Blend Trees (Locomoción y Agachado)
+        float currentSpeed = 0f;
+        if (_characterController != null)
+        {
+            Vector3 horizontalVelocity = new Vector3(_characterController.velocity.x, 0f, _characterController.velocity.z);
+            currentSpeed = horizontalVelocity.magnitude;
+        }
         _animator.SetFloat("Speed", currentSpeed);
 
-        // 2. ACTUALIZAR JUMP (Trigger)
-        // Si el jugador presiona espacio, disparamos el Trigger del salto
+        // 2. Estado de agachado (Bool) - Tecla C
+        bool isCrouching = Input.GetKey(KeyCode.C);
+        _animator.SetBool("IsCrouching", isCrouching);
+
+        // 3. Salto (Trigger) - Tecla Espacio
         if (Input.GetKeyDown(KeyCode.Space))
         {
             _animator.SetTrigger("Jump");
         }
-
-        // 3. ACTUALIZAR IS CROUCHING (Bool)
-        // Verificamos si mantiene presionada la tecla para agacharse (ej: C o LeftControl)
-        bool isCrouching = Input.GetKey(KeyCode.C);
-        _animator.SetBool("IsCrouching", isCrouching);
     }
 }
