@@ -1530,6 +1530,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: ClimbableWall
       objectReference: {fileID: 0}
+    - target: {fileID: 8103273115229025715, guid: e69f4bae816f570479a3b7402ae2d48a, type: 3}
+      propertyPath: SortKey
+      value: 1916012759
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

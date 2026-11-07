@@ -1,25 +1,24 @@
-using System.Collections;
-using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
 
 public class PlayerAnimatorController : NetworkBehaviour
 {
     private Animator _animator;
-    private CharacterController _characterController;
+    private Vector3 _lastPosition;
+    private bool _isCrouching = false;
 
     public override void Spawned()
     {
-        // Busca el Animator en los hijos (el modelo 3D del personaje)
+        // Busca el Animator en el modelo 3D hijo
         _animator = GetComponentInChildren<Animator>();
         
-        // Busca el CharacterController para medir la velocidad de movimiento
-        _characterController = GetComponent<CharacterController>();
+        // Guardamos la posición inicial para calcular la velocidad real
+        _lastPosition = transform.position;
     }
 
     public override void FixedUpdateNetwork()
     {
-        // En Photon Fusion, aseguramos que solo el jugador local actualice sus propias animaciones
+        // Asegura que solo el jugador local ejecute sus animaciones en red
         if (Object != null && !Object.HasInputAuthority) return;
 
         UpdateAnimations();
@@ -29,20 +28,25 @@ public class PlayerAnimatorController : NetworkBehaviour
     {
         if (_animator == null) return;
 
-        // 1. Velocidad horizontal para los Blend Trees (Locomoción y Agachado)
-        float currentSpeed = 0f;
-        if (_characterController != null)
+        // 1. VELOCIDAD REAL (Independiente de si usas CharacterController o transform)
+        Vector3 currentPosition = transform.position;
+        Vector3 displacement = currentPosition - _lastPosition;
+        
+        // Calculamos la velocidad en el plano horizontal (X y Z) dividida por el tiempo de red
+        Vector3 horizontalVelocity = new Vector3(displacement.x, 0f, displacement.z) / Runner.DeltaTime;
+        _animator.SetFloat("Speed", horizontalVelocity.magnitude);
+        
+        // Actualizamos la última posición para el siguiente frame
+        _lastPosition = currentPosition;
+
+        // 2. AGACHADO TIPO TOGGLE (Presionar Ctrl una vez para agacharse, otra para levantarse)
+        if (Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl))
         {
-            Vector3 horizontalVelocity = new Vector3(_characterController.velocity.x, 0f, _characterController.velocity.z);
-            currentSpeed = horizontalVelocity.magnitude;
+            _isCrouching = !_isCrouching;
         }
-        _animator.SetFloat("Speed", currentSpeed);
+        _animator.SetBool("IsCrouching", _isCrouching);
 
-        // 2. Estado de agachado (Bool) - Tecla C
-        bool isCrouching = Input.GetKey(KeyCode.C);
-        _animator.SetBool("IsCrouching", isCrouching);
-
-        // 3. Salto (Trigger) - Tecla Espacio
+        // 3. SALTO (Trigger con Espacio)
         if (Input.GetKeyDown(KeyCode.Space))
         {
             _animator.SetTrigger("Jump");
