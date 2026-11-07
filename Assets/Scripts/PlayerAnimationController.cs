@@ -1,55 +1,55 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using Fusion;
+using UnityEngine;
 
-public class PlayerAnimationController : NetworkBehaviour
+public class PlayerAnimatorController : NetworkBehaviour
 {
     private Animator _animator;
-    
-    // Si usas un CharacterController o Rigidbody para mover al jugador
-    private CharacterController _characterController; 
+    private Vector3 _lastPosition;
+    private bool _isCrouching = false;
 
     public override void Spawned()
     {
-        // Buscamos el componente Animator (suele estar en el modelo hijo del prefab)
+        // Busca el Animator en el modelo 3D hijo
         _animator = GetComponentInChildren<Animator>();
-        _characterController = GetComponent<CharacterController>();
+        
+        // Guardamos la posición inicial para calcular la velocidad real
+        _lastPosition = transform.position;
     }
 
-    private void Update()
+    public override void FixedUpdateNetwork()
     {
-        // IMPORTANTE: En juegos multijugador con Photon Fusion, 
-        // solo queremos que el cliente local mueva sus propias animaciones visuales 
-        // para evitar conflictos de predicción, o dejamos que el componente NetworkAnimator lo sincronice.
-        if (Object != null && !Object.HasInputAuthority) 
-            return;
+        // Asegura que solo el jugador local ejecute sus animaciones en red
+        if (Object != null && !Object.HasInputAuthority) return;
 
+        UpdateAnimations();
+    }
+
+    private void UpdateAnimations()
+    {
         if (_animator == null) return;
 
-        UpdateAnimatorParameters();
-    }
-
-    private void UpdateAnimatorParameters()
-    {
-        // 1. ACTUALIZAR SPEED (Blend Tree)
-        // Calculamos la velocidad en el plano horizontal (X y Z), ignorando la altura (Y)
-        Vector3 horizontalVelocity = new Vector3(_characterController.velocity.x, 0f, _characterController.velocity.z);
-        float currentSpeed = horizontalVelocity.magnitude;
+        // 1. VELOCIDAD REAL (Independiente de si usas CharacterController o transform)
+        Vector3 currentPosition = transform.position;
+        Vector3 displacement = currentPosition - _lastPosition;
         
-        // Enviamos el valor al parámetro "Speed" del Animator
-        _animator.SetFloat("Speed", currentSpeed);
+        // Calculamos la velocidad en el plano horizontal (X y Z) dividida por el tiempo de red
+        Vector3 horizontalVelocity = new Vector3(displacement.x, 0f, displacement.z) / Runner.DeltaTime;
+        _animator.SetFloat("Speed", horizontalVelocity.magnitude);
+        
+        // Actualizamos la última posición para el siguiente frame
+        _lastPosition = currentPosition;
 
-        // 2. ACTUALIZAR JUMP (Trigger)
-        // Si el jugador presiona espacio, disparamos el Trigger del salto
+        // 2. AGACHADO TIPO TOGGLE (Presionar Ctrl una vez para agacharse, otra para levantarse)
+        if (Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl))
+        {
+            _isCrouching = !_isCrouching;
+        }
+        _animator.SetBool("IsCrouching", _isCrouching);
+
+        // 3. SALTO (Trigger con Espacio)
         if (Input.GetKeyDown(KeyCode.Space))
         {
             _animator.SetTrigger("Jump");
         }
-
-        // 3. ACTUALIZAR IS CROUCHING (Bool)
-        // Verificamos si mantiene presionada la tecla para agacharse (ej: C o LeftControl)
-        bool isCrouching = Input.GetKey(KeyCode.C);
-        _animator.SetBool("IsCrouching", isCrouching);
     }
 }
