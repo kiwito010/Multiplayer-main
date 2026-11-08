@@ -1,31 +1,69 @@
+﻿
 using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
-public class TaskNotification : MonoBehaviour
-{
+public class TaskNotification : MonoBehaviour {
+    [Header("Referencias")]
+    [SerializeField] private TextMeshProUGUI headerText;
     [SerializeField] private TextMeshProUGUI taskText;
-    [SerializeField] private RectTransform rectTransform;
+    [SerializeField] private Image background;
 
-    [SerializeField] private float horizontalPadding = 40f;
-    [SerializeField] private float visibleTime = 4f;
+    [Header("Tamaños")]
+    [SerializeField] private float mainFontSize = 23f;
+    [SerializeField] private float secondaryFontSize = 20f;
 
-    public void SetTask(TaskData task) {
-        taskText.text = task.description;
+    [Header("Duraciones")]
+    [SerializeField] private float mainVisibleTime = 6f;
+    [SerializeField] private float secondaryVisibleTime = 4f;
+    [SerializeField] private float completedVisibleTime = 4f;
 
-        taskText.ForceMeshUpdate();
+    public void SetTask(TaskData task, bool completed = false) {
+        if (task == null || headerText == null || taskText == null)
+            return;
 
-        float textWidth = taskText.preferredWidth;
+        bool isMain = task.priority == TaskPriority.Principal;
 
-        rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, textWidth + horizontalPadding);
+        if (completed) {
+            headerText.text = "TAREA COMPLETADA";
 
-        StartCoroutine(HideAfterTime());
+            taskText.text =
+                "<color=#B0B0B0><s>" +
+                task.description +
+                "</s></color>";
+        } else {
+            headerText.text = isMain
+                ? "OBJETIVO PRINCIPAL"
+                : "NUEVA TAREA";
+
+            taskText.text = task.description;
+        }
+
+        taskText.fontSize = isMain
+            ? mainFontSize
+            : secondaryFontSize;
+
+        taskText.fontStyle = isMain
+            ? FontStyles.Bold
+            : FontStyles.Normal;
+
+        if (background != null) {
+            background.color =
+                new Color(0.05f, 0.06f, 0.08f, 0.88f);
+        }
+
+        float duration = completed
+            ? completedVisibleTime
+            : isMain
+                ? mainVisibleTime
+                : secondaryVisibleTime;
+
+        StartCoroutine(HideAfterTime(duration));
     }
 
-    private IEnumerator HideAfterTime() {
-        yield return new WaitForSeconds(visibleTime);
-
+    private IEnumerator HideAfterTime(float duration) {
+        yield return new WaitForSecondsRealtime(duration);
         Destroy(gameObject);
     }
 }

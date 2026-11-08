@@ -48,7 +48,7 @@ public class PlayerClimb : NetworkBehaviour {
             return;
         }
 
-        Collider wallCollider = wall.GetClimbCollider();
+        Collider wallCollider = wall.GetClosestClimbCollider(transform.position);
 
         if (wallCollider == null) {
             return;
@@ -83,7 +83,7 @@ public class PlayerClimb : NetworkBehaviour {
     }
 
     private Vector3 GetClimbStartPosition(ClimbableWall wall) {
-        Collider wallCollider = wall.GetClimbCollider();
+        Collider wallCollider = wall.GetClosestClimbCollider(transform.position);
 
         Vector3 wallNormal = wall.GetWallNormal();
 

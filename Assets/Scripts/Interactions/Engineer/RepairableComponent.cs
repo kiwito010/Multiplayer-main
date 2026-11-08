@@ -4,9 +4,6 @@ using UnityEngine;
 public class RepairableComponent : DiagnosableBase, IInteractable {
     [SerializeField] private string componentName;
 
-    [SerializeField] private TaskManager taskManager;
-    [SerializeField] private TaskData repairTask;
-
     [SerializeField] private MonoBehaviour repairMinigameBehaviour;
 
     [Networked] public NetworkBool cableInstalled { get; private set; }
@@ -152,8 +149,6 @@ public class RepairableComponent : DiagnosableBase, IInteractable {
 
     protected override void OnScanComplete() {
         Debug.Log(componentName + " diagnosticado");
-
-        taskManager.AddTask(repairTask);
     }
 
     public void Repair() {
@@ -164,8 +159,6 @@ public class RepairableComponent : DiagnosableBase, IInteractable {
             return;
 
         isRepaired = true;
-
-        taskManager.CompleteTask(repairTask);
 
         Debug.Log(componentName + " reparado");
     }

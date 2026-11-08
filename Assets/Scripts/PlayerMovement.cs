@@ -551,7 +551,7 @@ public class PlayerMovement : NetworkBehaviour
             return;
         }
 
-        Collider wallCollider = wall.GetClimbCollider();
+        Collider wallCollider = wall.GetClosestClimbCollider(transform.position);
 
         if (wallCollider == null) {
             playerClimb.StopClimbing();
@@ -590,7 +590,7 @@ public class PlayerMovement : NetworkBehaviour
 
         if (lateralMove.sqrMagnitude > 0.000001f &&
             TryFindClimbSurface(
-                wallCollider,
+                wall,
                 candidate,
                 wallNormal,
                 out _)) {
@@ -604,7 +604,7 @@ public class PlayerMovement : NetworkBehaviour
 
         if (verticalMove.sqrMagnitude > 0.000001f &&
             TryFindClimbSurface(
-                wallCollider,
+                wall,
                 candidate,
                 wallNormal,
                 out _)) {
@@ -613,7 +613,7 @@ public class PlayerMovement : NetworkBehaviour
 
         // Mantener al jugador cerca de la superficie.
         if (TryFindClimbSurface(
-            wallCollider,
+            wall,
             currentPosition,
             wallNormal,
             out RaycastHit hit)) {
@@ -640,26 +640,61 @@ public class PlayerMovement : NetworkBehaviour
         _characterController.Move(displacement);
     }
 
-
     private bool TryFindClimbSurface(
-    Collider wallCollider,
-    Vector3 candidatePosition,
-    Vector3 wallNormal,
-    out RaycastHit surfaceHit) {
+        ClimbableWall wall,
+        Vector3 candidatePosition,
+        Vector3 wallNormal,
+        out RaycastHit surfaceHit) {
+
         const float probeDistance = 2f;
 
         Vector3 rayOrigin = candidatePosition + wallNormal * probeDistance;
 
         Ray ray = new Ray(rayOrigin, -wallNormal);
 
-        if (wallCollider.Raycast(
-            ray,
-            out surfaceHit,
-            probeDistance * 2f)) {
-            if (Vector3.Dot(surfaceHit.normal, wallNormal) > 0.25f)
-                return true;
+        surfaceHit = default;
+        bool found = false;
+        float bestDistance = float.MaxValue;
+
+        BoxCollider[] zones = wall.GetClimbZones();
+
+        if (zones != null) {
+            foreach (BoxCollider zone in zones) {
+                if (zone == null || !zone.enabled ||
+                    !zone.gameObject.activeInHierarchy)
+                    continue;
+
+                if (!zone.Raycast(
+                    ray, out RaycastHit hit, probeDistance * 2f))
+                    continue;
+
+                if (Vector3.Dot(hit.normal, wallNormal) <= 0.25f)
+                    continue;
+
+                float distance = (candidatePosition - hit.point).sqrMagnitude;
+
+                if (distance < bestDistance) {
+                    bestDistance = distance;
+                    surfaceHit = hit;
+                    found = true;
+                }
+            }
         }
 
-        return false;
+        // Compatibilidad con la pared original.
+        if (!found && (zones == null || zones.Length == 0)) {
+            Collider originalCollider = wall.GetClimbCollider();
+
+            if (originalCollider != null &&
+                originalCollider.Raycast(ray, out RaycastHit hit, probeDistance * 2f) && Vector3.Dot(hit.normal, wallNormal) > 0.25f) {
+
+                surfaceHit = hit;
+                found = true;
+            }
+        }
+
+        return found;
     }
+
+
 }
