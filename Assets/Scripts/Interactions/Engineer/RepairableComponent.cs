@@ -222,8 +222,13 @@ public class RepairableComponent : DiagnosableBase, IInteractable {
         if (player == PlayerRef.None || isRepaired)
             return false;
 
-        if (repairingPlayer != PlayerRef.None)
+        if (repairingPlayer != PlayerRef.None) {
+            Debug.LogWarning(
+                "[REPAIR] Inicio rechazado. Jugador solicitante: " + player +
+                " | Jugador que figura reparando: " + repairingPlayer
+            );
             return false;
+        }
 
         repairingPlayer = player;
         return true;
@@ -237,6 +242,23 @@ public class RepairableComponent : DiagnosableBase, IInteractable {
         if (repairingPlayer != player)
             return;
 
+        Debug.Log("[REPAIR] Reparación liberada para: " + player);
         repairingPlayer = PlayerRef.None;
+    }
+
+    public bool IsCableRepairCompleted() {
+        return Object != null &&
+               Object.IsValid &&
+               cableRepairCompleted;
+    }
+
+    public bool IsBusyFor(PlayerRef player) {
+        if (Object == null || !Object.IsValid)
+            return false;
+
+        if (repairingPlayer == PlayerRef.None)
+            return false;
+
+        return repairingPlayer != player;
     }
 }

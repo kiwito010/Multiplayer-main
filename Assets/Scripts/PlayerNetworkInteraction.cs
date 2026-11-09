@@ -69,6 +69,29 @@ public class PlayerNetworkInteraction : NetworkBehaviour
         }
     }
 
+    public bool TryGetLookTarget(out NetworkObject target) {
+        target = null;
+
+        if (Object == null || !Object.HasInputAuthority)
+            return false;
+
+        if (interactPoint == null)
+            return false;
+
+        if (!Physics.Raycast(
+            interactPoint.position,
+            interactPoint.forward,
+            out RaycastHit hit,
+            range,
+            interactableLayers)) {
+            return false;
+        }
+
+        target = hit.collider.GetComponentInParent<NetworkObject>();
+
+        return target != null && target.IsValid;
+    }
+
     private void TryDetectAndNotify()
     {
         if (!UseCooldown.ExpiredOrNotRunning(Runner))

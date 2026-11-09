@@ -13,6 +13,17 @@ public class NetworkCoolantDeposit : NetworkBehaviour {
 
     // MÉTODOS:
 
+    public bool IsHackActive() {
+        if (networkComputer == null ||
+            networkComputer.Object == null ||
+            !networkComputer.Object.IsValid)
+            return false;
+
+        return networkComputer.IsHackRunning &&
+               !networkComputer.IsCompleted &&
+               !networkComputer.CooldownTimer.IsRunning;
+    }
+
     public override void Spawned() {
         PlayerNetworkInteraction.OnUsedOnTarget += HandleInteraction;
     }

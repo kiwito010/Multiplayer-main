@@ -13,6 +13,8 @@ public class NetworkPickableItem : NetworkBehaviour {
     [Networked] private NetworkBool isPickedUp { get; set; }
     [Networked] private PlayerRef pickedBy { get; set; }
 
+    [Networked] public NetworkBool WasEverPickedUp { get; private set; }
+
     [SerializeField] private GameObject equippedVisualPrefab;
 
 
@@ -84,6 +86,7 @@ public class NetworkPickableItem : NetworkBehaviour {
         // Confirmamos la recogida.
         pickedBy = player;
         isPickedUp = true;
+        WasEverPickedUp = true;
 
         SetPhysicsEnabled(false);
 

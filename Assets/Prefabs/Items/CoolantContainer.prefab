@@ -97,6 +97,7 @@ GameObject:
   - component: {fileID: 8627089072951774591}
   - component: {fileID: 5540909428329105256}
   - component: {fileID: 1997222581355488103}
+  - component: {fileID: -4310036203650425454}
   m_Layer: 10
   m_Name: CoolantContainer
   m_TagString: Untagged
@@ -245,6 +246,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemVisual: {fileID: 5010465291166195836}
   itemCollider: {fileID: 6269940511256426908}
+  _WasEverPickedUp:
+    RawValue: 0
   equippedVisualPrefab: {fileID: 2620909315375160723, guid: 6f495710f9f9d2248937d06e4cd28413, type: 3}
   remoteDropVisibilityDelay: 0.15
   itemType: 6
+--- !u!114 &-4310036203650425454
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6993684242307956567}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a4c6ae65add2f64b8126d62aa68eb4c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  outlineMaterial: {fileID: 2100000, guid: da57f57467490c44e953d0169151eb3d, type: 2}

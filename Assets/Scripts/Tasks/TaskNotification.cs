@@ -62,6 +62,19 @@ public class TaskNotification : MonoBehaviour {
         StartCoroutine(HideAfterTime(duration));
     }
 
+    public void SetHint(string message) {
+        if (headerText == null || taskText == null)
+            return;
+
+        headerText.text = "INDICACIÓN";
+        taskText.text = message;
+
+        taskText.fontSize = secondaryFontSize;
+        taskText.fontStyle = FontStyles.Normal;
+
+        StartCoroutine(HideAfterTime(7f));
+    }
+
     private IEnumerator HideAfterTime(float duration) {
         yield return new WaitForSecondsRealtime(duration);
         Destroy(gameObject);

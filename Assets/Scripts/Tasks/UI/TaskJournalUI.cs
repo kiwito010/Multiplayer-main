@@ -40,39 +40,46 @@ public class TaskJournalUI : MonoBehaviour {
             RefreshTasks();
     }
 
-
     private void RefreshTasks() {
-        if (taskManager == null) {
+        if (taskManager == null)
             taskManager = FindFirstObjectByType<TaskManager>();
 
-            if (taskManager == null)
-                return;
-        }
-
-        if (tasksText == null)
+        if (taskManager == null || tasksText == null)
             return;
 
         StringBuilder builder = new StringBuilder();
+        var tasks = taskManager.GetActiveTasks();
 
-        var activeTasks = taskManager.GetActiveTasks();
+        // 1. Misiones
+        foreach (TaskData task in tasks) {
+            if (task == null ||
+                task.priority != TaskPriority.Mision)
+                continue;
 
-        // Primero las tareas principales.
-        foreach (TaskData task in activeTasks) {
+            builder.AppendLine(
+                "<size=145%><b><color=#8DCBFF>" +
+                task.description +
+                "</color></b></size>"
+            );
+            builder.AppendLine();
+        }
+
+        // 2. Objetivos principales
+        foreach (TaskData task in tasks) {
             if (task == null ||
                 task.priority != TaskPriority.Principal)
                 continue;
 
             builder.AppendLine(
-                "<size=125%><b>● " +
+                "<size=115%><b>● " +
                 task.description +
                 "</b></size>"
             );
-
             builder.AppendLine();
         }
 
-        // Después las tareas secundarias.
-        foreach (TaskData task in activeTasks) {
+        // 3. Tareas secundarias
+        foreach (TaskData task in tasks) {
             if (task == null ||
                 task.priority != TaskPriority.Secundaria)
                 continue;
@@ -84,12 +91,11 @@ public class TaskJournalUI : MonoBehaviour {
             );
         }
 
-        if (activeTasks.Count == 0)
+        if (tasks.Count == 0)
             builder.AppendLine("No hay tareas activas.");
 
         tasksText.text = builder.ToString();
     }
-
 
     private void OnDisable() {
         wasOpen = false;

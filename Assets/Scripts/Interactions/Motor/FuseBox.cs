@@ -56,6 +56,11 @@ public class FuseBox : NetworkBehaviour {
         }
 
         if (!isOpened) {
+            // No permitir abrir la caja hasta reparar el cable.
+            if (repairableComponent == null ||
+                !repairableComponent.cableRepairCompleted)
+                return;
+
             isOpened = true;
             Debug.Log("Caja del fusible abierta");
             return;

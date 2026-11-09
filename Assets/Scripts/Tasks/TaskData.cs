@@ -2,8 +2,9 @@ using System;
 using UnityEngine;
 
 public enum TaskPriority {
-    Principal,
-    Secundaria
+    Principal = 0,
+    Secundaria = 1,
+    Mision = 2
 }
 
 [Serializable]

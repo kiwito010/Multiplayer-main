@@ -48,6 +48,22 @@ public class PlayerRepairInteraction : NetworkBehaviour {
         pendingRepair = null;
     }
 
+    public void OnRepairRequestRejected(NetworkObject target) {
+        if (!Object.HasInputAuthority)
+            return;
+
+        if (pendingRepair == null)
+            return;
+
+        // Limpiar solamente la solicitud rechazada.
+        if (target != null && pendingRepair.Object != target)
+            return;
+
+        Debug.Log("[REPAIR] Solicitud rechazada. Se puede reintentar.");
+
+        pendingRepair = null;
+    }
+
     private void OnLocalUsedOnTarget(NetworkObject target) {
         if (target == null)
             return;

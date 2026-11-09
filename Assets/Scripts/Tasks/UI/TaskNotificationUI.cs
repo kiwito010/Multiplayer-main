@@ -57,4 +57,15 @@ public class TaskNotificationUI : MonoBehaviour {
 
         notification.SetTask(task, true);
     }
+
+    public void ShowTemporaryHint(string message) {
+        if (notificationPrefab == null ||
+            notificationContainer == null)
+            return;
+
+        TaskNotification notification =
+            Instantiate(notificationPrefab, notificationContainer);
+
+        notification.SetHint(message);
+    }
 }

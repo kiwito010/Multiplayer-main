@@ -72,6 +72,11 @@ public class CooperativeButton : NetworkBehaviour {
                !pressTimer.ExpiredOrNotRunning(Runner);
     }
 
+    public bool IsActivationCompleted() {
+        return cooperativeActivation != null &&
+               cooperativeActivation.IsActivationCompleted();
+    }
+
     private bool ShouldShowPressedVisual() {
         return IsPressed() ||
                (cooperativeActivation != null &&

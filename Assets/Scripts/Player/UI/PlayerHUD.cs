@@ -8,6 +8,7 @@ public class PlayerHUD : MonoBehaviour {
     [SerializeField] private ScanUI scanUI;
     [SerializeField] private CableRepairMinigame cableRepairMinigame;
     [SerializeField] private ComputerUI computerUI;
+    [SerializeField] private InteractionPromptUI interactionPromptUI;
 
     // MÉTODOS:
 
@@ -32,6 +33,13 @@ public class PlayerHUD : MonoBehaviour {
 
         if (computerUI != null) {
             computerUI.InitializeNetwork(playerManager, gameInput);
+        }
+
+        if (interactionPromptUI != null && networkInventory != null) {
+
+            PlayerNetworkInteraction interaction = networkInventory.GetComponent<PlayerNetworkInteraction>();
+
+            interactionPromptUI.Initialize(interaction);
         }
     }
 

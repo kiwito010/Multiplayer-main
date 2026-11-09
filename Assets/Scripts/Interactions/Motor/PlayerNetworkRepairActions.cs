@@ -111,20 +111,68 @@ public class PlayerNetworkRepairActions : NetworkBehaviour {
         RPC_RequestBeginRepair(component.Object);
     }
 
+
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     private void RPC_RequestBeginRepair(NetworkObject target) {
-        if (target == null || !target.IsValid)
+
+        if (target == null || !target.IsValid) {
+            Debug.LogWarning("[REPAIR] Target inválido.");
+            RPC_RepairRequestRejected(target);
             return;
+        }
 
-        RepairableComponent component = target.GetComponent<RepairableComponent>();
+        RepairableComponent component =
+            target.GetComponent<RepairableComponent>();
 
-        if (component == null)
+        if (component == null) {
+            Debug.LogWarning("[REPAIR] No hay RepairableComponent.");
+            RPC_RepairRequestRejected(target);
             return;
+        }
 
-        if (Vector3.Distance(transform.position, target.transform.position) > 3f)
+        float distance = Vector3.Distance(
+            transform.position,
+            target.transform.position
+        );
+
+        Debug.Log(
+            "[REPAIR] Solicitud de inicio | Jugador: " +
+            Object.InputAuthority +
+            " | Distancia: " + distance
+        );
+
+        if (distance > 3f) {
+            Debug.LogWarning(
+                "[REPAIR] Inicio rechazado por distancia: " + distance
+            );
+
+            RPC_RepairRequestRejected(target);
             return;
+        }
 
-        component.TryBeginRepair(Object.InputAuthority);
+        bool accepted =
+            component.TryBeginRepair(Object.InputAuthority);
+
+        if (!accepted) {
+            Debug.LogWarning(
+                "[REPAIR] Inicio rechazado por estado u ocupación."
+            );
+
+            RPC_RepairRequestRejected(target);
+            return;
+        }
+
+        Debug.Log("[REPAIR] Inicio aceptado.");
+    }
+
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.InputAuthority)]
+    private void RPC_RepairRequestRejected(NetworkObject target) {
+        PlayerRepairInteraction repairInteraction =
+            GetComponent<PlayerRepairInteraction>();
+
+        if (repairInteraction != null)
+            repairInteraction.OnRepairRequestRejected(target);
     }
 
     public void RequestEndRepair(RepairableComponent component) {
