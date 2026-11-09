@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 // Va en un objeto de la escena LobbyUI que tenga TAMBIÉN un componente NetworkObject.
@@ -21,7 +22,8 @@ public class LobbyManager : NetworkBehaviour
     [SerializeField] private Transform playerListContent;   // contenedor de la lista
     [SerializeField] private GameObject playerEntryPrefab;  // una fila (puede ser un prefab o la fila de ejemplo de la escena)
     [SerializeField] private Button startGameButton;        // solo lo ve y lo usa el Host
-    [SerializeField] private Button changeColorButton;      // cambiar de personaje
+    [FormerlySerializedAs("changeColorButton")]
+    [SerializeField] private Button changeCharacterButton;  // cambiar de personaje
     [SerializeField] private Button leaveButton;
 
     [Header("Botón Empezar")]
@@ -46,6 +48,14 @@ public class LobbyManager : NetworkBehaviour
 
     [Header("Filas de jugadores")]
     [SerializeField] private float rowSpacing = 10f;   // separación entre una fila y la de abajo
+    [SerializeField] private float fallbackRowHeight = 60f; // alto de cada fila si no se puede medir del prefab
+
+    [Header("Colores del ping")]
+    [SerializeField] private int goodPingMax = 80;      // hasta acá: ping "bueno"
+    [SerializeField] private int mediumPingMax = 150;   // hasta acá: "regular"; más que esto: "malo"
+    [SerializeField] private Color goodPingColor = new Color(0.55f, 1f, 0.25f);
+    [SerializeField] private Color mediumPingColor = new Color(1f, 0.65f, 0.1f);
+    [SerializeField] private Color badPingColor = new Color(1f, 0.25f, 0.2f);
 
     // ---------------------------------------------------------
     //  ESTADO
@@ -54,7 +64,13 @@ public class LobbyManager : NetworkBehaviour
     // Lo escribe el Host y lo leen todos para dibujar la lista.
     [Networked, Capacity(MaxPlayers)] private NetworkArray<int> CharacterPlusOne => default;
 
-    private readonly List<GameObject> _entries = new List<GameObject>();
+    private readonly List<LobbyPlayerEntry> _rows = new List<LobbyPlayerEntry>();
+    private float _rowHeight;
+    private int _lastLoggedRows = -1;
+
+    // Para anunciar en el chat a los jugadores que entran (solo lo usa el Host).
+    private readonly HashSet<PlayerRef> _announcedPlayers = new HashSet<PlayerRef>();
+    private readonly HashSet<PlayerRef> _activeSet = new HashSet<PlayerRef>();
     private readonly bool[] _activeScratch = new bool[MaxPlayers];
     private float _refreshTimer;
     private Color _startNormalColor = Color.white;
@@ -157,6 +173,18 @@ public class LobbyManager : NetworkBehaviour
             playerEntryPrefab.SetActive(false);
         }
 
+        // Filas de ejemplo sueltas dentro del contenedor (las que dicen "Xms"): se ocultan,
+        // porque la lista dibuja sus propias filas.
+        foreach (TMP_Text sample in playerListContent.GetComponentsInChildren<TMP_Text>(true))
+        {
+            if (sample.text.Trim().ToLowerInvariant() != "xms") continue;
+
+            Transform rowRoot = sample.transform;
+            while (rowRoot.parent != null && rowRoot.parent != playerListContent) rowRoot = rowRoot.parent;
+
+            if (rowRoot != playerListContent) rowRoot.gameObject.SetActive(false);
+        }
+
         Debug.Log($"[LobbyManager] Molde de fila: '{playerEntryPrefab.name}' | contenedor: '{playerListContent.name}'");
     }
 
@@ -167,7 +195,7 @@ public class LobbyManager : NetworkBehaviour
         if (playerListContent == null) missing.Add("Player List Content");
         if (playerEntryPrefab == null) missing.Add("Player Entry Prefab");
         if (startGameButton == null) missing.Add("Start Game Button");
-        if (changeColorButton == null) missing.Add("Change Color Button");
+        if (changeCharacterButton == null) missing.Add("Change Character Button");
         if (leaveButton == null) missing.Add("Leave Button");
         if (leaveConfirmPopup == null) missing.Add("Leave Confirm Popup");
         if (chatInputField == null) missing.Add("Chat Input Field");
@@ -182,7 +210,7 @@ public class LobbyManager : NetworkBehaviour
     private void WireButtons()
     {
         if (startGameButton != null) startGameButton.onClick.AddListener(OnStartGameClicked);
-        if (changeColorButton != null) changeColorButton.onClick.AddListener(OnChangeCharacterClicked);
+        if (changeCharacterButton != null) changeCharacterButton.onClick.AddListener(OnChangeCharacterClicked);
         if (leaveButton != null) leaveButton.onClick.AddListener(OnLeavePressed);
         if (leaveYesButton != null) leaveYesButton.onClick.AddListener(OnConfirmLeaveYes);
         if (leaveNoButton != null) leaveNoButton.onClick.AddListener(OnConfirmLeaveNo);
@@ -216,6 +244,7 @@ public class LobbyManager : NetworkBehaviour
         if (Object.HasStateAuthority)
         {
             SyncCharactersToNetwork();
+            AnnounceNewPlayers();
         }
     }
 
@@ -290,117 +319,107 @@ public class LobbyManager : NetworkBehaviour
     {
         if (playerListContent == null || playerEntryPrefab == null || !IsReady) return;
 
+        if (!playerListContent.gameObject.activeInHierarchy)
+        {
+            Debug.LogWarning($"[LobbyManager] El contenedor '{playerListContent.name}' está apagado: la lista de jugadores no se puede ver.");
+            return;
+        }
+
         var players = new List<PlayerRef>(Runner.ActivePlayers);
         players.Sort((a, b) => a.PlayerId.CompareTo(b.PlayerId));
 
         // Una fila por jugador: se crean o borran las que sobren.
-        while (_entries.Count < players.Count)
+        while (_rows.Count < players.Count)
         {
-            _entries.Add(Instantiate(playerEntryPrefab, playerListContent));
+            _rows.Add(CreateRow());
         }
-        while (_entries.Count > players.Count)
+        while (_rows.Count > players.Count)
         {
-            Destroy(_entries[_entries.Count - 1]);
-            _entries.RemoveAt(_entries.Count - 1);
+            Destroy(_rows[_rows.Count - 1].gameObject);
+            _rows.RemoveAt(_rows.Count - 1);
         }
 
         for (int i = 0; i < players.Count; i++)
         {
-            FillEntry(_entries[i], players[i]);
+            FillRow(_rows[i], players[i]);
+            PositionRow(_rows[i], i);
         }
 
-        ArrangeRows();
-    }
-
-    // Pone cada fila debajo de la anterior. Si el contenedor ya tiene un Layout Group
-    // (Vertical Layout Group), él las ordena solo y esto no hace nada.
-    private void ArrangeRows()
-    {
-        if (playerListContent.GetComponent<LayoutGroup>() != null) return;
-
-        RectTransform template = playerEntryPrefab.GetComponent<RectTransform>();
-        if (template == null) return;
-
-        float step = template.rect.height + rowSpacing;
-
-        for (int i = 0; i < _entries.Count; i++)
+        if (_lastLoggedRows != players.Count)
         {
-            RectTransform rect = _entries[i].GetComponent<RectTransform>();
-            if (rect != null) rect.anchoredPosition = template.anchoredPosition + Vector2.down * step * i;
+            _lastLoggedRows = players.Count;
+            Debug.Log($"[LobbyManager] Lista de jugadores: {players.Count} fila(s) dentro de '{playerListContent.name}'.");
         }
     }
 
-    // Completa una fila: ping, nombre del rol y avatar del rol.
-    private void FillEntry(GameObject entry, PlayerRef player)
+    // Crea una fila nueva a partir del prefab.
+    private LobbyPlayerEntry CreateRow()
     {
-        entry.SetActive(true);
+        GameObject rowObject = Instantiate(playerEntryPrefab, playerListContent);
+        rowObject.SetActive(true);
+        rowObject.transform.localScale = Vector3.one;
 
+        // Si no le agregaste el componente LobbyPlayerEntry al prefab, se lo agrega solo.
+        LobbyPlayerEntry row = rowObject.GetComponent<LobbyPlayerEntry>();
+        if (row == null) row = rowObject.AddComponent<LobbyPlayerEntry>();
+
+        row.AutoBindMissing();
+        return row;
+    }
+
+    // Completa una fila: ping (con color), nombre del rol y avatar del rol.
+    private void FillRow(LobbyPlayerEntry row, PlayerRef player)
+    {
         int roleIndex = GetCharacterOf(player);
         string roleName = roleIndex >= 0 ? CharacterLabel(roleIndex) : "Eligiendo...";
         if (IsHostPlayer(player)) roleName += " <color=#FF3B30>[HOST]</color>";
 
         int pingMs = PingFor(player);
-        string ping = $"{pingMs}ms";
 
-        // --- Textos: uno es el ping ("Xms") y el otro el nombre del rol ---
-        TMP_Text[] texts = entry.GetComponentsInChildren<TMP_Text>(true);
-        TMP_Text pingTxt = null;
-        TMP_Text roleTxt = null;
+        row.SetPing($"{pingMs}ms", PingColor(pingMs));
+        row.SetName(roleName);
 
-        foreach (TMP_Text t in texts)
+        Sprite portrait = null;
+        if (characterPortraits != null && roleIndex >= 0 && roleIndex < characterPortraits.Length)
         {
-            if (pingTxt == null && (t.name.ToLowerInvariant().Contains("ping") || t.text.TrimEnd().EndsWith("ms")))
-            {
-                pingTxt = t;
-            }
+            portrait = characterPortraits[roleIndex];
+        }
+        row.SetAvatar(portrait);
+    }
+
+    // Pone cada fila debajo de la anterior, pegadas arriba y a todo el ancho del contenedor.
+    private void PositionRow(LobbyPlayerEntry row, int index)
+    {
+        // Si el contenedor tiene un Layout Group (por ejemplo un Vertical Layout Group), él las ordena.
+        if (playerListContent.GetComponent<LayoutGroup>() != null) return;
+
+        RectTransform rect = row.transform as RectTransform;
+        if (rect == null) return;
+
+        float height = GetRowHeight();
+
+        rect.anchorMin = new Vector2(0f, 1f);
+        rect.anchorMax = new Vector2(1f, 1f);
+        rect.pivot = new Vector2(0.5f, 1f);
+        rect.sizeDelta = new Vector2(0f, height);
+        rect.anchoredPosition = new Vector2(0f, -index * (height + rowSpacing));
+    }
+
+    // Alto de una fila, medido una sola vez desde el prefab.
+    private float GetRowHeight()
+    {
+        if (_rowHeight > 1f) return _rowHeight;
+
+        RectTransform template = playerEntryPrefab.GetComponent<RectTransform>();
+        if (template != null)
+        {
+            _rowHeight = template.rect.height;
+            if (_rowHeight <= 1f) _rowHeight = template.sizeDelta.y;
         }
 
-        foreach (TMP_Text t in texts)
-        {
-            if (t != pingTxt) { roleTxt = t; break; }
-        }
+        if (_rowHeight <= 1f) _rowHeight = fallbackRowHeight;
 
-        if (pingTxt != null)
-        {
-            pingTxt.text = ping;
-            pingTxt.color = PingColor(pingMs);
-        }
-        if (roleTxt != null) roleTxt.text = (pingTxt == null) ? $"{ping}   {roleName}" : roleName;
-
-        // --- Avatar: la imagen chica de la fila (el fondo de la fila no cuenta) ---
-        Image avatar = null;
-        float smallestArea = float.MaxValue;
-
-        foreach (Image img in entry.GetComponentsInChildren<Image>(true))
-        {
-            if (img.gameObject == entry) continue;
-
-            if (img.name.ToLowerInvariant().Contains("avatar"))
-            {
-                avatar = img;
-                break;
-            }
-
-            float area = img.rectTransform.rect.width * img.rectTransform.rect.height;
-            if (area < smallestArea)
-            {
-                smallestArea = area;
-                avatar = img;
-            }
-        }
-
-        if (avatar != null)
-        {
-            bool hasSprite = characterPortraits != null && roleIndex >= 0 && roleIndex < characterPortraits.Length
-                             && characterPortraits[roleIndex] != null;
-
-            // Si hay imagen para este rol se pone; si no, el avatar queda como está.
-            if (hasSprite)
-            {
-                avatar.sprite = characterPortraits[roleIndex];
-                avatar.color = Color.white;
-            }
-        }
+        return _rowHeight;
     }
 
     // true si este jugador es el que creó la sala.
@@ -412,12 +431,43 @@ public class LobbyManager : NetworkBehaviour
         return player == Object.StateAuthority;                            // el Host, visto desde un cliente
     }
 
-    // Verde = buen ping, naranja = regular, rojo = malo.
+    // Verde = buen ping, naranja = regular, rojo = malo (los límites se cambian en el Inspector).
     private Color PingColor(int ms)
     {
-        if (ms < 80) return new Color(0.55f, 1f, 0.25f);
-        if (ms < 150) return new Color(1f, 0.65f, 0.1f);
-        return new Color(1f, 0.25f, 0.2f);
+        if (ms <= goodPingMax) return goodPingColor;
+        if (ms <= mediumPingMax) return mediumPingColor;
+        return badPingColor;
+    }
+
+    // Anuncia en el chat a cada jugador que entra a la sala (solo lo corre el Host).
+    private void AnnounceNewPlayers()
+    {
+        NetworkManagerFusion manager = NetworkManagerFusion.Instance;
+        if (manager == null) return;
+
+        _activeSet.Clear();
+        foreach (PlayerRef player in Runner.ActivePlayers) _activeSet.Add(player);
+
+        foreach (PlayerRef player in _activeSet)
+        {
+            if (_announcedPlayers.Contains(player)) continue;
+
+            // El que creó la sala no "se une": no se anuncia.
+            if (player == Runner.LocalPlayer)
+            {
+                _announcedPlayers.Add(player);
+                continue;
+            }
+
+            int role = manager.GetCharacter(player);
+            if (role < 0) continue; // todavía no tiene personaje: se anuncia en el próximo tick
+
+            _announcedPlayers.Add(player);
+            RPC_System($"{CharacterLabel(role)} se unió a la sala ({_activeSet.Count}/{manager.PlayersNeeded}).");
+        }
+
+        // Los que se fueron se sacan, así si vuelven se anuncian de nuevo.
+        _announcedPlayers.RemoveWhere(p => !_activeSet.Contains(p));
     }
 
     // -1 si todavía no se sabe.
