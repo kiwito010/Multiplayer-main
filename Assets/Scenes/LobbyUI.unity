@@ -1714,11 +1714,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4529144102556866993, guid: 4bb2e8d651522dc4c8d8f6fabff49272, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -376
+      value: -1
       objectReference: {fileID: 0}
     - target: {fileID: 4529144102556866993, guid: 4bb2e8d651522dc4c8d8f6fabff49272, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 200
+      value: -156
       objectReference: {fileID: 0}
     - target: {fileID: 4529144102556866993, guid: 4bb2e8d651522dc4c8d8f6fabff49272, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -1832,12 +1832,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &867010363 stripped
 GameObject:
-  m_CorrespondingSourceObject: {fileID: 4815015400414487626, guid: 4bb2e8d651522dc4c8d8f6fabff49272, type: 3}
-  m_PrefabInstance: {fileID: 867010361}
-  m_PrefabAsset: {fileID: 0}
---- !u!224 &867010364 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 2835051341425440229, guid: 4bb2e8d651522dc4c8d8f6fabff49272, type: 3}
+  m_CorrespondingSourceObject: {fileID: 1832141134485404614, guid: 4bb2e8d651522dc4c8d8f6fabff49272, type: 3}
   m_PrefabInstance: {fileID: 867010361}
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &867010365 stripped
@@ -2078,7 +2073,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   titleSceneName: Main Menu
   pingText: {fileID: 867010365}
-  playerListContent: {fileID: 867010364}
+  playerListContent: {fileID: 867010362}
   playerEntryPrefab: {fileID: 867010363}
   startGameButton: {fileID: 1563564867}
   changeCharacterButton: {fileID: 1936617593}
