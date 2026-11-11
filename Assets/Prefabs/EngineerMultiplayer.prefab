@@ -14,7 +14,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -7055532277082615512, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}
       propertyPath: NetworkedBehaviours.Array.size
-      value: 11
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: -7055532277082615512, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}
       propertyPath: NetworkedBehaviours.Array.data[4]
@@ -44,6 +44,10 @@ PrefabInstance:
       propertyPath: NetworkedBehaviours.Array.data[10]
       value: 
       objectReference: {fileID: 5467170741881667304}
+    - target: {fileID: -7055532277082615512, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}
+      propertyPath: NetworkedBehaviours.Array.data[11]
+      value: 
+      objectReference: {fileID: 1112878893588771381}
     - target: {fileID: 378695112004466499, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}
       propertyPath: m_Name
       value: EngineerMultiplayer
@@ -125,6 +129,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 47c6bf632560a9a4083aab920e930b12, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1112878893588771381 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6359114768166614732, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}
+  m_PrefabInstance: {fileID: 6282979175802438905}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aba7662ffc34c5448b23dbe9d94e5dfe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!114 &2584556014395424299 stripped

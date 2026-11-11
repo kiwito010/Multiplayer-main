@@ -103,4 +103,8 @@ public class GameInput : MonoBehaviour
         return inputActions != null && inputActions.Player.Move.enabled;
     }
 
+    public bool WasFlashlightPressed() {
+        return inputActions.Player.FlashLight.WasPressedThisFrame();
+    }
+
 }
