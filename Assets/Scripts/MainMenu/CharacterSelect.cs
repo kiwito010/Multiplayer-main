@@ -118,6 +118,15 @@ public class CharacterSelect : MonoBehaviour
             return;
         }
 
+        // Ocultar todos los paneles de descripción al confirmar
+        if (characterDescriptionPanels != null)
+        {
+            foreach (var panel in characterDescriptionPanels)
+            {
+                if (panel != null) panel.SetActive(false);
+            }
+        }
+
         // Si la referencia del Inspector se perdió, usamos el manager que ya existe en la escena.
         NetworkManagerFusion manager = networkManager != null ? networkManager : NetworkManagerFusion.Instance;
         if (manager == null) manager = FindObjectOfType<NetworkManagerFusion>();
