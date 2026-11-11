@@ -300,6 +300,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: ExplorerMultiplayer
       objectReference: {fileID: 0}
+    - target: {fileID: 3312272379758384256, guid: 812f9ca6ad1913f47987a4ed520f3898, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8224607002136028965, guid: 812f9ca6ad1913f47987a4ed520f3898, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -341,7 +345,8 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 3312272379758384256, guid: 812f9ca6ad1913f47987a4ed520f3898, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 812f9ca6ad1913f47987a4ed520f3898, type: 3}
