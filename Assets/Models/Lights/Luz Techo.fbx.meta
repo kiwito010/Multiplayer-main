@@ -3,17 +3,7 @@ guid: b6fa8906ad517e4439cd55c7ff625902
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects:
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Material
-    second: {fileID: 2100000, guid: dd1f7760acc81f7489d4b1d1853d773d, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Metalizar Gris
-    second: {fileID: 2100000, guid: 533fb2d2b13dd1e4587e95d02a9c9979, type: 2}
+  externalObjects: {}
   materials:
     materialImportMode: 2
     materialName: 0
