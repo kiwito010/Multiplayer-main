@@ -19,9 +19,12 @@ public class PlayerHUD : MonoBehaviour {
         PlayerManager playerManager, 
         GameInput gameInput
         ) {
+
         if (inventoryUI != null) {
+            inventoryUI.SetRoleStyle(GameSession.CharacterIndex);
             inventoryUI.Initialize(playerInventory, networkInventory);
         }
+
 
         if (playerDiagnostic != null && scanUI != null) {
             playerDiagnostic.Initialize(scanUI);

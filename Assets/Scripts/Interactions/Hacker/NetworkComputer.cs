@@ -327,10 +327,7 @@ public class NetworkComputer : NetworkBehaviour {
         if (notificationUI == null)
             return;
 
-        notificationUI.ShowTemporaryHint(
-            "Agregá refrigerante al depósito para evitar " +
-            "que la computadora se sobrecaliente."
-        );
+        notificationUI.ShowTemporaryHint("Agregá refrigerante al depósito para evitar " + "que la computadora se sobrecaliente.");
     }
 
     private void HandleHackStarted() {
@@ -360,12 +357,18 @@ public class NetworkComputer : NetworkBehaviour {
 
         CooldownTimer = TickTimer.CreateFromSeconds(Runner, duration);
 
+        bool overheated = duration == overheatCooldown;
+
+        RPC_ShowCooldownNotification(overheated);
+
         Debug.Log("Computadora apagada durante " + duration + " segundos");
     }
 
     private void FinishCooldown() {
         Temperature = 0f;
         CooldownTimer = TickTimer.None;
+
+        RPC_ShowComputerReadyNotification();
 
         Debug.Log("Computadora enfriada y disponible");
     }
@@ -460,8 +463,7 @@ public class NetworkComputer : NetworkBehaviour {
 
         Temperature = Mathf.Max(0f, Temperature - coolantFreeze);
 
-        Debug.Log("Refrigerante depositado. Temperatura: " +
-                  Temperature.ToString("F1") + "%");
+        Debug.Log("Refrigerante depositado. Temperatura: " + Temperature.ToString("F1") + "%");
 
         return true;
     }
@@ -485,5 +487,37 @@ public class NetworkComputer : NetworkBehaviour {
             return false;
 
         return ActiveHacker != player;
+    }
+
+    public float GetCooldownRemaining() {
+        if (Runner == null || !CooldownTimer.IsRunning)
+            return 0f;
+
+        return Mathf.Max(0f, CooldownTimer.RemainingTime(Runner) ?? 0f);
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_ShowCooldownNotification(bool overheated) {
+        TaskNotificationUI notificationUI =
+            FindFirstObjectByType<TaskNotificationUI>();
+
+        if (notificationUI == null)
+            return;
+
+        if (overheated) {
+            notificationUI.ShowTemporaryHint("COMPUTADORA SOBRECALENTADA\n" + "Sistema bloqueado durante 15 segundos.");
+        } else {
+            notificationUI.ShowTemporaryHint("COMPUTADORA BLOQUEADA\n" + "Sistema bloqueado durante 5 segundos.");
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_ShowComputerReadyNotification() {
+        TaskNotificationUI notificationUI = FindFirstObjectByType<TaskNotificationUI>();
+
+        if (notificationUI == null)
+            return;
+
+        notificationUI.ShowTemporaryHint("COMPUTADORA ENFRIADA\n" +"El sistema vuelve a estar disponible.");
     }
 }

@@ -119,7 +119,11 @@ public class HackerTypingText : MonoBehaviour {
 
                 Vector3 characterCenter = (characterInfo.bottomLeft + characterInfo.topRight) / 2f;
 
-                qteContainer.localPosition = characterCenter;
+                Vector3 worldPosition = CodeText.transform.TransformPoint(characterCenter);
+
+                Vector3 localPosition = qteContainer.parent.InverseTransformPoint(worldPosition);
+
+                qteContainer.localPosition = localPosition;
 
                 timeCircle.localScale = Vector3.one;
 

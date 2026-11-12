@@ -13,8 +13,8 @@ public class InventoryUI : MonoBehaviour {
     [SerializeField] private TextMeshProUGUI[] slotTexts;
     [SerializeField] private Image[] slotImages;
 
-    [SerializeField] private Color normalColor;
-    [SerializeField] private Color selectedColor;
+    private Color normalColor;
+    private Color selectedColor;
 
     [SerializeField] private RectTransform inventoryPanel;
 
@@ -28,6 +28,26 @@ public class InventoryUI : MonoBehaviour {
 
     private string[] lastSlotNames;
     private bool isInitialized;
+
+
+    [Header("Diseño del inventario")]
+    [SerializeField] private Image inventoryBackground;
+
+    [Header("Engineer")]
+    [SerializeField] private Sprite engineerBackground;
+    [SerializeField] private Color engineerNormalColor;
+    [SerializeField] private Color engineerSelectedColor;
+
+    [Header("Hacker")]
+    [SerializeField] private Sprite hackerBackground;
+    [SerializeField] private Color hackerNormalColor;
+    [SerializeField] private Color hackerSelectedColor;
+
+    [Header("Explorer")]
+    [SerializeField] private Sprite explorerBackground;
+    [SerializeField] private Color explorerNormalColor;
+    [SerializeField] private Color explorerSelectedColor;
+
 
     // MÉTODOS:
 
@@ -131,4 +151,43 @@ public class InventoryUI : MonoBehaviour {
         UnsubscribeEvents();
         CancelInvoke(nameof(CloseInventory));
     }
+
+
+    public void SetRoleStyle(int roleIndex) {
+        Sprite background = null;
+
+        switch (roleIndex) {
+            case 0: // Engineer
+                background = engineerBackground;
+                normalColor = engineerNormalColor;
+                selectedColor = engineerSelectedColor;
+                break;
+
+            case 1: // Hacker
+                background = hackerBackground;
+                normalColor = hackerNormalColor;
+                selectedColor = hackerSelectedColor;
+                break;
+
+            case 2: // Explorer
+                background = explorerBackground;
+                normalColor = explorerNormalColor;
+                selectedColor = explorerSelectedColor;
+                break;
+
+            default:
+                Debug.LogWarning("[INVENTORY] Personaje desconocido: " + roleIndex);
+                return;
+        }
+
+        if (inventoryBackground != null && background != null) {
+            inventoryBackground.sprite = background;
+            inventoryBackground.color = Color.white;
+        }
+
+        // Actualizar los colores si el inventario ya está inicializado.
+        if (isInitialized)
+            UpdateUI();
+    }
+
 }

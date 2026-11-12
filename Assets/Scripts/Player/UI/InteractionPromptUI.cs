@@ -87,22 +87,32 @@ public class InteractionPromptUI : MonoBehaviour {
         if (promptText == null)
             return;
 
-        // 1. OCUPADO: gris.
+        // 1. SOBRECALENTADA: rojo.
+        if (TryGetCooldownMessage(
+            target, out string cooldownMessage)) {
+
+            promptText.text = cooldownMessage;
+            promptText.color = blockedTextColor;
+            return;
+        }
+
+        // 2. OCUPADO: gris.
         if (TryGetBusyMessage(target, out string busyMessage)) {
             promptText.text = busyMessage;
             promptText.color = busyTextColor;
             return;
         }
 
-        // 2. BLOQUEADO POR MISIÓN: rojo.
+        // 3. BLOQUEADO POR MISIÓN: rojo.
         if (TryGetMissionBlockedMessage(
             target, out string blockedMessage)) {
+
             promptText.text = blockedMessage;
             promptText.color = blockedTextColor;
             return;
         }
 
-        // 3. DISPONIBLE: blanco.
+        // 4. DISPONIBLE: blanco.
         InteractionPromptTarget promptTarget =
             target.GetComponentInChildren<InteractionPromptTarget>(true);
 
@@ -257,5 +267,34 @@ public class InteractionPromptUI : MonoBehaviour {
 
         if (currentOutline != null)
             currentOutline.SetHighlighted(true);
+    }
+
+    private bool TryGetCooldownMessage(
+    NetworkObject target,
+    out string message) {
+
+        message = null;
+
+        if (target == null)
+            return false;
+
+        NetworkComputer computer =
+            target.GetComponentInChildren<NetworkComputer>(true);
+
+        if (computer == null ||
+            computer.Object == null ||
+            !computer.Object.IsValid)
+            return false;
+
+        if (!computer.CooldownTimer.IsRunning)
+            return false;
+
+        int seconds = Mathf.CeilToInt(
+            computer.GetCooldownRemaining()
+        );
+
+        message = "Sobrecalentada - " + seconds + "s";
+
+        return true;
     }
 }
