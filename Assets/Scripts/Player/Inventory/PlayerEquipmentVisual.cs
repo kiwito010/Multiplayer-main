@@ -1,4 +1,3 @@
-
 using Fusion;
 using UnityEngine;
 
@@ -7,7 +6,10 @@ public class PlayerEquipmentVisual : MonoBehaviour {
 
     [SerializeField] private PlayerInventory playerInventory;
     [SerializeField] private NetworkInventoryState networkInventory;
-    [SerializeField] private Transform handPoint;
+
+    [Header("Puntos de equipamiento")]
+    [SerializeField] private Transform firstPersonItemHolder;
+    [SerializeField] private Transform thirdPersonItemHolder;
 
     private GameObject equippedVisual;
 
@@ -17,7 +19,9 @@ public class PlayerEquipmentVisual : MonoBehaviour {
     // MÉTODOS:
 
     private void Update() {
-        if (playerInventory == null || networkInventory == null || handPoint == null)
+        if (networkInventory == null ||
+            firstPersonItemHolder == null ||
+            thirdPersonItemHolder == null)
             return;
 
         if (networkInventory.Object == null || !networkInventory.Object.IsValid)
@@ -26,10 +30,11 @@ public class PlayerEquipmentVisual : MonoBehaviour {
         int selectedSlot;
 
         if (networkInventory.Object.HasInputAuthority) {
-            // Jugador local: respuesta inmediata.
+            if (playerInventory == null)
+                return;
+
             selectedSlot = playerInventory.GetSelectedSlot();
         } else {
-            // Jugadores remotos: selección sincronizada por Fusion.
             selectedSlot = networkInventory.EquippedSlot;
         }
 
@@ -68,8 +73,11 @@ public class PlayerEquipmentVisual : MonoBehaviour {
         if (visualPrefab == null)
             return;
 
-        equippedVisual = Instantiate(visualPrefab, handPoint);
+        bool isLocalPlayer = networkInventory.Object.HasInputAuthority;
 
+        Transform targetHolder = isLocalPlayer ? firstPersonItemHolder : thirdPersonItemHolder;
+
+        equippedVisual = Instantiate(visualPrefab, targetHolder);
         equippedVisual.SetActive(true);
 
         equippedVisual.transform.localPosition = Vector3.zero;

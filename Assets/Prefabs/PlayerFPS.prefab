@@ -212,7 +212,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac76441fe7246004680b11c45c31ec63, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  range: 3
+  range: 4
   interactPoint: {fileID: 4916090557827576219}
   interactableLayers:
     serializedVersion: 2
@@ -319,7 +319,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerInventory: {fileID: -6935682901151754486}
   networkInventory: {fileID: 6203016693621385032}
-  handPoint: {fileID: 5110690479083329799}
+  firstPersonItemHolder: {fileID: 0}
+  thirdPersonItemHolder: {fileID: 0}
 --- !u!114 &8426112057967049426
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -352,7 +353,7 @@ MonoBehaviour:
   diagnosticLayerMask:
     serializedVersion: 2
     m_Bits: 512
-  diagnosticDistance: 2
+  diagnosticDistance: 2.75
   scanLoseSpeed: 1
 --- !u!114 &2091209199481128925
 MonoBehaviour:

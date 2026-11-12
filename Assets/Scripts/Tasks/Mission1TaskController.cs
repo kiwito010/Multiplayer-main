@@ -311,6 +311,8 @@ public class Mission1TaskController : MonoBehaviour {
 
             currentStage = 5;
         }
+
+        UpdateMissionHighlights();
     }
 
     private void ShowMissionAnnouncement(string label, string title) {
@@ -327,5 +329,34 @@ public class Mission1TaskController : MonoBehaviour {
         }
 
         missionAnnouncementUI.ShowMission(label, title);
+    }
+
+    private void UpdateItemHighlight(NetworkPickableItem item, TaskData task) {
+
+        if (item == null || task == null || taskManager == null)
+            return;
+
+        MissionItemLight itemLight = item.GetComponentInChildren<MissionItemLight>(true);
+
+        if (itemLight == null)
+            return;
+
+        bool taskActive = taskManager.GetActiveTasks().Contains(task);
+
+        bool pickedUp = item.WasEverPickedUp;
+
+        itemLight.SetHighlighted(taskActive && !pickedUp);
+    }
+
+    private void UpdateMissionHighlights() {
+        UpdateItemHighlight(magnifyingGlass, magnifyingGlassTask);
+
+        UpdateItemHighlight(pliers, pliersTask);
+
+        UpdateItemHighlight(newCable, cableTask);
+
+        UpdateItemHighlight(insulatingTape, tapeTask);
+
+        UpdateItemHighlight(fuse, findFuseTask);
     }
 }

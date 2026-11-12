@@ -12,7 +12,7 @@ using UnityEngine;
 public class PlayerNetworkInteraction : NetworkBehaviour
 {
     [Header("Configuración de detección")]
-    public float range = 3f;                 // Alcance del raycast
+    public float range = 4f;                 // Alcance del raycast
     public Transform interactPoint;           // Desde dónde sale el rayo (normalmente la cámara)
     public LayerMask interactableLayers;      // Qué capas puede detectar
 
