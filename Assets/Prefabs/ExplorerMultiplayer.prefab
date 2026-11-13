@@ -43,6 +43,10 @@ PrefabInstance:
       propertyPath: m_UpdateMode
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 1709222051324039977, guid: 697d1b826e7f07c44a24f0467e6d8fff, type: 3}
+      propertyPath: m_ApplyRootMotion
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1709222051333143753, guid: 697d1b826e7f07c44a24f0467e6d8fff, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.5
@@ -148,6 +152,10 @@ PrefabInstance:
     - target: {fileID: 378695112004466499, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 378695112004466499, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}
+      propertyPath: m_TagString
+      value: Player
       objectReference: {fileID: 0}
     - target: {fileID: 3037266386262805235, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}
       propertyPath: cameraTransform
@@ -294,7 +302,7 @@ MonoBehaviour:
   crawlMaxSpeed: 2.5
   idleVariantAfter: 8
   idleVariants: 2
-  crouchKey: 99
+  crouchKey: 306
   proneKey: 122
 --- !u!114 &5107916552802261497 stripped
 MonoBehaviour:
