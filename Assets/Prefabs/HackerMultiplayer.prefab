@@ -99,10 +99,6 @@ PrefabInstance:
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 9100000, guid: 67a9ef10513b50145b9c1412cc30d7e4, type: 2}
-    - target: {fileID: 7454197014263240963, guid: e05d792139c32a44db91d203e8d59a19, type: 3}
-      propertyPath: m_ApplyRootMotion
-      value: 0
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -144,10 +140,6 @@ PrefabInstance:
     - target: {fileID: 378695112004466499, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}
       propertyPath: m_Name
       value: HackerMultiplayer
-      objectReference: {fileID: 0}
-    - target: {fileID: 378695112004466499, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}
-      propertyPath: m_TagString
-      value: Player
       objectReference: {fileID: 0}
     - target: {fileID: 3018098544571956420, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}
       propertyPath: m_Enabled
@@ -289,7 +281,7 @@ MonoBehaviour:
   crawlMaxSpeed: 2.5
   idleVariantAfter: 8
   idleVariants: 2
-  crouchKey: 306
+  crouchKey: 99
   proneKey: 122
 --- !u!4 &5554820034292979253 stripped
 Transform:

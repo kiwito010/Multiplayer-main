@@ -173,10 +173,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: EngineerMultiplayer
       objectReference: {fileID: 0}
-    - target: {fileID: 378695112004466499, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}
-      propertyPath: m_TagString
-      value: Player
-      objectReference: {fileID: 0}
     - target: {fileID: 3833499360900281797, guid: d53e7d05874e43a439234dcf3acd4220, type: 3}
       propertyPath: firstPersonItemHolder
       value: 
@@ -400,5 +396,5 @@ MonoBehaviour:
   crawlMaxSpeed: 2.5
   idleVariantAfter: 8
   idleVariants: 2
-  crouchKey: 306
+  crouchKey: 99
   proneKey: 122
