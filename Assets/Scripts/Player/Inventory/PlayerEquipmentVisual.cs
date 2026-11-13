@@ -78,10 +78,17 @@ public class PlayerEquipmentVisual : MonoBehaviour {
         Transform targetHolder = isLocalPlayer ? firstPersonItemHolder : thirdPersonItemHolder;
 
         equippedVisual = Instantiate(visualPrefab, targetHolder);
+
         equippedVisual.SetActive(true);
 
-        equippedVisual.transform.localPosition = Vector3.zero;
-        equippedVisual.transform.localRotation = Quaternion.identity;
+        EquippedItemOffsets offsets = equippedVisual.GetComponent<EquippedItemOffsets>();
+
+        if (offsets != null) {
+            offsets.ApplyOffset(isLocalPlayer);
+        } else {
+            equippedVisual.transform.localPosition = Vector3.zero;
+            equippedVisual.transform.localRotation = Quaternion.identity;
+        }
 
         // Evitamos que el visual equipado interfiera con el raycast.
         foreach (Collider collider in equippedVisual.GetComponentsInChildren<Collider>(true)) {

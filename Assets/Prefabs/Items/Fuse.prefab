@@ -166,7 +166,7 @@ MonoBehaviour:
   itemCollider: {fileID: 1791675657451903010}
   _WasEverPickedUp:
     RawValue: 0
-  equippedVisualPrefab: {fileID: 735774212285556590, guid: a93b96af242608b44b683e671d67414d, type: 3}
+  equippedVisualPrefab: {fileID: 6385695237419464286, guid: 5bce9027436f9d84d8c197f948ab8776, type: 3}
   remoteDropVisibilityDelay: 0.15
   itemType: 5
 --- !u!114 &1374955707287449804

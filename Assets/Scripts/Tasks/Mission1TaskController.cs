@@ -343,6 +343,12 @@ public class Mission1TaskController : MonoBehaviour {
 
         bool taskActive = taskManager.GetActiveTasks().Contains(task);
 
+        // Comprobar que el objeto siga inicializado en Photon Fusion.
+        if (item.Object == null || !item.Object.IsValid) {
+            itemLight.SetHighlighted(false);
+            return;
+        }
+
         bool pickedUp = item.WasEverPickedUp;
 
         itemLight.SetHighlighted(taskActive && !pickedUp);
