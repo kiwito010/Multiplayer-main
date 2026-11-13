@@ -221,6 +221,7 @@ GameObject:
   - component: {fileID: 1997222581355488103}
   - component: {fileID: -4310036203650425454}
   - component: {fileID: 6105289254739010249}
+  - component: {fileID: 2350380718261442237}
   m_Layer: 10
   m_Name: CoolantContainer
   m_TagString: Untagged
@@ -401,3 +402,17 @@ MonoBehaviour:
   missionLight: {fileID: 4175437988412152328}
   itemRenderer: {fileID: 8123021346251289616}
   materialIndexes: 0000000001000000
+--- !u!114 &2350380718261442237
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6993684242307956567}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59e91071b7fffd74daefaff9a768b553, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  networkComputer: {fileID: 0}
+  missionItemLight: {fileID: 6105289254739010249}

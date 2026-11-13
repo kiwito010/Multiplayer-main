@@ -168,11 +168,15 @@ public class PlayerNetworkRepairActions : NetworkBehaviour {
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.InputAuthority)]
     private void RPC_RepairRequestRejected(NetworkObject target) {
+
+        Debug.Log("[REPAIR CLIENT] RPC de rechazo recibido");
+
         PlayerRepairInteraction repairInteraction =
             GetComponent<PlayerRepairInteraction>();
 
-        if (repairInteraction != null)
+        if (repairInteraction != null) {
             repairInteraction.OnRepairRequestRejected(target);
+        }
     }
 
     public void RequestEndRepair(RepairableComponent component) {
