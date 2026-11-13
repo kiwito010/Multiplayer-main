@@ -27,8 +27,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
-  m_ConstrainProportionsScale: 1
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4228007898337404633}
   m_Father: {fileID: 0}
@@ -47,7 +47,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   firstPersonPosition: {x: 0, y: 0, z: 0}
   firstPersonRotation: {x: 0, y: 0, z: 0}
-  thirdPersonPosition: {x: 0, y: 0, z: 0.185}
+  thirdPersonPosition: {x: -0.08, y: 0, z: 0.44}
   thirdPersonRotation: {x: 0, y: 0, z: 0}
 --- !u!1 &9093195240969429314
 GameObject:
@@ -110,8 +110,8 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: b25b2dfe07cec1b4180d7dee9afa9ade, type: 2}
-  - {fileID: 2100000, guid: 7ac054c60e7fcbc469ec60ec6c072c99, type: 2}
+  - {fileID: 2100000, guid: 314231dc6e1082346bc1ecf1446cb916, type: 2}
+  - {fileID: 2100000, guid: 6d3a4cb2cbff9414293d5e2895d8e0e6, type: 2}
   - {fileID: 2100000, guid: 9fca54bb6a1eeb748858062129598f33, type: 2}
   - {fileID: 2100000, guid: f48b40674380c8646a6168e253453a90, type: 2}
   - {fileID: 2100000, guid: 807ef285cbfabfe4c9d07f74ad44a91d, type: 2}

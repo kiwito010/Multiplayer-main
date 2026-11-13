@@ -11,32 +11,19 @@ public class MissionItemLight : MonoBehaviour {
     [SerializeField] private int[] materialIndexes;
 
     private Material[] selectedMaterials;
-    private Color[] originalEmissionColors;
 
     private void Awake() {
-        if (itemRenderer != null && materialIndexes != null) {
-
+        if (itemRenderer != null) {
             Material[] materials = itemRenderer.materials;
 
             selectedMaterials = new Material[materialIndexes.Length];
-            originalEmissionColors = new Color[materialIndexes.Length];
 
             for (int i = 0; i < materialIndexes.Length; i++) {
                 int index = materialIndexes[i];
 
-                if (index < 0 || index >= materials.Length)
-                    continue;
-
-                Material material = materials[index];
-
-                if (!material.HasProperty("_EmissionColor"))
-                    continue;
-
-                selectedMaterials[i] = material;
-
-                // Guardamos el color y la intensidad originales.
-                originalEmissionColors[i] =
-                    material.GetColor("_EmissionColor");
+                if (index >= 0 && index < materials.Length) {
+                    selectedMaterials[i] = materials[index];
+                }
             }
         }
 
@@ -44,32 +31,21 @@ public class MissionItemLight : MonoBehaviour {
     }
 
     public void SetHighlighted(bool highlighted) {
-
+        // Encender o apagar la Point Light.
         if (missionLight != null)
             missionLight.enabled = highlighted;
 
         if (selectedMaterials == null)
             return;
 
-        for (int i = 0; i < selectedMaterials.Length; i++) {
-            Material material = selectedMaterials[i];
-
+        // Activar o desactivar Emission en los materiales elegidos.
+        foreach (Material material in selectedMaterials) {
             if (material == null)
                 continue;
 
             if (highlighted) {
                 material.EnableKeyword("_EMISSION");
-
-                material.SetColor(
-                    "_EmissionColor",
-                    originalEmissionColors[i]
-                );
             } else {
-                material.SetColor(
-                    "_EmissionColor",
-                    Color.black
-                );
-
                 material.DisableKeyword("_EMISSION");
             }
         }
